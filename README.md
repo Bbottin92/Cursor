@@ -1,0 +1,2 @@
+# Cursor
+General Cursor Repo
