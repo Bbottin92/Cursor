@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+.python-version
+*.egg-info/
+dist/
+build/
+
+# Local output
+out/
+
