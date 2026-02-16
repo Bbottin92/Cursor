@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cursor</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="header">
+    <nav class="nav container">
+      <a href="#" class="logo">Cursor</a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <button class="mobile-menu-btn" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-content">
+          <h1 class="hero-title">
+            Build something<br><span class="gradient-text">amazing</span> today.
+          </h1>
+          <p class="hero-subtitle">
+            A modern platform designed to help you create, collaborate, and ship faster than ever before.
+          </p>
+          <div class="hero-actions">
+            <a href="#features" class="btn btn-primary">Get Started</a>
+            <a href="#about" class="btn btn-secondary">Learn More</a>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="hero-card">
+            <div class="card-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <div class="card-code">
+              <code>
+                <span class="code-keyword">const</span> <span class="code-var">project</span> = <span class="code-func">create</span>({<br>
+                &nbsp;&nbsp;<span class="code-prop">name</span>: <span class="code-string">"my-app"</span>,<br>
+                &nbsp;&nbsp;<span class="code-prop">template</span>: <span class="code-string">"modern"</span>,<br>
+                &nbsp;&nbsp;<span class="code-prop">deploy</span>: <span class="code-keyword">true</span><br>
+                });
+              </code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="features">
+      <div class="container">
+        <h2 class="section-title">Features</h2>
+        <p class="section-subtitle">Everything you need to bring your ideas to life.</p>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+            </div>
+            <h3>Lightning Fast</h3>
+            <p>Optimized for speed and performance. Your projects load instantly and run smoothly.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="9" y1="21" x2="9" y2="9"></line>
+              </svg>
+            </div>
+            <h3>Clean Design</h3>
+            <p>Beautiful, responsive layouts that look great on every device and screen size.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <h3>Secure</h3>
+            <p>Built with security in mind. Your data is protected with industry-standard practices.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <h3>Collaborative</h3>
+            <p>Work together seamlessly with your team. Real-time collaboration made easy.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </div>
+            <h3>Customizable</h3>
+            <p>Tailor every aspect to fit your needs. Flexible configuration for any project.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+            </div>
+            <h3>Developer Friendly</h3>
+            <p>Built by developers, for developers. Clean APIs and extensive documentation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="about">
+      <div class="container">
+        <div class="about-grid">
+          <div class="about-content">
+            <h2 class="section-title">About Cursor</h2>
+            <p>
+              Cursor is a modern platform built to streamline your workflow and help you focus on what matters most &mdash; building great products.
+            </p>
+            <p>
+              Whether you're a solo developer or part of a large team, Cursor provides the tools and infrastructure you need to move fast without breaking things.
+            </p>
+            <ul class="about-stats">
+              <li>
+                <span class="stat-number">99.9%</span>
+                <span class="stat-label">Uptime</span>
+              </li>
+              <li>
+                <span class="stat-number">10k+</span>
+                <span class="stat-label">Users</span>
+              </li>
+              <li>
+                <span class="stat-number">50ms</span>
+                <span class="stat-label">Avg Response</span>
+              </li>
+            </ul>
+          </div>
+          <div class="about-visual">
+            <div class="about-card">
+              <div class="pulse-ring"></div>
+              <div class="pulse-ring pulse-ring-2"></div>
+              <div class="about-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="contact">
+      <div class="container">
+        <h2 class="section-title">Get in Touch</h2>
+        <p class="section-subtitle">Have a question or want to learn more? We'd love to hear from you.</p>
+        <form class="contact-form" onsubmit="handleSubmit(event)">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" rows="5" placeholder="How can we help?" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">Send Message</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <a href="#" class="logo">Cursor</a>
+          <p>Building the future, one project at a time.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-col">
+            <h4>Product</h4>
+            <ul>
+              <li><a href="#features">Features</a></li>
+              <li><a href="#about">About</a></li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Connect</h4>
+            <ul>
+              <li><a href="https://github.com/Bbottin92/Cursor" target="_blank" rel="noopener">GitHub</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Cursor. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu toggle
+    const menuBtn = document.querySelector('.mobile-menu-btn');
+    const navLinks = document.querySelector('.nav-links');
+
+    menuBtn.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+      menuBtn.classList.toggle('active');
+    });
+
+    // Close menu on link click
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('active');
+        menuBtn.classList.remove('active');
+      });
+    });
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Form submission handler
+    function handleSubmit(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.textContent = 'Message Sent!';
+      btn.style.background = '#10b981';
+      setTimeout(() => {
+        btn.textContent = 'Send Message';
+        btn.style.background = '';
+        e.target.reset();
+      }, 3000);
+    }
+
+    // Header scroll effect
+    const header = document.querySelector('.header');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+
+    // Intersection Observer for scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.feature-card, .about-content, .about-visual, .contact-form').forEach(el => {
+      el.classList.add('animate-in');
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>
