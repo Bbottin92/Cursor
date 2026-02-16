@@ -32,6 +32,50 @@ def _require_pytrends() -> None:
         raise
 
 
+def _patch_urllib3_retry_for_pytrends() -> None:
+    """
+    pytrends<=4.9.2 still uses urllib3 Retry(method_whitelist=...).
+
+    urllib3>=2 removed `method_whitelist` in favor of `allowed_methods`, which
+    causes a TypeError at runtime. We patch Retry.__init__ to accept the legacy
+    kwarg and translate it.
+    """
+
+    try:
+        import inspect
+
+        from urllib3.util.retry import Retry as Urllib3Retry
+    except Exception:
+        return
+
+    try:
+        sig = inspect.signature(Urllib3Retry.__init__)
+    except Exception:
+        return
+
+    # If this urllib3 still supports method_whitelist, nothing to do.
+    if "method_whitelist" in sig.parameters:
+        return
+
+    orig_init = Urllib3Retry.__init__
+
+    def patched_init(self, *args, method_whitelist=None, **kwargs):  # type: ignore[no-untyped-def]
+        if method_whitelist is not None and "allowed_methods" not in kwargs:
+            kwargs["allowed_methods"] = method_whitelist
+        return orig_init(self, *args, **kwargs)
+
+    Urllib3Retry.__init__ = patched_init  # type: ignore[assignment]
+
+    # requests also exposes urllib3 as requests.packages.urllib3
+    try:
+        from requests.packages.urllib3.util.retry import Retry as RequestsRetry  # type: ignore
+
+        if RequestsRetry is not Urllib3Retry:
+            RequestsRetry.__init__ = patched_init  # type: ignore[assignment]
+    except Exception:
+        pass
+
+
 def _retry(
     fn: Callable[[], Any],
     *,
@@ -99,6 +143,7 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
 
     _require_pytrends()
+    _patch_urllib3_retry_for_pytrends()
     from pytrends.request import TrendReq
 
     try:
