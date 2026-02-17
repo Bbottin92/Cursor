@@ -583,19 +583,19 @@ def _linux_collect(
                 max_chars=max_chars,
             )
         )
-    else:
-        # Fallback for non-systemd systems.
-        dmesg = _run_first_ok(
-            "dmesg_errors",
-            candidates=[
-                ["dmesg", "--color=never", "--ctime", "--level=emerg,alert,crit,err,warn"],
-                ["dmesg", "--color=never", "-T"],
-                ["dmesg"],
-            ],
-            timeout_s=timeout_s,
-            max_chars=max_chars,
-        )
-        results.append(dmesg)
+
+    # dmesg is useful even with systemd (and is a fallback if journald is empty).
+    dmesg = _run_first_ok(
+        "dmesg_errors",
+        candidates=[
+            ["dmesg", "--color=never", "--ctime", "--level=emerg,alert,crit,err,warn"],
+            ["dmesg", "--color=never", "-T"],
+            ["dmesg"],
+        ],
+        timeout_s=timeout_s,
+        max_chars=max_chars,
+    )
+    results.append(dmesg)
 
     # Synthesize a combined log text for analysis (pull from the most relevant sources).
     log_sources: list[str] = []
@@ -657,6 +657,24 @@ def _non_linux_collect(
         add("uptime", ["uptime"])
 
     return results, blobs
+
+
+def _excerpt_from_cmd(cmd_results: list[CmdResult], name: str, max_lines: int) -> str:
+    for r in cmd_results:
+        if r.name == name:
+            return _select_lines((r.stdout or r.stderr or "").strip(), max_lines=max_lines).strip()
+    return ""
+
+
+def _systemctl_failed_has_items(text: str) -> bool:
+    t = (text or "").strip()
+    if not t:
+        return False
+    # "0 loaded units listed." means none. Some versions include a header only.
+    if re.search(r"\b0 loaded units listed\b", t):
+        return False
+    # If a unit line like "foo.service loaded failed ..." exists, treat as present.
+    return bool(re.search(r"\b\w+\.service\b", t))
 
 
 def _render_report_md(
@@ -739,6 +757,10 @@ def _build_prompt(
     since: str,
     findings: list[Finding],
     combined_logs: str,
+    failed_units_excerpt: str,
+    reboots_excerpt: str,
+    coredumps_excerpt: str,
+    disk_pressure_excerpt: str,
     extra_notes: list[str],
 ) -> str:
     # Keep this concise enough to paste into chat, but with high signal.
@@ -750,6 +772,12 @@ def _build_prompt(
         findings_lines.append("- No obvious crash signature found in the collected excerpts.")
 
     notes = "\n".join(f"- {n}" for n in extra_notes) if extra_notes else "- (none)"
+
+    def block(title: str, body: str) -> str:
+        body = (body or "").strip()
+        if not body:
+            return ""
+        return f"\n{title}:\n```text\n{body.rstrip()}\n```\n"
 
     prompt = f"""\
 You are helping me debug repeated system errors/crashes. Please:
@@ -771,6 +799,11 @@ Heuristic findings:
 
 Extra notes:
 {notes}
+
+{block("Failed systemd units (if any)", failed_units_excerpt)}
+{block("Reboot history (last output)", reboots_excerpt)}
+{block("Coredumps (if any)", coredumps_excerpt)}
+{block("Disk pressure (mounts >=95% full)", disk_pressure_excerpt)}
 
 Key log excerpts (combined, truncated):
 ```text
@@ -845,18 +878,36 @@ def main(argv: list[str]) -> int:
             df_text = r.stdout or ""
             break
     disk_pressure_lines = _summarize_disk_pressure(df_text)
+    disk_pressure_excerpt = "\n".join(disk_pressure_lines).strip()
+
+    failed_units_excerpt = _excerpt_from_cmd(cmd_results, "systemctl_failed", max_lines=80)
+    if not _systemctl_failed_has_items(failed_units_excerpt):
+        failed_units_excerpt = ""
+
+    reboots_excerpt = _excerpt_from_cmd(cmd_results, "last_reboots", max_lines=80)
+    coredumps_excerpt = _excerpt_from_cmd(cmd_results, "coredumpctl_list", max_lines=80)
+    if re.search(r"\bNo coredumps found\b", coredumps_excerpt, re.IGNORECASE):
+        coredumps_excerpt = ""
 
     extra_notes: list[str] = []
     if disk_pressure_lines:
         extra_notes.append("Some filesystems are >=95% full (can cause crashes/app failures).")
     if platform_kind == "linux" and os.geteuid() != 0:
         extra_notes.append("Ran without root; SMART/MCE/firmware details may be missing.")
+    if failed_units_excerpt:
+        extra_notes.append("systemd has failed units (see excerpt).")
+    if coredumps_excerpt:
+        extra_notes.append("Found coredumps (see excerpt); they can reveal a crashing process.")
 
     prompt_text = _build_prompt(
         platform_kind=platform_kind,
         since=args.since,
         findings=findings,
         combined_logs=combined_logs or "(no logs collected)",
+        failed_units_excerpt=failed_units_excerpt,
+        reboots_excerpt=reboots_excerpt,
+        coredumps_excerpt=coredumps_excerpt,
+        disk_pressure_excerpt=disk_pressure_excerpt,
         extra_notes=extra_notes,
     )
 
