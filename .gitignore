@@ -1,0 +1,4 @@
+crashtriage_*/
+*.pyc
+__pycache__/
+
