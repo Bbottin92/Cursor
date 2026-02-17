@@ -1,0 +1,11 @@
+## Credentials / local config
+.env
+.env.*
+*.env
+.liquidgov.env
+.liquidgovrc
+
+## Python
+__pycache__/
+*.pyc
+
