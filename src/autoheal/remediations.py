@@ -56,6 +56,23 @@ def plan_actions_for_finding(cfg: dict[str, Any], finding: Finding) -> list[Acti
                     )
                 )
 
+    if finding.type == "systemd_user_failed_unit":
+        ucfg = actions_cfg.get("systemd_user_restart_failed_units", {}) or {}
+        if bool(ucfg.get("enabled", False)):
+            unit = str(finding.details.get("unit", ""))
+            allowlist = set(ucfg.get("allowlist_units", []) or [])
+            restart_all = bool(ucfg.get("restart_all_failed", False))
+            if unit and (restart_all or unit in allowlist):
+                plans.append(
+                    ActionPlan(
+                        name="systemd_user_restart_unit",
+                        description=f"Restart {unit} via systemctl --user",
+                        command=["systemctl", "--user", "restart", unit],
+                        requires_root=False,
+                        timeout_seconds=int(ucfg.get("command_timeout_seconds", 30)),
+                    )
+                )
+
     return plans
 
 

@@ -36,6 +36,14 @@ def default_config() -> dict[str, Any]:
                 "max_bytes_per_run": 512 * 1024 * 1024,  # 512 MiB
                 "allow_paths_outside_tmp": False,
             },
+            "systemd_user_restart_failed_units": {
+                # Safe-ish default: user scope only, no root required.
+                "enabled": True,
+                "restart_all_failed": True,
+                "allowlist_units": [],
+                "cooldown_seconds": 900,
+                "command_timeout_seconds": 30,
+            },
             "systemd_restart_failed_units": {
                 "enabled": False,
                 "allowlist_units": [],

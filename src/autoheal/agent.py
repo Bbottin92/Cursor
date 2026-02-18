@@ -243,11 +243,16 @@ class AutohealAgent:
         euid = os.geteuid() if hasattr(os, "geteuid") else -1
         for plan in plans:
             # Rate limiting for high-impact actions.
-            if plan.name == "systemd_restart_unit":
+            if plan.name in {"systemd_restart_unit", "systemd_user_restart_unit"}:
                 cooldown = int(
                     self.cfg.get("actions", {})
-                    .get("systemd_restart_failed_units", {})
-                    .get("cooldown_seconds", 900)
+                    .get(
+                        "systemd_restart_failed_units"
+                        if plan.name == "systemd_restart_unit"
+                        else "systemd_user_restart_failed_units",
+                        {},
+                    )
+                    .get("cooldown_seconds", 900),
                 )
                 last_ts = db.last_action_finished_ts(conn, incident_id, plan.name)
                 if last_ts and (time.time() - last_ts) < cooldown:

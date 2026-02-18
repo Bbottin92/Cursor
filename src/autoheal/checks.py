@@ -13,6 +13,7 @@ log = logging.getLogger("autoheal.checks")
 def run_all_checks(cfg: dict[str, Any]) -> list[Finding]:
     findings: list[Finding] = []
     findings.extend(check_disk_usage(cfg))
+    findings.extend(check_systemd_user_failed_units(cfg))
     findings.extend(check_systemd_failed_units(cfg))
     return findings
 
@@ -110,6 +111,62 @@ def check_systemd_failed_units(cfg: dict[str, Any]) -> list[Finding]:
                 },
                 diagnosis=(
                     f"systemd reports {unit} as failed (load={load}, active={active}, sub={sub}). "
+                    f"{desc}".strip()
+                ),
+            )
+        )
+
+    return out
+
+
+def check_systemd_user_failed_units(cfg: dict[str, Any]) -> list[Finding]:
+    """
+    Detect failed systemd *user* units (does not require root).
+    """
+    if which("systemctl") is None:
+        return []
+
+    try:
+        res = run(
+            ["systemctl", "--user", "--failed", "--no-legend", "--plain"],
+            timeout_seconds=10,
+        )
+    except Exception as e:
+        log.debug("systemctl --user failed: %s", e)
+        return []
+
+    if res.exit_code != 0 and not res.stdout.strip():
+        return []
+
+    out: list[Finding] = []
+    for line in res.stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split(None, 4)
+        if len(parts) < 4:
+            continue
+        unit, load, active, sub = parts[0], parts[1], parts[2], parts[3]
+        desc = parts[4] if len(parts) >= 5 else ""
+
+        if active != "failed" and sub != "failed":
+            continue
+
+        out.append(
+            Finding(
+                fingerprint=f"systemd_user_failed_unit:{unit}",
+                type="systemd_user_failed_unit",
+                severity=3,
+                title=f"systemd user unit failed: {unit}",
+                details={
+                    "unit": unit,
+                    "load": load,
+                    "active": active,
+                    "sub": sub,
+                    "description": desc,
+                },
+                diagnosis=(
+                    f"systemd --user reports {unit} as failed (load={load}, active={active}, sub={sub}). "
                     f"{desc}".strip()
                 ),
             )
