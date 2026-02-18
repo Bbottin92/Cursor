@@ -74,7 +74,7 @@ def plan_actions_for_finding(cfg: dict[str, Any], finding: Finding) -> list[Acti
                     )
                 )
 
-    if finding.type == "cursor_crashpad_reports":
+    if finding.type in {"cursor_crashpad_reports", "cursor_safe_launcher_missing"}:
         ccfg = actions_cfg.get("cursor_safe_launcher", {}) or {}
         if bool(ccfg.get("enabled", False)):
             plans.append(

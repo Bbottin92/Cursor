@@ -16,6 +16,7 @@ log = logging.getLogger("autoheal.checks")
 def run_all_checks(cfg: dict[str, Any]) -> list[Finding]:
     findings: list[Finding] = []
     findings.extend(check_disk_usage(cfg))
+    findings.extend(check_cursor_safe_launcher(cfg))
     findings.extend(check_cursor_crashpad(cfg))
     findings.extend(check_systemd_user_failed_units(cfg))
     findings.extend(check_systemd_failed_units(cfg))
@@ -249,6 +250,62 @@ def check_cursor_crashpad(cfg: dict[str, Any]) -> list[Finding]:
             diagnosis=(
                 f"Found {crash_count} Cursor Crashpad dump(s) modified in the last "
                 f"{window_minutes} minutes. This often indicates a crash loop or unstable configuration."
+            ),
+        )
+    ]
+
+
+def check_cursor_safe_launcher(cfg: dict[str, Any]) -> list[Finding]:
+    """
+    If the user explicitly enabled the Cursor safe launcher, ensure it's installed.
+
+    This makes the system more "automatic": enabling the fixer is enough; the
+    agent will converge the machine to the desired state on its own.
+    """
+    actions = cfg.get("actions", {}) or {}
+    ccfg = actions.get("cursor_safe_launcher", {}) or {}
+    if not bool(ccfg.get("enabled", False)):
+        return []
+
+    launcher_path = Path(str(ccfg.get("launcher_path", "~/.local/bin/cursor"))).expanduser()
+    backup_suffix = str(ccfg.get("backup_suffix", ".autoheal-orig"))
+    backup_path = launcher_path.with_name(launcher_path.name + backup_suffix)
+    marker = "autoheal-managed cursor launcher"
+
+    wrapper_installed = False
+    exists = launcher_path.exists()
+    if exists:
+        try:
+            wrapper_installed = marker in launcher_path.read_text(
+                encoding="utf-8", errors="replace"
+            )
+        except Exception:
+            wrapper_installed = False
+
+    if wrapper_installed:
+        return []
+
+    # Only report if we have a plausible original to wrap.
+    has_original_candidate = backup_path.exists() or (which("cursor") is not None) or exists
+    if not has_original_candidate:
+        return []
+
+    return [
+        Finding(
+            fingerprint=f"cursor_safe_launcher_missing:{launcher_path}",
+            type="cursor_safe_launcher_missing",
+            severity=2,
+            title="Cursor safe launcher enabled but not installed",
+            details={
+                "launcher_path": str(launcher_path),
+                "backup_path": str(backup_path),
+                "launcher_exists": exists,
+                "backup_exists": backup_path.exists(),
+                "wrapper_installed": wrapper_installed,
+            },
+            diagnosis=(
+                "actions.cursor_safe_launcher.enabled is true, but the wrapper is not installed yet. "
+                "autoheal will install it to add safer default flags."
             ),
         )
     ]

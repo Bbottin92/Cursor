@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 from autoheal import db
-from autoheal.checks import check_cursor_crashpad
+from autoheal.checks import check_cursor_crashpad, check_cursor_safe_launcher
 from autoheal.models import ActionPlan, Finding
 from autoheal.remediations import execute_plan
 
@@ -154,6 +154,31 @@ class TestCursorCrashpadCheck(unittest.TestCase):
                 findings = check_cursor_crashpad(cfg)
                 self.assertEqual(len(findings), 1)
                 self.assertEqual(findings[0].type, "cursor_crashpad_reports")
+            finally:
+                if old_home is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = old_home
+
+
+class TestCursorSafeLauncherCheck(unittest.TestCase):
+    def test_cursor_safe_launcher_check_reports_missing_wrapper(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            old_home = os.environ.get("HOME")
+            os.environ["HOME"] = td
+            try:
+                # Create an existing launcher without the autoheal marker.
+                launcher = Path(td) / ".local" / "bin" / "cursor"
+                launcher.parent.mkdir(parents=True, exist_ok=True)
+                launcher.write_text("#!/usr/bin/env bash\necho orig\n", encoding="utf-8")
+                os.chmod(launcher, 0o755)
+
+                cfg = {
+                    "actions": {"cursor_safe_launcher": {"enabled": True, "launcher_path": "~/.local/bin/cursor"}}
+                }
+                findings = check_cursor_safe_launcher(cfg)
+                self.assertEqual(len(findings), 1)
+                self.assertEqual(findings[0].type, "cursor_safe_launcher_missing")
             finally:
                 if old_home is None:
                     os.environ.pop("HOME", None)
