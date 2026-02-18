@@ -1,0 +1,13 @@
+ [Unit]
+ Description=autoheal agent (user service)
+ 
+ [Service]
+ Type=simple
+ # Adjust ExecStart to where autoheal is installed (e.g. ~/.local/bin/autoheal).
+ ExecStart=%h/.local/bin/autoheal agent run --config %h/.config/autoheal/config.json --state-dir %h/.local/state/autoheal
+ Restart=always
+ RestartSec=5
+ StartLimitIntervalSec=0
+ 
+ [Install]
+ WantedBy=default.target

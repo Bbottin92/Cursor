@@ -1,0 +1,24 @@
+ [Unit]
+ Description=autoheal agent (opt-in auto-diagnose/auto-fix)
+ After=network-online.target
+ Wants=network-online.target
+ 
+ [Service]
+ Type=simple
+ # Adjust ExecStart to where autoheal is installed (system python site-packages, venv, pipx, etc.).
+ ExecStart=/usr/bin/autoheal agent run --config /etc/autoheal/config.json --state-dir /var/lib/autoheal
+ Restart=always
+ RestartSec=5
+ StartLimitIntervalSec=0
+ 
+ # Basic hardening (kept compatible with tmp cleanup defaults)
+ NoNewPrivileges=true
+ ProtectHome=true
+ ProtectKernelTunables=true
+ ProtectKernelModules=true
+ ProtectControlGroups=true
+ ProtectSystem=strict
+ ReadWritePaths=/var/lib/autoheal /tmp /var/tmp
+ 
+ [Install]
+ WantedBy=multi-user.target
