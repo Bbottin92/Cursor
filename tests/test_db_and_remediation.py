@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 
 from autoheal import db
+from autoheal.checks import check_cursor_crashpad
 from autoheal.models import ActionPlan, Finding
 from autoheal.remediations import execute_plan
 
@@ -75,6 +76,89 @@ class TestTmpCleanup(unittest.TestCase):
             )
             self.assertIn(res.status, {"success", "failed"})
             self.assertFalse(victim.exists())
+
+
+class TestCursorSafeLauncher(unittest.TestCase):
+    def test_cursor_safe_launcher_installs_wrapper_and_backup(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            old_home = os.environ.get("HOME")
+            os.environ["HOME"] = td
+            try:
+                home = Path(td)
+                launcher = home / ".local" / "bin" / "cursor"
+                launcher.parent.mkdir(parents=True, exist_ok=True)
+                launcher.write_text("#!/usr/bin/env bash\necho orig\n", encoding="utf-8")
+                os.chmod(launcher, 0o755)
+
+                cfg = {
+                    "actions": {
+                        "cursor_safe_launcher": {
+                            "enabled": True,
+                            "launcher_path": "~/.local/bin/cursor",
+                            "backup_suffix": ".autoheal-orig",
+                            "flags": ["--disable-extensions"],
+                        }
+                    }
+                }
+                plan = ActionPlan(
+                    name="cursor_safe_launcher_install",
+                    description="test",
+                    command=None,
+                    requires_root=False,
+                    timeout_seconds=5,
+                )
+                res = execute_plan(
+                    cfg,
+                    plan,
+                    finding=Finding(
+                        fingerprint="x",
+                        type="cursor_crashpad_reports",
+                        severity=4,
+                        title="x",
+                        details={},
+                        diagnosis="x",
+                    ),
+                )
+                self.assertEqual(res.status, "success")
+                self.assertTrue(launcher.exists())
+                backup = home / ".local" / "bin" / "cursor.autoheal-orig"
+                self.assertTrue(backup.exists())
+                self.assertIn("autoheal-managed cursor launcher", launcher.read_text(encoding="utf-8"))
+            finally:
+                if old_home is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = old_home
+
+
+class TestCursorCrashpadCheck(unittest.TestCase):
+    def test_cursor_crashpad_check_detects_recent_dumps(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            old_home = os.environ.get("HOME")
+            os.environ["HOME"] = td
+            try:
+                crashpad = Path(td) / ".config" / "Cursor" / "Crashpad" / "reports"
+                crashpad.mkdir(parents=True, exist_ok=True)
+                dump = crashpad / "test.dmp"
+                dump.write_bytes(b"dummy")
+                now = time.time()
+                os.utime(dump, (now, now))
+
+                cfg = {
+                    "cursor": {
+                        "crashpad_dirs": ["~/.config/Cursor/Crashpad"],
+                        "crash_window_minutes": 60,
+                        "crash_threshold": 1,
+                    }
+                }
+                findings = check_cursor_crashpad(cfg)
+                self.assertEqual(len(findings), 1)
+                self.assertEqual(findings[0].type, "cursor_crashpad_reports")
+            finally:
+                if old_home is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = old_home
 
 
 if __name__ == "__main__":

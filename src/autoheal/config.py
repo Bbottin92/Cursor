@@ -25,6 +25,13 @@ def default_config() -> dict[str, Any]:
         "thresholds": {
             "disk_usage_percent": 92,
         },
+        "cursor": {
+            # Cursor / VSCode-style Electron apps often write Crashpad dumps even when
+            # stdout/stderr logs aren't persisted. These settings enable detection.
+            "crashpad_dirs": ["~/.config/Cursor/Crashpad"],
+            "crash_window_minutes": 30,
+            "crash_threshold": 2,
+        },
         "disk": {
             "mountpoints": ["/"],
         },
@@ -49,6 +56,15 @@ def default_config() -> dict[str, Any]:
                 "allowlist_units": [],
                 "cooldown_seconds": 900,
                 "command_timeout_seconds": 30,
+            },
+            "cursor_safe_launcher": {
+                # Disabled by default: this modifies/installs a launcher wrapper to
+                # apply safer flags automatically when Cursor is started.
+                "enabled": False,
+                "launcher_path": "~/.local/bin/cursor",
+                "backup_suffix": ".autoheal-orig",
+                "flags": ["--disable-extensions", "--disable-gpu"],
+                "cooldown_seconds": 3600,
             },
             "reboot": {
                 "enabled": False,

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 import stat
 import time
 from dataclasses import dataclass
@@ -73,12 +74,27 @@ def plan_actions_for_finding(cfg: dict[str, Any], finding: Finding) -> list[Acti
                     )
                 )
 
+    if finding.type == "cursor_crashpad_reports":
+        ccfg = actions_cfg.get("cursor_safe_launcher", {}) or {}
+        if bool(ccfg.get("enabled", False)):
+            plans.append(
+                ActionPlan(
+                    name="cursor_safe_launcher_install",
+                    description="Install/refresh Cursor launcher wrapper with safer flags",
+                    command=None,
+                    requires_root=False,
+                    timeout_seconds=10,
+                )
+            )
+
     return plans
 
 
 def execute_plan(cfg: dict[str, Any], plan: ActionPlan, finding: Finding) -> ActionResult:
     if plan.name == "tmp_cleanup":
         return _tmp_cleanup(cfg)
+    if plan.name == "cursor_safe_launcher_install":
+        return _cursor_safe_launcher_install(cfg)
 
     if plan.command:
         try:
@@ -114,6 +130,108 @@ def execute_plan(cfg: dict[str, Any], plan: ActionPlan, finding: Finding) -> Act
         stderr=None,
         summary="no executor for plan",
     )
+
+
+def _cursor_safe_launcher_install(cfg: dict[str, Any]) -> ActionResult:
+    """
+    Create or wrap a Cursor launcher to always start with safer flags.
+
+    This is user-scope only and does not require root, but it *does* modify a
+    launcher script, so it is disabled by default in config.
+    """
+    ccfg = cfg.get("actions", {}).get("cursor_safe_launcher", {}) or {}
+    launcher_path = Path(str(ccfg.get("launcher_path", "~/.local/bin/cursor"))).expanduser()
+    backup_suffix = str(ccfg.get("backup_suffix", ".autoheal-orig"))
+    flags = ccfg.get("flags", ["--disable-extensions", "--disable-gpu"]) or []
+    try:
+        flags = [str(f) for f in list(flags)]
+    except Exception:
+        flags = ["--disable-extensions", "--disable-gpu"]
+
+    marker = "# autoheal-managed cursor launcher"
+    orig_path = launcher_path.with_name(launcher_path.name + backup_suffix)
+
+    try:
+        if launcher_path.exists():
+            try:
+                existing = launcher_path.read_text(encoding="utf-8", errors="replace")
+                if marker in existing:
+                    # Wrapper already installed.
+                    return ActionResult(
+                        status="success",
+                        exit_code=0,
+                        stdout=str(launcher_path),
+                        stderr="",
+                        summary="cursor launcher wrapper already installed",
+                    )
+            except Exception:
+                pass
+
+            # Backup existing launcher exactly once.
+            if not orig_path.exists():
+                orig_path.parent.mkdir(parents=True, exist_ok=True)
+                launcher_path.rename(orig_path)
+
+        else:
+            launcher_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # If we don't have a backed up original, try to find one on PATH.
+        orig_exec = orig_path if orig_path.exists() else None
+        if orig_exec is None:
+            w = shutil.which("cursor")
+            if w:
+                wp = Path(w)
+                # If which() resolves to the same path we are about to write, ignore it.
+                if wp.resolve() != launcher_path.resolve():
+                    orig_exec = wp
+
+        if orig_exec is None or not orig_exec.exists():
+            return ActionResult(
+                status="failed",
+                exit_code=1,
+                stdout=None,
+                stderr=f"could not locate original cursor launcher to wrap (expected {orig_path})",
+                summary="cursor launcher wrapper install failed",
+            )
+
+        # Build a small bash wrapper that adds flags only if missing.
+        flags_bash = " ".join([f'"{f}"' for f in flags])
+        script = (
+            "#!/usr/bin/env bash\n"
+            + marker
+            + "\n"
+            + "set -euo pipefail\n\n"
+            + f'ORIG="{str(orig_exec)}"\n'
+            + "args=(\"$@\")\n"
+            + "extra=()\n"
+            + f"defaults=({flags_bash})\n"
+            + "for f in \"${defaults[@]}\"; do\n"
+            + "  present=0\n"
+            + "  for a in \"${args[@]}\"; do\n"
+            + "    if [[ \"$a\" == \"$f\" ]]; then present=1; break; fi\n"
+            + "  done\n"
+            + "  if [[ $present -eq 0 ]]; then extra+=(\"$f\"); fi\n"
+            + "done\n"
+            + "exec \"$ORIG\" \"${extra[@]}\" \"${args[@]}\"\n"
+        )
+        launcher_path.write_text(script, encoding="utf-8")
+        os.chmod(launcher_path, 0o755)
+
+        return ActionResult(
+            status="success",
+            exit_code=0,
+            stdout=str(launcher_path),
+            stderr="",
+            summary=f"installed cursor launcher wrapper at {launcher_path}",
+        )
+    except Exception as e:
+        return ActionResult(
+            status="failed",
+            exit_code=None,
+            stdout=None,
+            stderr=str(e),
+            summary="cursor launcher wrapper install error",
+        )
 
 
 def _tmp_cleanup(cfg: dict[str, Any]) -> ActionResult:

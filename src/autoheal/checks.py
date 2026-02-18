@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import logging
+import os
 import shutil
+import time
+from pathlib import Path
 from typing import Any
 
 from .models import Finding
@@ -13,6 +16,7 @@ log = logging.getLogger("autoheal.checks")
 def run_all_checks(cfg: dict[str, Any]) -> list[Finding]:
     findings: list[Finding] = []
     findings.extend(check_disk_usage(cfg))
+    findings.extend(check_cursor_crashpad(cfg))
     findings.extend(check_systemd_user_failed_units(cfg))
     findings.extend(check_systemd_failed_units(cfg))
     return findings
@@ -173,3 +177,78 @@ def check_systemd_user_failed_units(cfg: dict[str, Any]) -> list[Finding]:
         )
 
     return out
+
+
+def check_cursor_crashpad(cfg: dict[str, Any]) -> list[Finding]:
+    """
+    Detect frequent Cursor crashes by scanning Crashpad dumps.
+
+    This is intentionally conservative: it only reports an incident when a
+    threshold of recent crash dumps is exceeded.
+    """
+    ccfg = cfg.get("cursor", {}) or {}
+    crashpad_dirs = ccfg.get("crashpad_dirs", ["~/.config/Cursor/Crashpad"]) or []
+    try:
+        crashpad_dirs = list(crashpad_dirs)
+    except Exception:
+        crashpad_dirs = ["~/.config/Cursor/Crashpad"]
+
+    window_minutes = int(ccfg.get("crash_window_minutes", 30))
+    threshold = int(ccfg.get("crash_threshold", 2))
+    if window_minutes <= 0 or threshold <= 0:
+        return []
+
+    cutoff = time.time() - (window_minutes * 60)
+
+    crash_count = 0
+    samples: list[str] = []
+    scanned = 0
+    max_scanned = 10_000
+
+    for d in crashpad_dirs:
+        p = Path(str(d)).expanduser()
+        if not p.exists():
+            continue
+
+        for root, _, files in os.walk(p, followlinks=False):
+            for fn in files:
+                scanned += 1
+                if scanned > max_scanned:
+                    break
+                if not fn.endswith(".dmp"):
+                    continue
+                fp = Path(root) / fn
+                try:
+                    st = fp.stat()
+                except Exception:
+                    continue
+                if st.st_mtime < cutoff:
+                    continue
+                crash_count += 1
+                if len(samples) < 5:
+                    samples.append(str(fp))
+            if scanned > max_scanned:
+                break
+
+    if crash_count < threshold:
+        return []
+
+    return [
+        Finding(
+            fingerprint="cursor_crashpad_reports",
+            type="cursor_crashpad_reports",
+            severity=4,
+            title=f"Cursor crash reports detected ({crash_count} recent dumps)",
+            details={
+                "crashpad_dirs": [str(Path(str(d)).expanduser()) for d in crashpad_dirs],
+                "crash_count": crash_count,
+                "window_minutes": window_minutes,
+                "samples": samples,
+                "max_scanned": max_scanned,
+            },
+            diagnosis=(
+                f"Found {crash_count} Cursor Crashpad dump(s) modified in the last "
+                f"{window_minutes} minutes. This often indicates a crash loop or unstable configuration."
+            ),
+        )
+    ]

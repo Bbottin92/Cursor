@@ -270,6 +270,28 @@ class AutohealAgent:
                     )
                     continue
 
+            if plan.name == "cursor_safe_launcher_install":
+                cooldown = int(
+                    self.cfg.get("actions", {})
+                    .get("cursor_safe_launcher", {})
+                    .get("cooldown_seconds", 3600)
+                )
+                last_ts = db.last_action_finished_ts(conn, incident_id, plan.name)
+                if last_ts and (time.time() - last_ts) < cooldown:
+                    db.record_action(
+                        conn,
+                        incident_id,
+                        plan,
+                        status="skipped",
+                        started_ts=time.time(),
+                        finished_ts=time.time(),
+                        exit_code=None,
+                        stdout=None,
+                        stderr=None,
+                        notes=f"cooldown active ({cooldown}s)",
+                    )
+                    continue
+
             if plan.requires_root and euid != 0:
                 db.record_action(
                     conn,
