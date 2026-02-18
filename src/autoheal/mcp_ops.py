@@ -147,14 +147,30 @@ class AutohealOps:
         self.control_sock = default_control_socket_path(state_dir)
         self.db_path = default_db_path(state_dir)
         self.log_path = default_log_path(state_dir)
+        self._token_required = self._detect_token_required()
+
+    def _detect_token_required(self) -> bool:
+        """
+        The agent enforces tokens if configured. MCP should only *require* a token
+        when config says it's required; otherwise we allow calls without forcing
+        users to set a token unnecessarily.
+        """
+        try:
+            loaded = load_config(self.config_path)
+            token = loaded.data.get("control", {}).get("token", None)
+            if token is None:
+                return False
+            token = str(token).strip()
+            return bool(token)
+        except Exception:
+            # If config can't be read, do not hard-fail MCP usage.
+            return False
 
     def _call(self, method: str, params: dict[str, Any], *, require_token: bool) -> Any:
         if not _socket_exists(self.control_sock):
             raise RuntimeError(f"agent control socket not found: {self.control_sock}")
-        if require_token and not self.token:
-            raise PermissionError(
-                "token required for this operation (set AUTOHEAL_TOKEN or pass --token)"
-            )
+        if require_token and self._token_required and not self.token:
+            raise PermissionError("AUTOHEAL_TOKEN required by config for this operation")
         resp = call_control(self.control_sock, method=method, params=params, token=self.token)
         if not resp.ok:
             raise RuntimeError(resp.error or "control call failed")
