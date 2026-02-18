@@ -66,6 +66,16 @@ python3 -m venv ~/.venvs/autoheal
 ~/.venvs/autoheal/bin/pip install -e '.[mcp]'
 ```
 
+### If `pip install '.[mcp]'` crashes/segfaults (or you want zero deps)
+
+You can run a **stdlib-only MCP server** that doesn’t require installing the `mcp` SDK or its compiled deps:
+
+```bash
+PYTHONPATH=/path/to/repo/src python3 -m autoheal mcp serve --implementation stdlib \
+  --state-dir ~/.local/state/autoheal \
+  --config ~/.config/autoheal/config.json
+```
+
 Run the MCP server (Cursor will typically launch this for you):
 
 ```bash

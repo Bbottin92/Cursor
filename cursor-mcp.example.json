@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "autoheal": {
+    "autoheal-venv-sdk": {
       "command": "/home/YOU/.venvs/autoheal/bin/python",
       "args": [
         "-m",
@@ -13,6 +13,25 @@
         "/home/YOU/.config/autoheal/config.json"
       ],
       "env": {
+        "AUTOHEAL_TOKEN": "OPTIONAL_IF_CONFIG_REQUIRES_IT"
+      }
+    },
+    "autoheal-repo-stdlib": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "autoheal",
+        "mcp",
+        "serve",
+        "--implementation",
+        "stdlib",
+        "--state-dir",
+        "/home/YOU/.local/state/autoheal",
+        "--config",
+        "/home/YOU/.config/autoheal/config.json"
+      ],
+      "env": {
+        "PYTHONPATH": "/home/YOU/Cursor-autoheal/src",
         "AUTOHEAL_TOKEN": "OPTIONAL_IF_CONFIG_REQUIRES_IT"
       }
     }

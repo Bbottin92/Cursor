@@ -111,6 +111,12 @@ def main(argv: list[str] | None = None) -> int:
         help="MCP transport",
     )
     mcp_serve.add_argument(
+        "--implementation",
+        choices=["auto", "sdk", "stdlib"],
+        default="auto",
+        help="MCP implementation: 'sdk' uses the mcp PyPI package; 'stdlib' uses no deps (stdio only).",
+    )
+    mcp_serve.add_argument(
         "--token",
         default=os.environ.get("AUTOHEAL_TOKEN"),
         help="Token for privileged control calls (defaults to AUTOHEAL_TOKEN)",
@@ -119,6 +125,12 @@ def main(argv: list[str] | None = None) -> int:
         "manifest",
         parents=[common],
         help="Print MCP tool manifest as JSON",
+    )
+    mcp_manifest.add_argument(
+        "--implementation",
+        choices=["auto", "sdk", "stdlib"],
+        default="auto",
+        help="MCP implementation to describe.",
     )
     mcp_manifest.add_argument(
         "--token",
@@ -141,34 +153,62 @@ def main(argv: list[str] | None = None) -> int:
     db_path = default_db_path(state_dir)
 
     if args.cmd == "mcp" and args.mcp_cmd == "serve":
-        try:
-            from .mcp_server import run_mcp_server
-        except Exception as e:
-            print(str(e), file=sys.stderr)
+        impl = str(getattr(args, "implementation", "auto"))
+        transport = str(getattr(args, "transport", "stdio"))
+        token = getattr(args, "token", None)
+
+        if impl == "stdlib" and transport != "stdio":
+            print("stdlib MCP implementation only supports stdio transport", file=sys.stderr)
             return 2
 
-        run_mcp_server(
-            state_dir=state_dir,
-            config_path=args.config,
-            token=getattr(args, "token", None),
-            transport=str(getattr(args, "transport", "stdio")),
-        )
+        if impl in {"auto", "sdk"}:
+            try:
+                from .mcp_server import run_mcp_server
+
+                run_mcp_server(
+                    state_dir=state_dir,
+                    config_path=args.config,
+                    token=token,
+                    transport=transport,
+                )
+                return 0
+            except Exception as e:
+                if impl == "sdk":
+                    print(str(e), file=sys.stderr)
+                    return 2
+                # auto => fall back to stdlib below
+
+        # stdlib fallback (no deps)
+        from .mcp_stdio_server import run_stdio_server
+
+        run_stdio_server(state_dir=state_dir, config_path=args.config, token=token)
         return 0
 
     if args.cmd == "mcp" and args.mcp_cmd == "manifest":
-        try:
-            from .mcp_server import mcp_manifest_json
-        except Exception as e:
-            print(str(e), file=sys.stderr)
-            return 2
+        impl = str(getattr(args, "implementation", "auto"))
+        token = getattr(args, "token", None)
 
-        _pjson(
-            mcp_manifest_json(
-                state_dir=state_dir,
-                config_path=args.config,
-                token=getattr(args, "token", None),
-            )
-        )
+        if impl in {"auto", "sdk"}:
+            try:
+                from .mcp_server import mcp_manifest_json
+
+                _pjson(
+                    mcp_manifest_json(
+                        state_dir=state_dir,
+                        config_path=args.config,
+                        token=token,
+                    )
+                )
+                return 0
+            except Exception as e:
+                if impl == "sdk":
+                    print(str(e), file=sys.stderr)
+                    return 2
+                # auto => fall back to stdlib below
+
+        from .mcp_stdio_server import manifest_json
+
+        _pjson(manifest_json())
         return 0
 
     if args.cmd == "agent" and args.agent_cmd == "run":
