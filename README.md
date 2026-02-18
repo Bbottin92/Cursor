@@ -45,6 +45,43 @@ export AUTOHEAL_TOKEN="…"
 autoheal control incidents.create --params-json '{"title":"hello","type":"manual"}' --token "$AUTOHEAL_TOKEN"
 ```
 
+## Cursor integration (MCP)
+
+Cursor works best with an **MCP server** (Model Context Protocol). `autoheal` can run as an MCP server over **stdio**, exposing tools like:
+
+- `autoheal_incidents_list`
+- `autoheal_incident_get`
+- `autoheal_report_incident`
+- `autoheal_run_once`
+- `autoheal_tail_log`
+
+Install with MCP support:
+
+```bash
+pip install -e '.[mcp]'
+```
+
+Run the MCP server (Cursor will typically launch this for you):
+
+```bash
+autoheal mcp serve --state-dir ~/.local/state/autoheal --config ~/.config/autoheal/config.json
+```
+
+Example Cursor MCP config is in `cursor-mcp.example.json`.
+
+### Recommended runtime for Cursor control
+
+If you run the agent as a **root system service**, the control socket/DB in `/var/lib/autoheal` may not be accessible to your user (and Cursor).
+
+For best Cursor integration, run `autoheal` as a **user service** and enable lingering so it starts on boot even without login (no password bypass):
+
+```bash
+# one-time (may require admin privileges on some systems)
+loginctl enable-linger "$USER"
+
+systemctl --user enable --now autoheal-user.service
+```
+
 ## systemd templates
 
 See `systemd/autoheal.service` for a system-wide unit template and `systemd/autoheal-user.service`

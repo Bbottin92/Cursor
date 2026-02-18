@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "autoheal": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "autoheal",
+        "mcp",
+        "serve",
+        "--state-dir",
+        "/home/YOU/.local/state/autoheal",
+        "--config",
+        "/home/YOU/.config/autoheal/config.json"
+      ],
+      "env": {
+        "AUTOHEAL_TOKEN": "OPTIONAL_IF_CONFIG_REQUIRES_IT"
+      }
+    }
+  }
+}

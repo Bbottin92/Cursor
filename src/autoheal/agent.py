@@ -102,7 +102,7 @@ class AutohealAgent:
         method = req.method
         params = req.params or {}
 
-        if method in {"incidents.create", "agent.run_once"} and not self._authorized(req):
+        if method in {"incidents.create", "incidents.mark_fixed", "agent.run_once"} and not self._authorized(req):
             return ControlResponse(id=req.id, ok=False, error="unauthorized")
 
         if method == "ping":
@@ -160,6 +160,15 @@ class AutohealAgent:
                 )
                 self.wake_event.set()
                 return ControlResponse(id=req.id, ok=True, result={"id": iid})
+
+            if method == "incidents.mark_fixed":
+                iid = str(params.get("id", ""))
+                summary = str(params.get("summary", "marked fixed"))
+                inc = db.get_incident(conn, iid)
+                if inc is None:
+                    return ControlResponse(id=req.id, ok=False, error="not found")
+                db.mark_incident_fixed(conn, iid, summary)
+                return ControlResponse(id=req.id, ok=True, result={"id": iid, "status": "fixed"})
 
         finally:
             conn.close()

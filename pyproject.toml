@@ -18,6 +18,10 @@ classifiers = [
 ]
 dependencies = []
 
+[project.optional-dependencies]
+# Cursor integration via Model Context Protocol (MCP).
+mcp = ["mcp"]
+
 [project.scripts]
 autoheal = "autoheal.__main__:main"
 

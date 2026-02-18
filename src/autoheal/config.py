@@ -88,10 +88,21 @@ def load_config(path: str | Path | None) -> LoadedConfig:
 
 def ensure_state_dirs(state_dir: Path) -> None:
     state_dir.mkdir(parents=True, exist_ok=True)
+    # Keep state private for user installs (contains DB, logs, control socket).
+    if hasattr(os, "geteuid") and os.geteuid() != 0:
+        try:
+            os.chmod(state_dir, 0o700)
+        except Exception:
+            pass
     # Also ensure ~/.config/autoheal exists for convenience (no-op if missing perms).
     if hasattr(os, "geteuid") and os.geteuid() != 0:
         try:
-            Path("~/.config/autoheal").expanduser().mkdir(parents=True, exist_ok=True)
+            cfg_dir = Path("~/.config/autoheal").expanduser()
+            cfg_dir.mkdir(parents=True, exist_ok=True)
+            try:
+                os.chmod(cfg_dir, 0o700)
+            except Exception:
+                pass
         except Exception:
             pass
 

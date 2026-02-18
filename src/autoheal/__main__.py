@@ -93,6 +93,39 @@ def main(argv: list[str] | None = None) -> int:
     ctl_p.add_argument("--params-json", default="{}", help="JSON object string for params")
     ctl_p.add_argument("--token", default=os.environ.get("AUTOHEAL_TOKEN"))
 
+    mcp_p = sub.add_parser(
+        "mcp",
+        parents=[common],
+        help="Run an MCP server for Cursor integration",
+    )
+    mcp_sub = mcp_p.add_subparsers(dest="mcp_cmd", required=True)
+    mcp_serve = mcp_sub.add_parser(
+        "serve",
+        parents=[common],
+        help="Serve MCP over stdio (recommended for Cursor)",
+    )
+    mcp_serve.add_argument(
+        "--transport",
+        choices=["stdio", "sse", "streamable-http"],
+        default="stdio",
+        help="MCP transport",
+    )
+    mcp_serve.add_argument(
+        "--token",
+        default=os.environ.get("AUTOHEAL_TOKEN"),
+        help="Token for privileged control calls (defaults to AUTOHEAL_TOKEN)",
+    )
+    mcp_manifest = mcp_sub.add_parser(
+        "manifest",
+        parents=[common],
+        help="Print MCP tool manifest as JSON",
+    )
+    mcp_manifest.add_argument(
+        "--token",
+        default=os.environ.get("AUTOHEAL_TOKEN"),
+        help="Token for privileged control calls (defaults to AUTOHEAL_TOKEN)",
+    )
+
     args = parser.parse_args(argv)
 
     state_dir = resolve_state_dir(args.state_dir)
@@ -106,6 +139,37 @@ def main(argv: list[str] | None = None) -> int:
 
     control_sock = default_control_socket_path(state_dir)
     db_path = default_db_path(state_dir)
+
+    if args.cmd == "mcp" and args.mcp_cmd == "serve":
+        try:
+            from .mcp_server import run_mcp_server
+        except Exception as e:
+            print(str(e), file=sys.stderr)
+            return 2
+
+        run_mcp_server(
+            state_dir=state_dir,
+            config_path=args.config,
+            token=getattr(args, "token", None),
+            transport=str(getattr(args, "transport", "stdio")),
+        )
+        return 0
+
+    if args.cmd == "mcp" and args.mcp_cmd == "manifest":
+        try:
+            from .mcp_server import mcp_manifest_json
+        except Exception as e:
+            print(str(e), file=sys.stderr)
+            return 2
+
+        _pjson(
+            mcp_manifest_json(
+                state_dir=state_dir,
+                config_path=args.config,
+                token=getattr(args, "token", None),
+            )
+        )
+        return 0
 
     if args.cmd == "agent" and args.agent_cmd == "run":
         # Convenience: allow disabling control socket from CLI.

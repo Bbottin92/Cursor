@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import socket
 import socketserver
 import threading
@@ -76,6 +77,11 @@ def start_control_server(
     server = _ThreadingUnixStreamServer(str(socket_path), Handler)
     # Ensure we can notice stop_event without a client connecting.
     server.timeout = 0.5
+    try:
+        # Limit control socket access to the current user by default.
+        os.chmod(socket_path, 0o600)
+    except Exception:
+        pass
 
     def _serve() -> None:
         with server:
