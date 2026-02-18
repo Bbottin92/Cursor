@@ -196,6 +196,19 @@ class TestAddonLoader(unittest.TestCase):
         self.assertEqual(len(m["addons"]), 1)
         self.assertEqual(m["addons"][0]["checks"], 0)
 
+    def test_load_builtin_addon_performance_disabled_by_default(self) -> None:
+        cfg = {
+            "addons": {
+                "enabled": True,
+                "modules": ["autoheal.addons_builtin.performance"],
+                "module_config": {},
+            }
+        }
+        mgr = load_addons(cfg)
+        m = mgr.manifest()
+        self.assertEqual(len(m["addons"]), 1)
+        self.assertEqual(m["addons"][0]["checks"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()

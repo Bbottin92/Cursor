@@ -98,6 +98,34 @@ pipx ensurepath
 pipx install --editable '.[mcp]'
 ```
 
+## Addons (auto-optimization modules)
+
+`autoheal` supports addons: optional modules that can add checks and remediations (optimizations).
+
+List loaded addons:
+
+```bash
+autoheal addons list --config ~/.config/autoheal/config.json --state-dir ~/.local/state/autoheal
+```
+
+Enable the built-in **performance** addon (detect load/memory pressure; optional renice allowlist):
+
+```json
+{
+  "addons": {
+    "modules": ["autoheal.addons_builtin.performance"],
+    "module_config": {
+      "autoheal.addons_builtin.performance": {
+        "enabled": true,
+        "load_threshold_per_cpu": 1.5,
+        "mem_available_percent_threshold": 10.0,
+        "renice_enabled": false
+      }
+    }
+  }
+}
+```
+
 ### Recommended runtime for Cursor control
 
 If you run the agent as a **root system service**, the control socket/DB in `/var/lib/autoheal` may not be accessible to your user (and Cursor).
