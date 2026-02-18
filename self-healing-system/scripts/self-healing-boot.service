@@ -1,0 +1,27 @@
+[Unit]
+Description=Self-Healing System Early Boot Recovery
+Documentation=https://github.com/self-healing-system
+DefaultDependencies=no
+After=local-fs.target
+Before=sysinit.target
+
+# This runs very early in boot, before user login
+ConditionPathExists=/opt/self-healing-system/main.py
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/self-healing-system/scripts/boot_recovery.py
+RemainAfterExit=no
+TimeoutStartSec=30
+
+User=root
+Group=root
+WorkingDirectory=/opt/self-healing-system
+Environment=PYTHONPATH=/opt/self-healing-system
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=self-healing-boot
+
+[Install]
+WantedBy=sysinit.target

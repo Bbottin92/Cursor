@@ -1,0 +1,30 @@
+[Unit]
+Description=Self-Healing System Watchdog Supervisor
+Documentation=https://github.com/self-healing-system
+After=self-healing-daemon.service
+Requires=self-healing-daemon.service
+PartOf=self-healing-daemon.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/self-healing-system/main.py --mode watchdog
+Restart=always
+RestartSec=10
+StartLimitIntervalSec=120
+StartLimitBurst=10
+
+User=root
+Group=root
+WorkingDirectory=/opt/self-healing-system
+
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=/opt/self-healing-system
+
+LimitNOFILE=65536
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=self-healing-watchdog
+
+[Install]
+WantedBy=multi-user.target

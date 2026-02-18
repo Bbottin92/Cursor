@@ -1,0 +1,48 @@
+[Unit]
+Description=Self-Healing System Daemon
+Documentation=https://github.com/self-healing-system
+After=network.target local-fs.target
+Wants=network.target
+Before=multi-user.target graphical.target
+DefaultDependencies=no
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/self-healing-system/main.py --mode daemon
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+# Run as root for full system access
+User=root
+Group=root
+
+# Working directory
+WorkingDirectory=/opt/self-healing-system
+
+# Environment
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=/opt/self-healing-system
+
+# Watchdog integration - systemd will restart if no heartbeat in 120s
+WatchdogSec=120
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Security hardening (while still allowing system repairs)
+ProtectSystem=false
+ProtectHome=read-only
+NoNewPrivileges=false
+PrivateTmp=false
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=self-healing-daemon
+
+[Install]
+WantedBy=multi-user.target
