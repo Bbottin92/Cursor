@@ -6,6 +6,7 @@ from pathlib import Path
 
 from autoheal import db
 from autoheal.checks import check_cursor_crashpad, check_cursor_safe_launcher
+from autoheal.addons import load_addons
 from autoheal.models import ActionPlan, Finding
 from autoheal.remediations import execute_plan
 
@@ -184,6 +185,16 @@ class TestCursorSafeLauncherCheck(unittest.TestCase):
                     os.environ.pop("HOME", None)
                 else:
                     os.environ["HOME"] = old_home
+
+
+class TestAddonLoader(unittest.TestCase):
+    def test_load_builtin_addon_git_pager_disabled_by_default(self) -> None:
+        cfg = {"addons": {"enabled": True, "modules": ["autoheal.addons_builtin.git_pager"], "module_config": {}}}
+        mgr = load_addons(cfg)
+        # addon is listed but registers nothing unless enabled in module_config
+        m = mgr.manifest()
+        self.assertEqual(len(m["addons"]), 1)
+        self.assertEqual(m["addons"][0]["checks"], 0)
 
 
 if __name__ == "__main__":

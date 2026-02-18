@@ -32,6 +32,14 @@ def default_config() -> dict[str, Any]:
             "crash_window_minutes": 30,
             "crash_threshold": 2,
         },
+        "addons": {
+            # Addon system: lets you extend autoheal with new checks/actions.
+            "enabled": True,
+            "modules": [],
+            "paths": ["~/.config/autoheal/addons.d"],
+            "module_config": {},
+            "fail_open": True,
+        },
         "disk": {
             "mountpoints": ["/"],
         },

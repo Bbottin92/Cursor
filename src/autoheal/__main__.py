@@ -93,6 +93,10 @@ def main(argv: list[str] | None = None) -> int:
     ctl_p.add_argument("--params-json", default="{}", help="JSON object string for params")
     ctl_p.add_argument("--token", default=os.environ.get("AUTOHEAL_TOKEN"))
 
+    addons_p = sub.add_parser("addons", parents=[common], help="Addon utilities")
+    addons_sub = addons_p.add_subparsers(dest="addons_cmd", required=True)
+    addons_sub.add_parser("list", parents=[common], help="List loaded addons (from config)")
+
     mcp_p = sub.add_parser(
         "mcp",
         parents=[common],
@@ -151,6 +155,13 @@ def main(argv: list[str] | None = None) -> int:
 
     control_sock = default_control_socket_path(state_dir)
     db_path = default_db_path(state_dir)
+
+    if args.cmd == "addons" and args.addons_cmd == "list":
+        from .addons import load_addons
+
+        mgr = load_addons(cfg)
+        _pjson(mgr.manifest())
+        return 0
 
     if args.cmd == "mcp" and args.mcp_cmd == "serve":
         impl = str(getattr(args, "implementation", "auto"))

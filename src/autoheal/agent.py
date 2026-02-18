@@ -16,6 +16,7 @@ from ._paths import (
 from .checks import run_all_checks
 from .control import ControlRequest, ControlResponse, start_control_server
 from .models import Finding
+from .addons import load_addons
 from .remediations import execute_plan, plan_actions_for_finding
 
 log = logging.getLogger("autoheal.agent")
@@ -66,6 +67,7 @@ class AutohealAgent:
         self.wake_event = threading.Event()
         self._lock_file = None
         self._control_thread = None
+        self._addons = load_addons(cfg)
 
     def start(self) -> None:
         self._lock_file = _acquire_lock(self.lock_path)
@@ -196,6 +198,7 @@ class AutohealAgent:
     def run_once(self) -> None:
         cycle_started = time.time()
         findings = run_all_checks(self.cfg)
+        findings.extend(self._addons.run_checks(self.cfg))
         active_fps = {f.fingerprint for f in findings}
 
         conn = db.connect(self.db_path)
@@ -237,6 +240,7 @@ class AutohealAgent:
 
     def _remediate_finding(self, conn: Any, incident_id: str, finding: Finding) -> None:
         plans = plan_actions_for_finding(self.cfg, finding)
+        plans.extend(self._addons.plan_actions_for_finding(self.cfg, finding))
         if not plans:
             return
 
@@ -308,7 +312,10 @@ class AutohealAgent:
                 continue
 
             started = time.time()
-            result = execute_plan(self.cfg, plan, finding)
+            if self._addons.can_execute(plan):
+                result = self._addons.execute(self.cfg, plan, finding)
+            else:
+                result = execute_plan(self.cfg, plan, finding)
             finished = time.time()
 
             db.record_action(
