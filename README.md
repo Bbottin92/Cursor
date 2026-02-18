@@ -58,16 +58,35 @@ Cursor works best with an **MCP server** (Model Context Protocol). `autoheal` ca
 Install with MCP support:
 
 ```bash
-pip install -e '.[mcp]'
+# On distros enforcing PEP 668 (e.g. Arch), install into a venv or via pipx.
+python3 -m venv ~/.venvs/autoheal
+~/.venvs/autoheal/bin/pip install -U pip
+
+# from the repo root
+~/.venvs/autoheal/bin/pip install -e '.[mcp]'
 ```
 
 Run the MCP server (Cursor will typically launch this for you):
 
 ```bash
-autoheal mcp serve --state-dir ~/.local/state/autoheal --config ~/.config/autoheal/config.json
+~/.venvs/autoheal/bin/python -m autoheal mcp serve \
+  --state-dir ~/.local/state/autoheal \
+  --config ~/.config/autoheal/config.json
 ```
 
 Example Cursor MCP config is in `cursor-mcp.example.json`.
+
+### Alternative: pipx (also PEP 668 friendly)
+
+If you prefer a global-ish user install:
+
+```bash
+sudo pacman -S python-pipx
+pipx ensurepath
+
+# from repo root
+pipx install --editable '.[mcp]'
+```
 
 ### Recommended runtime for Cursor control
 

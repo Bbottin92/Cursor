@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "autoheal": {
-      "command": "python3",
+      "command": "/home/YOU/.venvs/autoheal/bin/python",
       "args": [
         "-m",
         "autoheal",

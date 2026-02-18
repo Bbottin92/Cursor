@@ -29,7 +29,8 @@ def _require_mcp() -> Any:
         from mcp.server.fastmcp import FastMCP
     except Exception as e:  # pragma: no cover
         raise McpNotInstalled(
-            "MCP support not installed. Install with: pip install -e '.[mcp]'"
+            "MCP support not installed. Install the extra dependencies for Cursor integration "
+            "(see README), e.g. in a venv: pip install -e '.[mcp]'"
         ) from e
     return FastMCP
 
