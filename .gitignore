@@ -1,15 +1,15 @@
- __pycache__/
- *.py[cod]
- *.egg-info/
- .pytest_cache/
- .mypy_cache/
- .ruff_cache/
- 
- .venv/
- venv/
- 
- # Local state (db/log/socket)
- state/
- *.db
- *.log
- *.sock
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+.venv/
+venv/
+
+# Local state (db/log/socket)
+state/
+*.db
+*.log
+*.sock
