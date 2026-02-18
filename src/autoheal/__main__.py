@@ -15,8 +15,11 @@ from .db import (
     connect,
     create_manual_incident,
     get_incident,
+    get_recommendation,
     list_actions_for_incident,
     list_incidents,
+    list_recommendations,
+    set_recommendation_status,
 )
 from .logging_setup import setup_logging
 
@@ -73,6 +76,24 @@ def main(argv: list[str] | None = None) -> int:
     rep_p.add_argument(
         "--details-json", default="{}", help='JSON object string, e.g. \'{"k":"v"}\''
     )
+
+    rec_p = sub.add_parser(
+        "recommendations",
+        parents=[common],
+        help="List/accept/dismiss persistent suggestions",
+    )
+    rec_sub = rec_p.add_subparsers(dest="rec_cmd", required=True)
+    rec_list = rec_sub.add_parser("list", parents=[common], help="List recommendations")
+    rec_list.add_argument("--limit", type=int, default=50)
+    rec_list.add_argument("--status", choices=["open", "accepted", "dismissed"], default=None)
+    rec_show = rec_sub.add_parser("show", parents=[common], help="Show recommendation")
+    rec_show.add_argument("id")
+    rec_acc = rec_sub.add_parser("accept", parents=[common], help="Accept recommendation")
+    rec_acc.add_argument("id")
+    rec_acc.add_argument("--note", default="")
+    rec_dis = rec_sub.add_parser("dismiss", parents=[common], help="Dismiss recommendation")
+    rec_dis.add_argument("id")
+    rec_dis.add_argument("--note", default="")
 
     cfg_p = sub.add_parser("config", parents=[common], help="Config utilities")
     cfg_sub = cfg_p.add_subparsers(dest="cfg_cmd", required=True)
@@ -299,6 +320,74 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
             inc["actions"] = list_actions_for_incident(conn, iid)
             _pjson(inc)
+        finally:
+            conn.close()
+        return 0
+
+    if args.cmd == "recommendations" and args.rec_cmd == "list":
+        if control_sock.exists():
+            resp = call_control(
+                control_sock,
+                method="recommendations.list",
+                params={"limit": int(args.limit), "status": args.status},
+                token=None,
+            )
+            if resp.ok:
+                _pjson(resp.result)
+                return 0
+        conn = connect(db_path)
+        try:
+            _pjson(list_recommendations(conn, status=args.status, limit=int(args.limit)))
+        finally:
+            conn.close()
+        return 0
+
+    if args.cmd == "recommendations" and args.rec_cmd == "show":
+        rid = str(args.id)
+        if control_sock.exists():
+            resp = call_control(
+                control_sock,
+                method="recommendations.get",
+                params={"id": rid},
+                token=None,
+            )
+            if resp.ok:
+                _pjson(resp.result)
+                return 0
+        conn = connect(db_path)
+        try:
+            r = get_recommendation(conn, rid)
+            if r is None:
+                print("not found", file=sys.stderr)
+                return 2
+            _pjson(r)
+        finally:
+            conn.close()
+        return 0
+
+    if args.cmd == "recommendations" and args.rec_cmd in {"accept", "dismiss"}:
+        rid = str(args.id)
+        status = "accepted" if args.rec_cmd == "accept" else "dismissed"
+        note = str(getattr(args, "note", "") or "")
+
+        if control_sock.exists():
+            resp = call_control(
+                control_sock,
+                method="recommendations.set_status",
+                params={"id": rid, "status": status, "note": note},
+                token=os.environ.get("AUTOHEAL_TOKEN"),
+            )
+            if resp.ok:
+                _pjson(resp.result)
+                return 0
+
+        conn = connect(db_path)
+        try:
+            if get_recommendation(conn, rid) is None:
+                print("not found", file=sys.stderr)
+                return 2
+            set_recommendation_status(conn, rid, status=status, note=note)
+            _pjson({"id": rid, "status": status})
         finally:
             conn.close()
         return 0

@@ -7,7 +7,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from .models import ActionPlan, Finding
+from .models import ActionPlan, Finding, Recommendation
 
 SCHEMA_VERSION = 1
 
@@ -78,6 +78,46 @@ def _init(conn: sqlite3.Connection) -> None:
     )
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_actions_incident_name ON actions(incident_id, name, finished_ts);"
+    )
+
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS recommendations (
+          id TEXT PRIMARY KEY,
+          key TEXT UNIQUE,
+          title TEXT NOT NULL,
+          message TEXT NOT NULL,
+          details_json TEXT NOT NULL,
+          status TEXT NOT NULL,
+          priority INTEGER NOT NULL,
+          confidence REAL NOT NULL,
+          occurrences INTEGER NOT NULL,
+          first_seen_ts REAL NOT NULL,
+          last_seen_ts REAL NOT NULL,
+          accepted_ts REAL,
+          dismissed_ts REAL,
+          last_note TEXT
+        );
+        """
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_recommendations_status_seen ON recommendations(status, last_seen_ts);"
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS recommendation_events (
+          id TEXT PRIMARY KEY,
+          recommendation_id TEXT NOT NULL,
+          event_type TEXT NOT NULL,
+          ts REAL NOT NULL,
+          note TEXT,
+          data_json TEXT,
+          FOREIGN KEY(recommendation_id) REFERENCES recommendations(id)
+        );
+        """
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_reco_events_reco_ts ON recommendation_events(recommendation_id, ts);"
     )
 
     # schema version marker
@@ -334,3 +374,219 @@ def create_manual_incident(
         ),
     )
     return incident_id
+
+
+def upsert_recommendation(conn: sqlite3.Connection, rec: Recommendation) -> str:
+    now = time.time()
+    details_json = json.dumps(rec.details or {}, sort_keys=True)
+
+    row = conn.execute(
+        "SELECT id, status FROM recommendations WHERE key=?",
+        (rec.key,),
+    ).fetchone()
+
+    if row is None:
+        rid = str(uuid.uuid4())
+        conn.execute(
+            """
+            INSERT INTO recommendations(
+              id, key, title, message, details_json, status,
+              priority, confidence, occurrences,
+              first_seen_ts, last_seen_ts
+            )
+            VALUES(?, ?, ?, ?, ?, 'open', ?, ?, 1, ?, ?)
+            """,
+            (
+                rid,
+                rec.key,
+                rec.title,
+                rec.message,
+                details_json,
+                int(rec.priority),
+                float(rec.confidence),
+                now,
+                now,
+            ),
+        )
+        return rid
+
+    rid = str(row["id"])
+    status = str(row["status"])
+    # Keep accepted/dismissed state, but update content + last_seen.
+    conn.execute(
+        """
+        UPDATE recommendations
+        SET title=?,
+            message=?,
+            details_json=?,
+            priority=?,
+            confidence=?,
+            occurrences=occurrences+1,
+            last_seen_ts=?
+        WHERE id=?
+        """,
+        (
+            rec.title,
+            rec.message,
+            details_json,
+            int(rec.priority),
+            float(rec.confidence),
+            now,
+            rid,
+        ),
+    )
+    return rid
+
+
+def list_recommendations(
+    conn: sqlite3.Connection,
+    *,
+    status: str | None = None,
+    limit: int = 50,
+) -> list[dict[str, Any]]:
+    if status:
+        rows = conn.execute(
+            """
+            SELECT
+              id, key, title, message, status, priority, confidence, occurrences,
+              first_seen_ts, last_seen_ts, accepted_ts, dismissed_ts, last_note
+            FROM recommendations
+            WHERE status=?
+            ORDER BY last_seen_ts DESC
+            LIMIT ?
+            """,
+            (str(status), int(limit)),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """
+            SELECT
+              id, key, title, message, status, priority, confidence, occurrences,
+              first_seen_ts, last_seen_ts, accepted_ts, dismissed_ts, last_note
+            FROM recommendations
+            ORDER BY last_seen_ts DESC
+            LIMIT ?
+            """,
+            (int(limit),),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_recommendation(conn: sqlite3.Connection, rid: str) -> dict[str, Any] | None:
+    row = conn.execute(
+        """
+        SELECT
+          id, key, title, message, details_json, status, priority, confidence, occurrences,
+          first_seen_ts, last_seen_ts, accepted_ts, dismissed_ts, last_note
+        FROM recommendations
+        WHERE id=?
+        """,
+        (str(rid),),
+    ).fetchone()
+    if row is None:
+        return None
+    d = dict(row)
+    try:
+        d["details"] = json.loads(d.pop("details_json", "{}"))
+    except Exception:
+        d["details"] = {}
+    d["events"] = list_recommendation_events(conn, str(rid), limit=50)
+    return d
+
+
+def list_recommendation_events(
+    conn: sqlite3.Connection, rid: str, *, limit: int = 50
+) -> list[dict[str, Any]]:
+    rows = conn.execute(
+        """
+        SELECT id, recommendation_id, event_type, ts, note, data_json
+        FROM recommendation_events
+        WHERE recommendation_id=?
+        ORDER BY ts DESC
+        LIMIT ?
+        """,
+        (str(rid), int(limit)),
+    ).fetchall()
+    out: list[dict[str, Any]] = []
+    for r in rows:
+        d = dict(r)
+        try:
+            d["data"] = json.loads(d.pop("data_json") or "null")
+        except Exception:
+            d["data"] = None
+        out.append(d)
+    return out
+
+
+def _record_recommendation_event(
+    conn: sqlite3.Connection,
+    rid: str,
+    *,
+    event_type: str,
+    note: str | None,
+    data: dict[str, Any] | None,
+) -> str:
+    eid = str(uuid.uuid4())
+    conn.execute(
+        """
+        INSERT INTO recommendation_events(id, recommendation_id, event_type, ts, note, data_json)
+        VALUES(?, ?, ?, ?, ?, ?)
+        """,
+        (
+            eid,
+            str(rid),
+            str(event_type),
+            time.time(),
+            (str(note)[:2000] if note else None),
+            json.dumps(data or {}, sort_keys=True) if data is not None else None,
+        ),
+    )
+    return eid
+
+
+def set_recommendation_status(
+    conn: sqlite3.Connection,
+    rid: str,
+    *,
+    status: str,
+    note: str | None = None,
+) -> None:
+    now = time.time()
+    status = str(status)
+    if status not in {"open", "accepted", "dismissed"}:
+        raise ValueError("invalid status")
+
+    if status == "accepted":
+        conn.execute(
+            """
+            UPDATE recommendations
+            SET status='accepted', accepted_ts=?, last_note=?
+            WHERE id=?
+            """,
+            (now, (str(note)[:2000] if note else None), str(rid)),
+        )
+        _record_recommendation_event(conn, rid, event_type="accepted", note=note, data=None)
+        return
+
+    if status == "dismissed":
+        conn.execute(
+            """
+            UPDATE recommendations
+            SET status='dismissed', dismissed_ts=?, last_note=?
+            WHERE id=?
+            """,
+            (now, (str(note)[:2000] if note else None), str(rid)),
+        )
+        _record_recommendation_event(conn, rid, event_type="dismissed", note=note, data=None)
+        return
+
+    # open
+    conn.execute(
+        """
+        UPDATE recommendations
+        SET status='open', last_note=?
+        WHERE id=?
+        """,
+        ((str(note)[:2000] if note else None), str(rid)),
+    )
+    _record_recommendation_event(conn, rid, event_type="reopened", note=note, data=None)

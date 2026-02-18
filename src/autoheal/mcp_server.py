@@ -95,6 +95,40 @@ def create_autoheal_mcp_server(
         return ops.mark_fixed(id=str(id), summary=str(summary))
 
     @mcp.tool(
+        name="autoheal_recommendations_list",
+        title="list recommendations",
+        description="List persistent optimization/workflow suggestions.",
+    )
+    def autoheal_recommendations_list(
+        limit: int = 50, status: str | None = None
+    ) -> list[dict[str, Any]]:
+        return ops.recommendations_list(limit=int(limit), status=status)
+
+    @mcp.tool(
+        name="autoheal_recommendation_get",
+        title="get recommendation",
+        description="Get a single recommendation (includes events).",
+    )
+    def autoheal_recommendation_get(id: str) -> dict[str, Any]:
+        return ops.recommendation_get(id=str(id))
+
+    @mcp.tool(
+        name="autoheal_recommendation_accept",
+        title="accept recommendation",
+        description="Accept a recommendation (records feedback; requires token if configured).",
+    )
+    def autoheal_recommendation_accept(id: str, note: str = "") -> dict[str, Any]:
+        return ops.recommendation_set_status(id=str(id), status="accepted", note=str(note))
+
+    @mcp.tool(
+        name="autoheal_recommendation_dismiss",
+        title="dismiss recommendation",
+        description="Dismiss a recommendation (records feedback; requires token if configured).",
+    )
+    def autoheal_recommendation_dismiss(id: str, note: str = "") -> dict[str, Any]:
+        return ops.recommendation_set_status(id=str(id), status="dismissed", note=str(note))
+
+    @mcp.tool(
         name="autoheal_run_once",
         title="run one cycle",
         description="Trigger the running agent to run a cycle (or run locally if not running).",

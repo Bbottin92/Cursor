@@ -10,7 +10,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable
 
-from .models import ActionPlan, Finding
+from .models import ActionPlan, Finding, Recommendation
 from .remediations import ActionResult
 
 log = logging.getLogger("autoheal.addons")
@@ -18,6 +18,7 @@ log = logging.getLogger("autoheal.addons")
 CheckFn = Callable[[dict[str, Any]], list[Finding]]
 PlannerFn = Callable[[dict[str, Any], Finding], list[ActionPlan]]
 ExecutorFn = Callable[[dict[str, Any], ActionPlan, Finding], ActionResult]
+RecommenderFn = Callable[[dict[str, Any], list[Finding]], list[Recommendation]]
 
 
 @dataclass
@@ -38,6 +39,7 @@ class AddonRegistry:
     checks: list[CheckFn] = field(default_factory=list)
     planners: list[PlannerFn] = field(default_factory=list)
     executors: dict[str, ExecutorFn] = field(default_factory=dict)
+    recommenders: list[RecommenderFn] = field(default_factory=list)
 
     def add_check(self, fn: CheckFn) -> None:
         self.checks.append(fn)
@@ -50,6 +52,9 @@ class AddonRegistry:
         if action_name in self.executors:
             raise ValueError(f"executor already registered for action: {action_name}")
         self.executors[action_name] = fn
+
+    def add_recommender(self, fn: RecommenderFn) -> None:
+        self.recommenders.append(fn)
 
 
 @dataclass
@@ -89,6 +94,16 @@ class AddonManager:
                     self._err(a.source, f"planner failed ({a.addon_id}): {e}")
         return out
 
+    def run_recommendations(self, cfg: dict[str, Any], findings: list[Finding]) -> list[Recommendation]:
+        out: list[Recommendation] = []
+        for a in self.addons:
+            for fn in a.registry.recommenders:
+                try:
+                    out.extend(fn(cfg, findings))
+                except Exception as e:
+                    self._err(a.source, f"recommender failed ({a.addon_id}): {e}")
+        return out
+
     def can_execute(self, plan: ActionPlan) -> bool:
         return any(plan.name in a.registry.executors for a in self.addons)
 
@@ -125,6 +140,7 @@ class AddonManager:
                     "source": a.source,
                     "checks": len(a.registry.checks),
                     "planners": len(a.registry.planners),
+                    "recommenders": len(a.registry.recommenders),
                     "executors": sorted(a.registry.executors.keys()),
                 }
                 for a in self.addons

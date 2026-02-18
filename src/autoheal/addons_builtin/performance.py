@@ -4,7 +4,7 @@ import os
 import time
 from typing import Any
 
-from ..models import ActionPlan, Finding
+from ..models import ActionPlan, Finding, Recommendation
 from ..remediations import ActionResult
 from ..subprocess_utils import run, which
 
@@ -169,6 +169,62 @@ def register(registry, *, config: dict[str, Any] | None = None) -> None:
             )
         ]
 
+    def recommend(_: dict[str, Any], findings: list[Finding]) -> list[Recommendation]:
+        recs: list[Recommendation] = []
+        for f in findings:
+            if f.type == "performance_high_load":
+                top = f.details.get("top_cpu", [])
+                comms: list[str] = []
+                if isinstance(top, list):
+                    for p in top:
+                        try:
+                            comm = str(p.get("comm", ""))
+                        except Exception:
+                            continue
+                        if comm and comm not in comms:
+                            comms.append(comm)
+                recs.append(
+                    Recommendation(
+                        key="perf:high_load_tuning",
+                        title="Consider tuning high-load workflow",
+                        message=(
+                            "High load was detected. If this repeats, consider enabling the performance addon "
+                            "renice allowlist for noisy processes (e.g. "
+                            + (", ".join(comms[:3]) if comms else "top CPU consumers")
+                            + ")."
+                        ),
+                        priority=3,
+                        confidence=0.6,
+                        details={"top_cpu_comms": comms[:10], "threshold_per_cpu": load_threshold_per_cpu},
+                    )
+                )
+
+            if f.type == "performance_low_memory":
+                top = f.details.get("top_mem", [])
+                comms = []
+                if isinstance(top, list):
+                    for p in top:
+                        try:
+                            comm = str(p.get("comm", ""))
+                        except Exception:
+                            continue
+                        if comm and comm not in comms:
+                            comms.append(comm)
+                recs.append(
+                    Recommendation(
+                        key="perf:low_memory_tuning",
+                        title="Consider reducing memory pressure",
+                        message=(
+                            "Low available memory was detected. If this repeats, consider closing heavy apps, "
+                            "reducing extensions, or adding swap/zram."
+                        ),
+                        priority=4,
+                        confidence=0.65,
+                        details={"top_mem_comms": comms[:10], "threshold_percent": mem_available_percent_threshold},
+                    )
+                )
+        return recs
+
     def execute(_: dict[str, Any], plan: ActionPlan, finding: Finding) -> ActionResult:
         if plan.name != "performance_renice_allowlisted":
             return ActionResult(
@@ -255,4 +311,5 @@ def register(registry, *, config: dict[str, Any] | None = None) -> None:
 
     registry.add_check(check)
     registry.add_planner(plan)
+    registry.add_recommender(recommend)
     registry.add_executor("performance_renice_allowlisted", execute)

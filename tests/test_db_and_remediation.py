@@ -7,7 +7,7 @@ from pathlib import Path
 from autoheal import db
 from autoheal.checks import check_cursor_crashpad, check_cursor_safe_launcher
 from autoheal.addons import load_addons
-from autoheal.models import ActionPlan, Finding
+from autoheal.models import ActionPlan, Finding, Recommendation
 from autoheal.remediations import execute_plan
 
 
@@ -208,6 +208,35 @@ class TestAddonLoader(unittest.TestCase):
         m = mgr.manifest()
         self.assertEqual(len(m["addons"]), 1)
         self.assertEqual(m["addons"][0]["checks"], 0)
+
+
+class TestRecommendationsDb(unittest.TestCase):
+    def test_recommendations_upsert_and_accept(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            conn = db.connect(Path(td) / "autoheal.db")
+            try:
+                rid = db.upsert_recommendation(
+                    conn,
+                    Recommendation(
+                        key="perf:low_memory_tuning",
+                        title="Test recommendation",
+                        message="Try a thing",
+                        priority=4,
+                        confidence=0.7,
+                        details={"k": "v"},
+                    ),
+                )
+                r = db.get_recommendation(conn, rid)
+                assert r is not None
+                self.assertEqual(r["status"], "open")
+
+                db.set_recommendation_status(conn, rid, status="accepted", note="yep")
+                r2 = db.get_recommendation(conn, rid)
+                assert r2 is not None
+                self.assertEqual(r2["status"], "accepted")
+                self.assertTrue(len(r2.get("events") or []) >= 1)
+            finally:
+                conn.close()
 
 
 if __name__ == "__main__":

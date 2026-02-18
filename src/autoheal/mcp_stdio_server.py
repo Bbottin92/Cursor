@@ -177,6 +177,25 @@ def _dispatch_tool(ops: AutohealOps, name: str, args: dict[str, Any]) -> Any:
             id=str(args.get("id", "")),
             summary=str(args.get("summary", "marked fixed")),
         )
+    if name == "autoheal_recommendations_list":
+        return ops.recommendations_list(
+            limit=int(args.get("limit", 50)),
+            status=(str(args.get("status")) if args.get("status") else None),
+        )
+    if name == "autoheal_recommendation_get":
+        return ops.recommendation_get(id=str(args.get("id", "")))
+    if name == "autoheal_recommendation_accept":
+        return ops.recommendation_set_status(
+            id=str(args.get("id", "")),
+            status="accepted",
+            note=str(args.get("note", "")),
+        )
+    if name == "autoheal_recommendation_dismiss":
+        return ops.recommendation_set_status(
+            id=str(args.get("id", "")),
+            status="dismissed",
+            note=str(args.get("note", "")),
+        )
     if name == "autoheal_run_once":
         return ops.run_once()
     if name == "autoheal_tail_log":

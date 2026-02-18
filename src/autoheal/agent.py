@@ -104,7 +104,12 @@ class AutohealAgent:
         method = req.method
         params = req.params or {}
 
-        if method in {"incidents.create", "incidents.mark_fixed", "agent.run_once"} and not self._authorized(req):
+        if method in {
+            "incidents.create",
+            "incidents.mark_fixed",
+            "recommendations.set_status",
+            "agent.run_once",
+        } and not self._authorized(req):
             return ControlResponse(id=req.id, ok=False, error="unauthorized")
 
         if method == "ping":
@@ -172,6 +177,32 @@ class AutohealAgent:
                 db.mark_incident_fixed(conn, iid, summary)
                 return ControlResponse(id=req.id, ok=True, result={"id": iid, "status": "fixed"})
 
+            if method == "recommendations.list":
+                limit = int(params.get("limit", 50))
+                status = params.get("status", None)
+                status_s = str(status) if status else None
+                return ControlResponse(
+                    id=req.id,
+                    ok=True,
+                    result=db.list_recommendations(conn, status=status_s, limit=limit),
+                )
+
+            if method == "recommendations.get":
+                rid = str(params.get("id", ""))
+                r = db.get_recommendation(conn, rid)
+                if r is None:
+                    return ControlResponse(id=req.id, ok=False, error="not found")
+                return ControlResponse(id=req.id, ok=True, result=r)
+
+            if method == "recommendations.set_status":
+                rid = str(params.get("id", ""))
+                status = str(params.get("status", ""))
+                note = params.get("note", None)
+                if db.get_recommendation(conn, rid) is None:
+                    return ControlResponse(id=req.id, ok=False, error="not found")
+                db.set_recommendation_status(conn, rid, status=status, note=str(note) if note else None)
+                return ControlResponse(id=req.id, ok=True, result={"id": rid, "status": status})
+
         finally:
             conn.close()
 
@@ -203,6 +234,13 @@ class AutohealAgent:
 
         conn = db.connect(self.db_path)
         try:
+            # Recommendations (suggestions) are stored separately from incidents.
+            for rec in self._addons.run_recommendations(self.cfg, findings):
+                try:
+                    db.upsert_recommendation(conn, rec)
+                except Exception as e:
+                    log.debug("recommendation upsert failed: %s", e)
+
             # Upsert active findings => acknowledge them and persist diagnostic context.
             fp_to_incident_id: dict[str, str] = {}
             for f in findings:

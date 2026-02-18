@@ -14,9 +14,12 @@ from .db import (
     connect,
     create_manual_incident,
     get_incident,
+    get_recommendation,
     list_actions_for_incident,
     list_incidents,
+    list_recommendations,
     mark_incident_fixed,
+    set_recommendation_status,
 )
 
 
@@ -78,6 +81,48 @@ def tool_specs() -> list[dict[str, Any]]:
                     "id": {"type": "string"},
                     "summary": {"type": "string", "default": "marked fixed"},
                 },
+                "required": ["id"],
+            },
+        },
+        {
+            "name": "autoheal_recommendations_list",
+            "title": "list recommendations",
+            "description": "List persistent optimization/workflow suggestions.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "limit": {"type": "integer", "default": 50, "minimum": 1},
+                    "status": {"type": "string", "enum": ["open", "accepted", "dismissed"]},
+                },
+            },
+        },
+        {
+            "name": "autoheal_recommendation_get",
+            "title": "get recommendation",
+            "description": "Get a single recommendation (includes events).",
+            "inputSchema": {
+                "type": "object",
+                "properties": {"id": {"type": "string"}},
+                "required": ["id"],
+            },
+        },
+        {
+            "name": "autoheal_recommendation_accept",
+            "title": "accept recommendation",
+            "description": "Accept a recommendation (records feedback; requires token if configured).",
+            "inputSchema": {
+                "type": "object",
+                "properties": {"id": {"type": "string"}, "note": {"type": "string"}},
+                "required": ["id"],
+            },
+        },
+        {
+            "name": "autoheal_recommendation_dismiss",
+            "title": "dismiss recommendation",
+            "description": "Dismiss a recommendation (records feedback; requires token if configured).",
+            "inputSchema": {
+                "type": "object",
+                "properties": {"id": {"type": "string"}, "note": {"type": "string"}},
                 "required": ["id"],
             },
         },
@@ -285,6 +330,60 @@ class AutohealOps:
                 raise KeyError("not found")
             mark_incident_fixed(conn, str(id), str(summary))
             return {"id": str(id), "status": "fixed"}
+        finally:
+            conn.close()
+
+    def recommendations_list(self, *, limit: int = 50, status: str | None = None) -> list[dict[str, Any]]:
+        if _socket_exists(self.control_sock):
+            try:
+                res = self._call(
+                    "recommendations.list",
+                    {"limit": int(limit), "status": status},
+                    require_token=False,
+                )
+                return list(res)
+            except Exception:
+                pass
+        conn = connect(self.db_path)
+        try:
+            return list_recommendations(conn, status=status, limit=int(limit))
+        finally:
+            conn.close()
+
+    def recommendation_get(self, *, id: str) -> dict[str, Any]:
+        rid = str(id)
+        if _socket_exists(self.control_sock):
+            try:
+                return dict(self._call("recommendations.get", {"id": rid}, require_token=False))
+            except Exception:
+                pass
+        conn = connect(self.db_path)
+        try:
+            r = get_recommendation(conn, rid)
+            if r is None:
+                raise KeyError("not found")
+            return r
+        finally:
+            conn.close()
+
+    def recommendation_set_status(self, *, id: str, status: str, note: str = "") -> dict[str, Any]:
+        rid = str(id)
+        status = str(status)
+        if _socket_exists(self.control_sock):
+            return dict(
+                self._call(
+                    "recommendations.set_status",
+                    {"id": rid, "status": status, "note": str(note or "")},
+                    require_token=True,
+                )
+            )
+
+        conn = connect(self.db_path)
+        try:
+            if get_recommendation(conn, rid) is None:
+                raise KeyError("not found")
+            set_recommendation_status(conn, rid, status=status, note=str(note or ""))
+            return {"id": rid, "status": status}
         finally:
             conn.close()
 
