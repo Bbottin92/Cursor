@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiquidGov Member App</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">LiquidGov Member App</div>
+    <nav>
+      <a href="index.html">Public Site</a>
+      <a href="legal.html">Legal & Safety</a>
+    </nav>
+  </header>
+
+  <main class="app-shell">
+    <section class="panel stack">
+      <div class="layout-title">
+        <h2 class="tight">Account</h2>
+        <button class="secondary" id="logoutBtn" type="button">Log Out</button>
+      </div>
+
+      <div class="feed-card">
+        <div class="avatar" id="avatarInitial">G</div>
+        <p class="tiny-note">
+          Verified Patriot counter:
+          <strong id="profileVerifiedCounter">0</strong>
+        </p>
+      </div>
+
+      <div class="metric">
+        Signed in as: <strong id="currentUsername">Guest</strong><br />
+        Status: <span id="currentBadge">Participant</span>
+      </div>
+
+      <label>
+        Switch account
+        <select id="accountSwitcher"></select>
+      </label>
+      <button id="useAccountBtn" class="primary" type="button">Use Selected Account</button>
+
+      <div class="metric">
+        [<span id="participantsCount">0</span> / 175,000,000 PARTICIPANTS]
+      </div>
+      <div class="metric">
+        Verified Patriots: <strong id="verifiedCount">0</strong>
+      </div>
+
+      <div class="policy-card">
+        <h3>Communication Suite</h3>
+        <ul class="tight">
+          <li>Direct messenger</li>
+          <li>Audio message chat</li>
+          <li>1:1 video chat</li>
+          <li>Group chat</li>
+          <li>Group video rooms</li>
+        </ul>
+      </div>
+
+      <div class="policy-card">
+        <h3>Scope Focus</h3>
+        <div id="scopeChips" class="chips"></div>
+      </div>
+
+      <div class="policy-card">
+        <h3>Minor Safety Defaults</h3>
+        <ul class="tight">
+          <li>Under 18 verification requires linked parent account</li>
+          <li>Minor-to-adult interactions require guardian approval</li>
+          <li>Guardian investigations are logged and disclosed to the child</li>
+        </ul>
+      </div>
+
+      <div class="policy-card">
+        <h3>Guardian Inspection (Demo)</h3>
+        <label>
+          Child username
+          <input id="childInspectName" type="text" placeholder="child_username" />
+        </label>
+        <label>
+          Area
+          <select id="inspectArea">
+            <option value="messages">Messages</option>
+            <option value="group chat">Group Chat</option>
+            <option value="video call logs">Video Call Logs</option>
+          </select>
+        </label>
+        <button id="inspectBtn" class="secondary" type="button">Run Inspection</button>
+        <p id="inspectResult" class="tiny-note"></p>
+        <hr />
+        <h4>Approve Adult Contact (for Minor)</h4>
+        <label>
+          Child username
+          <input id="approveChildName" type="text" placeholder="child_username" />
+        </label>
+        <label>
+          Adult username
+          <input id="approveAdultName" type="text" placeholder="adult_username" />
+        </label>
+        <button id="approveContactBtn" class="secondary" type="button">
+          Approve Contact
+        </button>
+        <p id="approveResult" class="tiny-note"></p>
+      </div>
+    </section>
+
+    <section class="panel stack">
+      <div class="layout-title">
+        <h2 class="tight">Community Feed</h2>
+        <span class="tiny-note">Persistence, speed, and quality with humanity.</span>
+      </div>
+
+      <div class="chips" aria-label="community channels">
+        <span class="chip">Community</span>
+        <span class="chip">Communication</span>
+        <span class="chip">Voluntarism</span>
+        <span class="chip">Barter / Trade</span>
+        <span class="chip">Collaboration</span>
+        <span class="chip">Arts</span>
+        <span class="chip">Politics</span>
+        <span class="chip">News</span>
+        <span class="chip">Networking</span>
+      </div>
+
+      <div class="feed-card">
+        <h3>Civic Signal</h3>
+        <p class="tiny-note">
+          On login, submit a recent pain point and your proposed solution.
+        </p>
+        <form id="proposalForm" class="stack">
+          <label>
+            Pain point
+            <textarea id="painPointInput" required></textarea>
+          </label>
+          <label>
+            Proposed solution
+            <textarea id="solutionInput" required></textarea>
+          </label>
+          <label>
+            Category
+            <select id="proposalCategory">
+              <option>Governance</option>
+              <option>Community</option>
+              <option>Trade</option>
+              <option>Safety</option>
+              <option>Arts</option>
+              <option>News</option>
+            </select>
+          </label>
+          <button class="primary" type="submit">Submit Proposal</button>
+          <p id="proposalResult" class="tiny-note"></p>
+        </form>
+      </div>
+
+      <div class="chat-card">
+        <h3>Messaging & Calls</h3>
+        <div class="three-col">
+          <article class="feed-card">
+            <h4>Direct Messenger</h4>
+            <input id="dmRecipient" type="text" placeholder="Recipient username" />
+            <textarea id="dmInput" placeholder="Type a direct message..."></textarea>
+            <button id="dmSendBtn" class="secondary" type="button">Send DM</button>
+            <p id="dmResult" class="tiny-note"></p>
+          </article>
+          <article class="feed-card">
+            <h4>Audio Message</h4>
+            <textarea id="audioNoteInput" placeholder="Record note summary or paste transcript..."></textarea>
+            <button id="audioSendBtn" class="secondary" type="button">Send Audio Message</button>
+          </article>
+          <article class="feed-card">
+            <h4>Video</h4>
+            <button id="startVideoBtn" class="secondary" type="button">Start 1:1 Video</button>
+            <button id="startGroupVideoBtn" class="secondary" type="button">Start Group Video</button>
+          </article>
+        </div>
+        <div class="feed-item">
+          <h4>Group Chat Stream</h4>
+          <textarea id="groupInput" placeholder="Post to group chat..."></textarea>
+          <button id="groupSendBtn" class="secondary" type="button">Post Message</button>
+          <ul id="groupStream"></ul>
+        </div>
+      </div>
+
+      <div class="feed-card">
+        <h3>Proposal Archive (with Referential Credit)</h3>
+        <table class="archive-table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Author</th>
+              <th>Idea</th>
+              <th>Status</th>
+              <th>Law Ref</th>
+            </tr>
+          </thead>
+          <tbody id="archiveTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="panel stack">
+      <div class="map-card">
+        <h3 id="mapTitle">Scope Map</h3>
+        <div class="map-frame">
+          <strong id="scopeName">Neighborhood</strong>
+          <p id="scopeSummary" class="tiny-note"></p>
+          <ul id="scopePins" class="pin-list"></ul>
+        </div>
+      </div>
+
+      <div class="feed-card">
+        <h3>Custom Profile Theme</h3>
+        <p class="tiny-note">
+          MySpace-style HTML theme preview (sandboxed, scripts disabled).
+        </p>
+        <textarea id="profileHtmlInput"><h2 style="color:#57d5ff;">My LiquidGov Profile</h2><p>Design this area with custom HTML/CSS.</p></textarea>
+        <button id="renderProfileBtn" class="secondary" type="button">Render Theme</button>
+        <iframe id="profilePreview" class="profile-preview" sandbox=""></iframe>
+      </div>
+
+      <div class="feed-card">
+        <h3>Profile Directory</h3>
+        <label>
+          Visit profile
+          <select id="profileDirectory"></select>
+        </label>
+        <button id="visitProfileBtn" class="secondary" type="button">Log Profile Visit</button>
+      </div>
+
+      <div class="feed-card">
+        <h3>Recent Profile Visitors</h3>
+        <table class="visitor-log">
+          <thead>
+            <tr>
+              <th>Visitor</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="visitorLogBody"></tbody>
+        </table>
+      </div>
+
+      <div class="feed-card">
+        <h3>Notifications</h3>
+        <table class="visitor-log">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Message</th>
+            </tr>
+          </thead>
+          <tbody id="notificationsBody"></tbody>
+        </table>
+      </div>
+    </aside>
+  </main>
+
+  <script src="store.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiquidGov.US | Voluntary Civic Network</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="public-body">
+  <header class="site-header">
+    <div class="brand">LiquidGov.US</div>
+    <nav>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#milestones">Launch Milestone</a>
+      <a href="#archive">Archive</a>
+      <a href="legal.html">Legal</a>
+      <a class="nav-button" href="app.html">Enter Member App</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Voluntary. Peaceful. Transparent.</p>
+      <h1>Build a voluntary civic movement in the open.</h1>
+      <p class="hero-copy">
+        LiquidGov is an opt-in network for people who want transparent governance,
+        accountable systems, and real-time participation without coercion.
+      </p>
+
+      <div class="counter-wrap">
+        <div class="main-counter" aria-live="polite">
+          [<span id="participantCurrent">0</span> / 175,000,000 PARTICIPANTS]
+        </div>
+        <p class="counter-note">
+          In this phase, any created account is counted as a Participant.
+        </p>
+      </div>
+
+      <div class="hero-actions">
+        <button id="openSignup" class="primary">Create Account</button>
+        <a class="secondary" href="app.html">Preview Member Experience</a>
+      </div>
+    </section>
+
+    <section class="definition-strip">
+      <article>
+        <h2>Participant</h2>
+        <p>Any person with an account.</p>
+      </article>
+      <article>
+        <h2>Verified Patriot</h2>
+        <p>A Participant who verifies identity and signs the transition pledge.</p>
+      </article>
+      <article>
+        <h2>Phase Transition</h2>
+        <p>
+          A planned shift from growth mode to launch mode once the Launch
+          Milestone criteria are met.
+        </p>
+      </article>
+    </section>
+
+    <section id="how-it-works" class="section">
+      <h2>How It Works</h2>
+      <div class="three-col">
+        <article>
+          <h3>1) Join</h3>
+          <p>
+            Create an account and become a Participant. In this stage, the
+            participation counter tracks account growth.
+          </p>
+        </article>
+        <article>
+          <h3>2) Build</h3>
+          <p>
+            Submit pain points, propose solutions, debate ideas, and collaborate
+            in the member app.
+          </p>
+        </article>
+        <article>
+          <h3>3) Transition</h3>
+          <p>
+            Transition is considered only when milestone thresholds are met and
+            the community votes to proceed.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="milestones" class="section">
+      <h2>Launch Milestone Checklist</h2>
+      <ul class="checklist">
+        <li>Ratified verification method for unique human participation</li>
+        <li>Foundational governance framework published and vote-tested</li>
+        <li>Founding Assembly roles filled and documented</li>
+        <li>Public safety standards: peaceful, lawful, anti-harassment</li>
+        <li>Open audit of member counts and voting integrity tests</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Core Culture</h2>
+      <div class="pillars">
+        <span>Persistence over hype</span>
+        <span>Continuous optimization</span>
+        <span>Speed and efficiency</span>
+        <span>Humanity and quality first</span>
+        <span>Voluntary participation always</span>
+        <span>Transparent historical record</span>
+      </div>
+    </section>
+
+    <section id="archive" class="section">
+      <h2>Contribution Archive & Referential Credit</h2>
+      <p>
+        Every proposal is archived with author and timestamp. Implemented laws
+        include origin credits for the members who shaped them.
+      </p>
+      <div class="archive-grid">
+        <article>
+          <h3>Implemented Ideas</h3>
+          <ul id="implementedPreview"></ul>
+        </article>
+        <article>
+          <h3>Archived / Not Implemented</h3>
+          <ul id="archivedPreview"></ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Inside the Member App</h2>
+      <p>
+        After login, members enter a social-style civic platform with messaging,
+        group chat, group video rooms, profile customization, local-to-global
+        scope maps, trade/barter boards, and community coordination tools.
+      </p>
+      <a class="primary inline-button" href="app.html">Open Member App</a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      LiquidGov is voluntary and non-coercive. Participation is always optional.
+    </p>
+  </footer>
+
+  <dialog id="signupDialog">
+    <form id="signupForm" method="dialog" class="signup-form">
+      <h2>Create Account</h2>
+      <p>Any account created is counted as a Participant in this phase.</p>
+
+      <label>
+        Display name
+        <input type="text" name="username" required minlength="2" maxlength="30" />
+      </label>
+
+      <label>
+        Age
+        <input type="number" name="age" min="1" max="120" required />
+      </label>
+
+      <label>
+        Parent/Guardian username (required for under 18 verification)
+        <input type="text" name="parentLink" maxlength="30" />
+      </label>
+
+      <label class="checkbox-row">
+        <input type="checkbox" name="wantsVerification" />
+        I want to become a Verified Patriot now
+      </label>
+
+      <label class="checkbox-row">
+        <input type="checkbox" name="pledge" />
+        I pledge support for a peaceful and lawful transition process
+      </label>
+
+      <menu>
+        <button id="closeSignup" type="button" class="secondary">Cancel</button>
+        <button type="submit" class="primary">Create Account</button>
+      </menu>
+      <p id="signupResult" class="form-message" aria-live="polite"></p>
+    </form>
+  </dialog>
+
+  <script src="store.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
