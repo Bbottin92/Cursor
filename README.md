@@ -1,48 +1,94 @@
-# LiquidGov.US Prototype (V1 Scaffold)
+# LiquidGov.US Prototype
 
-This repository now contains a static prototype for LiquidGov.US:
+This repository now includes:
 
-- Public landing page with participant growth counter
-- Account creation flow (`Participant` and `Verified Patriot` paths)
-- Legal/safety page with minor rules and transparency standards
-- Member app shell with communication modules, map scopes, profile customization,
-  contribution archive, visitor/notification logs, launch milestone tracker,
-  founding assembly role assignment, barter/trade board, and networking board
+- Public website (`index.html`) with participant counter and account creation flow
+- Legal/safety page (`legal.html`) with core definitions and minor-protection rules
+- Member app (`app.html`) with:
+  - communication modules (DM/audio/video/group)
+  - scope map views (Neighborhood/Town/State/National/International)
+  - launch milestone tracker
+  - founding assembly role board
+  - proposal archive with attribution
+  - barter/trade board
+  - networking board
+  - profile visitor logs and notifications
+- Backend API + SQLite persistence (`server/`)
 
-## Files
+## Architecture
+
+- Frontend: vanilla HTML/CSS/JS
+- Backend: Express + SQLite (`better-sqlite3`)
+- Data mode:
+  - Uses API + SQLite when backend is running
+  - Falls back to localStorage store when backend is unavailable
+
+## Project layout
 
 - `index.html` - public homepage
-- `legal.html` - legal definitions and safety policy
-- `app.html` - logged-in member experience shell
-- `styles.css` - shared styling
-- `store.js` - localStorage data layer
+- `app.html` - member experience shell
+- `legal.html` - policy and definitions
+- `styles.css` - shared styles
+- `store.js` - local fallback data layer
+- `dataClient.js` - API client with fallback behavior
 - `main.js` - homepage logic
 - `app.js` - member app logic
+- `server/server.js` - Express API server
+- `server/db.js` - SQLite schema, seed data, DB utilities
+- `data/liquidgov.db` - runtime database file (gitignored)
 
-## Quick start
-
-Open `index.html` directly in a browser, or run a local static server:
+## Run locally
 
 ```bash
-python3 -m http.server 8000
+npm install
+npm run dev
 ```
 
-Then visit `http://localhost:8000`.
+Then open:
 
-## Current implementation notes
+- `http://localhost:3000/` (public site)
+- `http://localhost:3000/app.html` (member app)
 
-1. Any created account is counted in the participant counter.
-2. Under-18 verification requires an existing linked parent account.
-3. Proposal archive tracks author + timestamp + status.
-4. Implemented ideas include a law reference field for referential credit.
-5. Profile visitor logs and guardian-inspection notifications are included in the
-   app prototype.
-6. Launch Milestone progress and Founding Assembly roles are tracked in-app.
-7. Barter/trade listings and networking posts are persisted locally.
+## API coverage (implemented)
+
+- Auth/session:
+  - `POST /api/auth/register`
+  - `POST /api/auth/login`
+  - `POST /api/auth/logout`
+  - `GET /api/session/current`
+- Accounts/stats/settings:
+  - `GET /api/accounts`
+  - `GET /api/stats`
+  - `GET /api/settings`
+  - `PATCH /api/settings`
+  - `GET /api/milestone`
+- Civic modules:
+  - `GET/POST /api/proposals`
+  - `GET /api/roles`
+  - `POST /api/roles/claim`
+  - `POST /api/roles/release`
+  - `GET/POST /api/listings`
+  - `POST /api/listings/:listingId/close`
+  - `GET/POST /api/network-posts`
+- Safety/transparency:
+  - `GET/POST /api/notifications`
+  - `GET /api/profile-visits/:username`
+  - `POST /api/profile-visits`
+  - `POST /api/minor/inspect`
+  - `POST /api/minor/approve-contact`
+  - `GET /api/minor/can-interact`
+
+## Current behavior notes
+
+1. Any created account is counted as a Participant.
+2. Under-18 verification requires a linked parent account.
+3. Minor/adult interaction checks enforce guardian approval.
+4. Guardian inspection events notify the child account.
+5. Proposal/archive and referential-law fields are persisted.
 
 ## Next build targets
 
-- Backend authentication and moderation
-- Real messaging/video infrastructure
-- Strong identity verification and anti-sybil controls
-- Geographic map integration with real data layers
+- Hardened authentication (passwords, reset flows, role-based auth)
+- Real-time chat/media infrastructure (WebSocket/WebRTC services)
+- Production verification pipeline and anti-sybil controls
+- Map integrations with real geospatial data + moderation tooling

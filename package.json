@@ -1,0 +1,26 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "LiquidGov.US prototype with backend API and frontend app shell",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js",
+    "test": "node --check server/server.js && node --check server/db.js && node --check main.js && node --check app.js && node --check dataClient.js && node --check store.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bbottin92/Cursor.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Bbottin92/Cursor/issues"
+  },
+  "homepage": "https://github.com/Bbottin92/Cursor#readme",
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "express": "^5.2.1"
+  }
+}

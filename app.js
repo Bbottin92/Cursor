@@ -1,5 +1,6 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const store = window.LiquidGovStore;
+document.addEventListener("DOMContentLoaded", async () => {
+  const data = window.LiquidGovData;
+  await data.init();
 
   const scopes = {
     Neighborhood: {
@@ -101,27 +102,27 @@ document.addEventListener("DOMContentLoaded", () => {
     "System: Keep discussion constructive and solution-focused."
   ];
 
-  function getAccounts() {
-    return store.getAccounts();
+  async function getAccounts() {
+    return data.getAccounts();
   }
 
-  function findAccount(username) {
-    const accounts = getAccounts();
+  async function findAccount(username) {
+    const accounts = await getAccounts();
     return accounts.find(
       (item) => item.username.toLowerCase() === String(username || "").toLowerCase()
     );
   }
 
-  function refreshMetrics() {
-    const accounts = getAccounts();
+  async function refreshMetrics() {
+    const accounts = await getAccounts();
     const verifiedTotal = accounts.filter((item) => item.isVerifiedPatriot).length;
-    participantsCount.textContent = store.formatNumber(accounts.length);
-    verifiedCount.textContent = store.formatNumber(verifiedTotal);
-    profileVerifiedCounter.textContent = store.formatNumber(verifiedTotal);
+    participantsCount.textContent = data.formatNumber(accounts.length);
+    verifiedCount.textContent = data.formatNumber(verifiedTotal);
+    profileVerifiedCounter.textContent = data.formatNumber(verifiedTotal);
   }
 
-  function renderLaunchMilestone() {
-    const milestone = store.getLaunchMilestoneStatus();
+  async function renderLaunchMilestone() {
+    const milestone = await data.getLaunchMilestoneStatus();
     milestoneCompleted.textContent = String(milestone.completedChecks);
     milestoneFill.style.width = `${(milestone.completedChecks / 5) * 100}%`;
     milestoneChecks.innerHTML = milestone.checks
@@ -137,14 +138,14 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .join("");
 
-    const settings = store.getSettings();
+    const settings = await data.getSettings();
     toggleVerificationMethod.checked = Boolean(settings.verificationMethodRatified);
     toggleFrameworkPublished.checked = Boolean(settings.frameworkPublished);
     toggleAuditPublished.checked = Boolean(settings.auditPublished);
   }
 
-  function renderRoles() {
-    const roles = store.getAssemblyRoles();
+  async function renderRoles() {
+    const roles = await data.getAssemblyRoles();
     roleSelector.innerHTML = roles
       .map((role) => `<option value="${role.id}">${role.title}</option>`)
       .join("");
@@ -157,8 +158,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .join("");
   }
 
-  function renderListings() {
-    const listings = store.getListings();
+  async function renderListings() {
+    const listings = await data.getListings();
     listingTableBody.innerHTML = listings
       .slice(0, 20)
       .map((item) => {
@@ -176,8 +177,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .join("");
   }
 
-  function renderNetworkPosts() {
-    const posts = store.getNetworkPosts();
+  async function renderNetworkPosts() {
+    const posts = await data.getNetworkPosts();
     networkList.innerHTML = posts
       .slice(0, 20)
       .map((post) => {
@@ -187,8 +188,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .join("");
   }
 
-  function renderAccountSelectors() {
-    const accounts = getAccounts();
+  async function renderAccountSelectors() {
+    const accounts = await getAccounts();
     const options = accounts.length
       ? accounts
           .map((item) => {
@@ -202,7 +203,8 @@ document.addEventListener("DOMContentLoaded", () => {
     profileDirectory.innerHTML = options;
   }
 
-  function setActiveUser(username) {
+  async function setActiveUser(username, options = {}) {
+    const { skipAuthSync = false } = options;
     if (!username) {
       activeUsername = null;
       currentUsername.textContent = "Guest";
@@ -213,14 +215,21 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const account = findAccount(username);
+    const account = await findAccount(username);
     if (!account) {
-      setActiveUser(null);
+      await setActiveUser(null, { skipAuthSync: true });
       return;
     }
 
     activeUsername = account.username;
-    store.setCurrentUser(account.username);
+    if (!skipAuthSync) {
+      try {
+        await data.setCurrentUser(account.username);
+      } catch (error) {
+        roleResult.textContent = error.message;
+      }
+    }
+
     currentUsername.textContent = account.username;
     avatarInitial.textContent = account.username.slice(0, 1).toUpperCase();
 
@@ -232,8 +241,8 @@ document.addEventListener("DOMContentLoaded", () => {
       currentBadge.textContent = "Participant";
     }
 
-    renderVisitorLog();
-    renderNotifications();
+    await renderVisitorLog();
+    await renderNotifications();
   }
 
   function renderScopes() {
@@ -262,9 +271,8 @@ document.addEventListener("DOMContentLoaded", () => {
     scopePins.innerHTML = scope.pins.map((item) => `<li>${item}</li>`).join("");
   }
 
-  function renderArchive() {
-    const proposals = store
-      .getProposals()
+  async function renderArchive() {
+    const proposals = (await data.getProposals())
       .slice()
       .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
 
@@ -277,10 +285,14 @@ document.addEventListener("DOMContentLoaded", () => {
               ? "status-archived"
               : "status-under-review";
         const statusLabel =
-          item.status === "implemented" ? "Implemented" : item.status === "archived" ? "Archived" : "Under Review";
+          item.status === "implemented"
+            ? "Implemented"
+            : item.status === "archived"
+              ? "Archived"
+              : "Under Review";
         return `
           <tr>
-            <td>${store.formatDate(item.submittedAt)}</td>
+            <td>${data.formatDate(item.submittedAt)}</td>
             <td>${item.author}</td>
             <td>${item.title}</td>
             <td><span class="status-tag ${statusClass}">${statusLabel}</span></td>
@@ -291,11 +303,11 @@ document.addEventListener("DOMContentLoaded", () => {
       .join("");
   }
 
-  function renderVisitorLog() {
+  async function renderVisitorLog() {
     if (!activeUsername) {
       return;
     }
-    const visitors = store.getProfileVisitors(activeUsername);
+    const visitors = await data.getProfileVisitors(activeUsername);
     if (!visitors.length) {
       visitorLogBody.innerHTML = "<tr><td colspan='2'>No profile visitors logged yet.</td></tr>";
       return;
@@ -304,16 +316,16 @@ document.addEventListener("DOMContentLoaded", () => {
       .slice(0, 12)
       .map(
         (entry) =>
-          `<tr><td>${entry.visitor}</td><td>${store.formatDate(entry.visitedAt)}</td></tr>`
+          `<tr><td>${entry.visitor}</td><td>${data.formatDate(entry.visitedAt)}</td></tr>`
       )
       .join("");
   }
 
-  function renderNotifications() {
+  async function renderNotifications() {
     if (!activeUsername) {
       return;
     }
-    const notes = store.getNotifications(activeUsername);
+    const notes = await data.getNotifications(activeUsername);
     if (!notes.length) {
       notificationsBody.innerHTML =
         "<tr><td colspan='2'>No notifications yet for this account.</td></tr>";
@@ -323,7 +335,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .slice(0, 15)
       .map(
         (entry) =>
-          `<tr><td>${store.formatDate(entry.createdAt)}</td><td>${entry.message}</td></tr>`
+          `<tr><td>${data.formatDate(entry.createdAt)}</td><td>${entry.message}</td></tr>`
       )
       .join("");
   }
@@ -352,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
     profilePreview.srcdoc = frame;
   }
 
-  proposalForm.addEventListener("submit", (event) => {
+  proposalForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!activeUsername) {
       proposalResult.textContent = "Select an account first.";
@@ -367,7 +379,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const combinedTitle = `${painPoint.slice(0, 58)} -> ${solution.slice(0, 58)}`;
-    store.addProposal({
+    await data.addProposal({
       title: combinedTitle,
       category,
       author: activeUsername,
@@ -376,10 +388,10 @@ document.addEventListener("DOMContentLoaded", () => {
     proposalResult.textContent = "Proposal submitted to archive with author credit.";
     painPointInput.value = "";
     solutionInput.value = "";
-    renderArchive();
+    await renderArchive();
   });
 
-  dmSendBtn.addEventListener("click", () => {
+  dmSendBtn.addEventListener("click", async () => {
     dmResult.textContent = "";
     if (!activeUsername || !dmInput.value.trim()) {
       return;
@@ -389,50 +401,50 @@ document.addEventListener("DOMContentLoaded", () => {
       dmResult.textContent = "Add a recipient username.";
       return;
     }
-    const permission = store.canInteract(activeUsername, recipient);
+    const permission = await data.canInteract(activeUsername, recipient);
     if (!permission.ok) {
       dmResult.textContent = permission.reason;
       return;
     }
 
-    store.addNotification(
+    await data.addNotification(
       activeUsername,
       `DM sent to ${recipient}: "${dmInput.value.trim().slice(0, 60)}"`,
       "info"
     );
-    store.addNotification(
+    await data.addNotification(
       recipient,
       `DM received from ${activeUsername}: "${dmInput.value.trim().slice(0, 60)}"`,
       "info"
     );
     dmInput.value = "";
     dmResult.textContent = "Message delivered.";
-    renderNotifications();
+    await renderNotifications();
   });
 
-  audioSendBtn.addEventListener("click", () => {
+  audioSendBtn.addEventListener("click", async () => {
     if (!activeUsername || !audioNoteInput.value.trim()) {
       return;
     }
-    store.addNotification(activeUsername, "Audio message submitted.", "info");
+    await data.addNotification(activeUsername, "Audio message submitted.", "info");
     audioNoteInput.value = "";
-    renderNotifications();
+    await renderNotifications();
   });
 
-  startVideoBtn.addEventListener("click", () => {
+  startVideoBtn.addEventListener("click", async () => {
     if (!activeUsername) {
       return;
     }
-    store.addNotification(activeUsername, "1:1 video room token generated.", "info");
-    renderNotifications();
+    await data.addNotification(activeUsername, "1:1 video room token generated.", "info");
+    await renderNotifications();
   });
 
-  startGroupVideoBtn.addEventListener("click", () => {
+  startGroupVideoBtn.addEventListener("click", async () => {
     if (!activeUsername) {
       return;
     }
-    store.addNotification(activeUsername, "Group video room opened.", "info");
-    renderNotifications();
+    await data.addNotification(activeUsername, "Group video room opened.", "info");
+    await renderNotifications();
   });
 
   groupSendBtn.addEventListener("click", () => {
@@ -446,21 +458,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderProfileBtn.addEventListener("click", renderProfileTheme);
 
-  useAccountBtn.addEventListener("click", () => {
+  useAccountBtn.addEventListener("click", async () => {
     const selected = accountSwitcher.value;
     if (!selected) {
       return;
     }
-    setActiveUser(selected);
-    renderAccountSelectors();
+    await setActiveUser(selected);
+    await renderAccountSelectors();
   });
 
-  logoutBtn.addEventListener("click", () => {
-    store.setCurrentUser(null);
-    setActiveUser(null);
+  logoutBtn.addEventListener("click", async () => {
+    await data.setCurrentUser(null);
+    await setActiveUser(null, { skipAuthSync: true });
   });
 
-  visitProfileBtn.addEventListener("click", () => {
+  visitProfileBtn.addEventListener("click", async () => {
     if (!activeUsername) {
       return;
     }
@@ -468,13 +480,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!target || target === activeUsername) {
       return;
     }
-    store.recordProfileVisit(target, activeUsername);
-    store.addNotification(target, `${activeUsername} viewed your profile.`, "notice");
-    renderVisitorLog();
-    renderNotifications();
+    await data.recordProfileVisit(target, activeUsername);
+    await renderVisitorLog();
+    await renderNotifications();
   });
 
-  inspectBtn.addEventListener("click", () => {
+  inspectBtn.addEventListener("click", async () => {
     inspectResult.textContent = "";
     if (!activeUsername) {
       inspectResult.textContent = "Sign in as the guardian account first.";
@@ -485,15 +496,15 @@ document.addEventListener("DOMContentLoaded", () => {
       inspectResult.textContent = "Provide child username.";
       return;
     }
-    const result = store.inspectMinorActivity(activeUsername, child, inspectArea.value);
+    const result = await data.inspectMinorActivity(activeUsername, child, inspectArea.value);
     inspectResult.textContent = result.message;
     if (result.ok) {
-      store.addNotification(activeUsername, `Inspection logged for ${child}.`, "notice");
-      renderNotifications();
+      await data.addNotification(activeUsername, `Inspection logged for ${child}.`, "notice");
+      await renderNotifications();
     }
   });
 
-  approveContactBtn.addEventListener("click", () => {
+  approveContactBtn.addEventListener("click", async () => {
     approveResult.textContent = "";
     if (!activeUsername) {
       approveResult.textContent = "Sign in as the guardian account first.";
@@ -505,56 +516,56 @@ document.addEventListener("DOMContentLoaded", () => {
       approveResult.textContent = "Provide both child and adult usernames.";
       return;
     }
-    const result = store.approveMinorContact(activeUsername, child, adult);
+    const result = await data.approveMinorContact(activeUsername, child, adult);
     approveResult.textContent = result.message;
     if (result.ok) {
-      store.addNotification(activeUsername, `Approved ${adult} for ${child}.`, "notice");
-      renderNotifications();
+      await data.addNotification(activeUsername, `Approved ${adult} for ${child}.`, "notice");
+      await renderNotifications();
     }
   });
 
   [toggleVerificationMethod, toggleFrameworkPublished, toggleAuditPublished].forEach(
     (checkbox) => {
-      checkbox.addEventListener("change", () => {
-        store.updateSettings({
+      checkbox.addEventListener("change", async () => {
+        await data.updateSettings({
           verificationMethodRatified: toggleVerificationMethod.checked,
           frameworkPublished: toggleFrameworkPublished.checked,
           auditPublished: toggleAuditPublished.checked
         });
-        renderLaunchMilestone();
+        await renderLaunchMilestone();
       });
     }
   );
 
-  claimRoleBtn.addEventListener("click", () => {
+  claimRoleBtn.addEventListener("click", async () => {
     roleResult.textContent = "";
     if (!activeUsername) {
       roleResult.textContent = "Select an account first.";
       return;
     }
     const roleId = roleSelector.value;
-    const result = store.claimAssemblyRole(roleId, activeUsername);
+    const result = await data.claimAssemblyRole(roleId, activeUsername);
     roleResult.textContent = result.message;
-    renderRoles();
-    renderLaunchMilestone();
-    renderNotifications();
+    await renderRoles();
+    await renderLaunchMilestone();
+    await renderNotifications();
   });
 
-  releaseRoleBtn.addEventListener("click", () => {
+  releaseRoleBtn.addEventListener("click", async () => {
     roleResult.textContent = "";
     if (!activeUsername) {
       roleResult.textContent = "Select an account first.";
       return;
     }
     const roleId = roleSelector.value;
-    const result = store.releaseAssemblyRole(roleId, activeUsername);
+    const result = await data.releaseAssemblyRole(roleId, activeUsername);
     roleResult.textContent = result.message;
-    renderRoles();
-    renderLaunchMilestone();
-    renderNotifications();
+    await renderRoles();
+    await renderLaunchMilestone();
+    await renderNotifications();
   });
 
-  listingForm.addEventListener("submit", (event) => {
+  listingForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     listingResult.textContent = "";
     if (!activeUsername) {
@@ -567,7 +578,7 @@ document.addEventListener("DOMContentLoaded", () => {
       listingResult.textContent = "Provide title and details.";
       return;
     }
-    store.addListing({
+    await data.addListing({
       type: listingType.value,
       title,
       details,
@@ -577,10 +588,10 @@ document.addEventListener("DOMContentLoaded", () => {
     listingResult.textContent = "Listing posted.";
     listingTitle.value = "";
     listingDetails.value = "";
-    renderListings();
+    await renderListings();
   });
 
-  networkForm.addEventListener("submit", (event) => {
+  networkForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     networkResult.textContent = "";
     if (!activeUsername) {
@@ -598,7 +609,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .filter(Boolean)
       .slice(0, 7);
 
-    store.addNetworkPost({
+    await data.addNetworkPost({
       author: activeUsername,
       scope: activeScope,
       tags,
@@ -607,21 +618,23 @@ document.addEventListener("DOMContentLoaded", () => {
     networkResult.textContent = "Networking post published.";
     networkTags.value = "";
     networkMessage.value = "";
-    renderNetworkPosts();
+    await renderNetworkPosts();
   });
 
-  refreshMetrics();
-  renderLaunchMilestone();
-  renderRoles();
-  renderAccountSelectors();
+  await refreshMetrics();
+  await renderLaunchMilestone();
+  await renderRoles();
+  await renderAccountSelectors();
   renderScopes();
   renderScopePanel();
-  renderArchive();
-  renderListings();
-  renderNetworkPosts();
+  await renderArchive();
+  await renderListings();
+  await renderNetworkPosts();
   renderGroupStream();
   renderProfileTheme();
 
-  const session = store.getCurrentUser();
-  setActiveUser(session ? session.username : accountSwitcher.value);
+  const session = await data.getCurrentUser();
+  await setActiveUser(session ? session.username : accountSwitcher.value, {
+    skipAuthSync: Boolean(session)
+  });
 });

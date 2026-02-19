@@ -1,5 +1,7 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const store = window.LiquidGovStore;
+document.addEventListener("DOMContentLoaded", async () => {
+  const data = window.LiquidGovData;
+  await data.init();
+
   const participantCurrent = document.getElementById("participantCurrent");
   const openSignup = document.getElementById("openSignup");
   const signupDialog = document.getElementById("signupDialog");
@@ -9,13 +11,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const implementedPreview = document.getElementById("implementedPreview");
   const archivedPreview = document.getElementById("archivedPreview");
 
-  function updateCounter() {
-    const accounts = store.getAccounts();
-    participantCurrent.textContent = store.formatNumber(accounts.length);
+  async function updateCounter() {
+    const accounts = await data.getAccounts();
+    participantCurrent.textContent = data.formatNumber(accounts.length);
   }
 
-  function renderArchivePreview() {
-    const proposals = store.getProposals();
+  async function renderArchivePreview() {
+    const proposals = await data.getProposals();
     const implemented = proposals.filter((item) => item.status === "implemented").slice(0, 4);
     const archived = proposals.filter((item) => item.status === "archived").slice(0, 4);
 
@@ -29,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     archivedPreview.innerHTML = archived
       .map(
         (item) =>
-          `<li><strong>${item.title}</strong> by ${item.author} · ${store.formatDate(item.submittedAt)}</li>`
+          `<li><strong>${item.title}</strong> by ${item.author} · ${data.formatDate(item.submittedAt)}</li>`
       )
       .join("");
   }
@@ -54,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
   openSignup.addEventListener("click", openSignupDialog);
   closeSignup.addEventListener("click", closeSignupDialog);
 
-  signupForm.addEventListener("submit", (event) => {
+  signupForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const formData = new FormData(signupForm);
     const payload = {
@@ -65,14 +67,14 @@ document.addEventListener("DOMContentLoaded", () => {
       pledge: formData.get("pledge") === "on"
     };
 
-    const result = store.createAccount(payload);
+    const result = await data.createAccount(payload);
     signupResult.textContent = result.message;
 
     if (!result.ok) {
       return;
     }
 
-    updateCounter();
+    await updateCounter();
     signupForm.reset();
     setTimeout(() => {
       closeSignupDialog();
@@ -93,6 +95,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  updateCounter();
-  renderArchivePreview();
+  await updateCounter();
+  await renderArchivePreview();
 });
