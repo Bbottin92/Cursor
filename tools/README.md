@@ -67,3 +67,14 @@ python3 tools/liquidgov_remote.py tail --lines 160
 - `put` and `replace` create a remote backup (`*.bak.<timestamp>`) unless you
   pass `--no-backup`.
 
+## Cursor / Remote-SSH helper
+
+If your host enables SSH, you can create a simple SSH config entry for Cursor:
+
+```bash
+bash tools/setup_cursor_remote_ssh.sh
+```
+
+It will generate a key, print the public key for cPanel import/authorization,
+and update `~/.ssh/config` with a host alias you can select in Cursor.
+
