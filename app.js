@@ -33,6 +33,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const profileVerifiedCounter = document.getElementById("profileVerifiedCounter");
   const participantsCount = document.getElementById("participantsCount");
   const verifiedCount = document.getElementById("verifiedCount");
+  const milestoneCompleted = document.getElementById("milestoneCompleted");
+  const milestoneFill = document.getElementById("milestoneFill");
+  const milestoneChecks = document.getElementById("milestoneChecks");
+  const toggleVerificationMethod = document.getElementById("toggleVerificationMethod");
+  const toggleFrameworkPublished = document.getElementById("toggleFrameworkPublished");
+  const toggleAuditPublished = document.getElementById("toggleAuditPublished");
+  const roleSelector = document.getElementById("roleSelector");
+  const claimRoleBtn = document.getElementById("claimRoleBtn");
+  const releaseRoleBtn = document.getElementById("releaseRoleBtn");
+  const roleResult = document.getElementById("roleResult");
+  const roleList = document.getElementById("roleList");
   const accountSwitcher = document.getElementById("accountSwitcher");
   const useAccountBtn = document.getElementById("useAccountBtn");
   const logoutBtn = document.getElementById("logoutBtn");
@@ -51,6 +62,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const proposalCategory = document.getElementById("proposalCategory");
   const proposalResult = document.getElementById("proposalResult");
   const archiveTableBody = document.getElementById("archiveTableBody");
+  const listingForm = document.getElementById("listingForm");
+  const listingType = document.getElementById("listingType");
+  const listingTitle = document.getElementById("listingTitle");
+  const listingDetails = document.getElementById("listingDetails");
+  const listingResult = document.getElementById("listingResult");
+  const listingTableBody = document.getElementById("listingTableBody");
+  const networkForm = document.getElementById("networkForm");
+  const networkTags = document.getElementById("networkTags");
+  const networkMessage = document.getElementById("networkMessage");
+  const networkResult = document.getElementById("networkResult");
+  const networkList = document.getElementById("networkList");
   const groupInput = document.getElementById("groupInput");
   const groupSendBtn = document.getElementById("groupSendBtn");
   const groupStream = document.getElementById("groupStream");
@@ -96,6 +118,73 @@ document.addEventListener("DOMContentLoaded", () => {
     participantsCount.textContent = store.formatNumber(accounts.length);
     verifiedCount.textContent = store.formatNumber(verifiedTotal);
     profileVerifiedCounter.textContent = store.formatNumber(verifiedTotal);
+  }
+
+  function renderLaunchMilestone() {
+    const milestone = store.getLaunchMilestoneStatus();
+    milestoneCompleted.textContent = String(milestone.completedChecks);
+    milestoneFill.style.width = `${(milestone.completedChecks / 5) * 100}%`;
+    milestoneChecks.innerHTML = milestone.checks
+      .map((item) => {
+        const labelClass = item.met ? "done" : "todo";
+        const labelText = item.met ? "Met" : "Pending";
+        return `
+          <div class="check-item">
+            <span>${item.label}</span>
+            <strong class="${labelClass}">${labelText}</strong>
+          </div>
+        `;
+      })
+      .join("");
+
+    const settings = store.getSettings();
+    toggleVerificationMethod.checked = Boolean(settings.verificationMethodRatified);
+    toggleFrameworkPublished.checked = Boolean(settings.frameworkPublished);
+    toggleAuditPublished.checked = Boolean(settings.auditPublished);
+  }
+
+  function renderRoles() {
+    const roles = store.getAssemblyRoles();
+    roleSelector.innerHTML = roles
+      .map((role) => `<option value="${role.id}">${role.title}</option>`)
+      .join("");
+
+    roleList.innerHTML = roles
+      .map((role) => {
+        const assignee = role.assignedTo ? role.assignedTo : "Vacant";
+        return `<li>${role.title}: <strong>${assignee}</strong></li>`;
+      })
+      .join("");
+  }
+
+  function renderListings() {
+    const listings = store.getListings();
+    listingTableBody.innerHTML = listings
+      .slice(0, 20)
+      .map((item) => {
+        const tagClass = item.status === "open" ? "status-under-review" : "status-archived";
+        const label = item.status === "open" ? "Open" : "Closed";
+        return `
+          <tr>
+            <td>${item.type}</td>
+            <td>${item.title}</td>
+            <td>${item.author}</td>
+            <td><span class="status-tag ${tagClass}">${label}</span></td>
+          </tr>
+        `;
+      })
+      .join("");
+  }
+
+  function renderNetworkPosts() {
+    const posts = store.getNetworkPosts();
+    networkList.innerHTML = posts
+      .slice(0, 20)
+      .map((post) => {
+        const tags = post.tags.length ? `#${post.tags.join(" #")}` : "No tags";
+        return `<li><strong>${post.author}</strong> (${post.scope}) · ${tags}<br />${post.message}</li>`;
+      })
+      .join("");
   }
 
   function renderAccountSelectors() {
@@ -424,11 +513,112 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  [toggleVerificationMethod, toggleFrameworkPublished, toggleAuditPublished].forEach(
+    (checkbox) => {
+      checkbox.addEventListener("change", () => {
+        store.updateSettings({
+          verificationMethodRatified: toggleVerificationMethod.checked,
+          frameworkPublished: toggleFrameworkPublished.checked,
+          auditPublished: toggleAuditPublished.checked
+        });
+        renderLaunchMilestone();
+      });
+    }
+  );
+
+  claimRoleBtn.addEventListener("click", () => {
+    roleResult.textContent = "";
+    if (!activeUsername) {
+      roleResult.textContent = "Select an account first.";
+      return;
+    }
+    const roleId = roleSelector.value;
+    const result = store.claimAssemblyRole(roleId, activeUsername);
+    roleResult.textContent = result.message;
+    renderRoles();
+    renderLaunchMilestone();
+    renderNotifications();
+  });
+
+  releaseRoleBtn.addEventListener("click", () => {
+    roleResult.textContent = "";
+    if (!activeUsername) {
+      roleResult.textContent = "Select an account first.";
+      return;
+    }
+    const roleId = roleSelector.value;
+    const result = store.releaseAssemblyRole(roleId, activeUsername);
+    roleResult.textContent = result.message;
+    renderRoles();
+    renderLaunchMilestone();
+    renderNotifications();
+  });
+
+  listingForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    listingResult.textContent = "";
+    if (!activeUsername) {
+      listingResult.textContent = "Select an account first.";
+      return;
+    }
+    const title = listingTitle.value.trim();
+    const details = listingDetails.value.trim();
+    if (!title || !details) {
+      listingResult.textContent = "Provide title and details.";
+      return;
+    }
+    store.addListing({
+      type: listingType.value,
+      title,
+      details,
+      scope: activeScope,
+      author: activeUsername
+    });
+    listingResult.textContent = "Listing posted.";
+    listingTitle.value = "";
+    listingDetails.value = "";
+    renderListings();
+  });
+
+  networkForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    networkResult.textContent = "";
+    if (!activeUsername) {
+      networkResult.textContent = "Select an account first.";
+      return;
+    }
+    const message = networkMessage.value.trim();
+    if (!message) {
+      networkResult.textContent = "Write a networking message.";
+      return;
+    }
+    const tags = networkTags.value
+      .split(",")
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean)
+      .slice(0, 7);
+
+    store.addNetworkPost({
+      author: activeUsername,
+      scope: activeScope,
+      tags,
+      message
+    });
+    networkResult.textContent = "Networking post published.";
+    networkTags.value = "";
+    networkMessage.value = "";
+    renderNetworkPosts();
+  });
+
   refreshMetrics();
+  renderLaunchMilestone();
+  renderRoles();
   renderAccountSelectors();
   renderScopes();
   renderScopePanel();
   renderArchive();
+  renderListings();
+  renderNetworkPosts();
   renderGroupStream();
   renderProfileTheme();
 

@@ -6,7 +6,8 @@ This repository now contains a static prototype for LiquidGov.US:
 - Account creation flow (`Participant` and `Verified Patriot` paths)
 - Legal/safety page with minor rules and transparency standards
 - Member app shell with communication modules, map scopes, profile customization,
-  contribution archive, and visitor/notification logs
+  contribution archive, visitor/notification logs, launch milestone tracker,
+  founding assembly role assignment, barter/trade board, and networking board
 
 ## Files
 
@@ -36,6 +37,8 @@ Then visit `http://localhost:8000`.
 4. Implemented ideas include a law reference field for referential credit.
 5. Profile visitor logs and guardian-inspection notifications are included in the
    app prototype.
+6. Launch Milestone progress and Founding Assembly roles are tracked in-app.
+7. Barter/trade listings and networking posts are persisted locally.
 
 ## Next build targets
 

@@ -4,7 +4,11 @@
     proposals: "liquidgov.proposals",
     session: "liquidgov.session",
     profileViews: "liquidgov.profileViews",
-    notifications: "liquidgov.notifications"
+    notifications: "liquidgov.notifications",
+    roles: "liquidgov.roles",
+    listings: "liquidgov.listings",
+    networkPosts: "liquidgov.networkPosts",
+    settings: "liquidgov.settings"
   };
 
   const defaultProposals = [
@@ -37,6 +41,57 @@
     }
   ];
 
+  const defaultAssemblyRoles = [
+    { id: "R-1", title: "Coordinator / Facilitator", assignedTo: null },
+    { id: "R-2", title: "Secretary / Records", assignedTo: null },
+    { id: "R-3", title: "Treasury / Finance", assignedTo: null },
+    { id: "R-4", title: "Tech Steward", assignedTo: null },
+    { id: "R-5", title: "Governance Steward", assignedTo: null },
+    { id: "R-6", title: "Community Steward", assignedTo: null },
+    { id: "R-7", title: "Ethics & Safety Steward", assignedTo: null }
+  ];
+
+  const defaultListings = [
+    {
+      id: "L-9001",
+      type: "barter",
+      title: "Offer: plumbing help for web design",
+      details: "Can help with basic plumbing in exchange for logo + landing page polish.",
+      scope: "Neighborhood",
+      author: "Nova72",
+      status: "open",
+      createdAt: "2026-02-10T14:00:00Z"
+    },
+    {
+      id: "L-9002",
+      type: "trade",
+      title: "Need: livestream mic setup",
+      details: "Seeking affordable used setup for chapter meetings.",
+      scope: "Town",
+      author: "Ari-Founder",
+      status: "open",
+      createdAt: "2026-02-12T19:22:00Z"
+    }
+  ];
+
+  const defaultNetworkPosts = [
+    {
+      id: "N-4001",
+      author: "Ari-Founder",
+      scope: "National",
+      tags: ["governance", "voluntarism"],
+      message: "Looking for chapter organizers with policy writing experience.",
+      createdAt: "2026-02-15T11:30:00Z"
+    }
+  ];
+
+  const defaultSettings = {
+    verificationMethodRatified: false,
+    frameworkPublished: false,
+    safetyStandardsAdopted: true,
+    auditPublished: false
+  };
+
   function read(key, fallback) {
     try {
       const raw = localStorage.getItem(key);
@@ -54,6 +109,34 @@
     const existing = read(STORE.proposals, null);
     if (!existing || !Array.isArray(existing) || existing.length === 0) {
       write(STORE.proposals, defaultProposals);
+    }
+  }
+
+  function ensureSeededRoles() {
+    const existing = read(STORE.roles, null);
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      write(STORE.roles, defaultAssemblyRoles);
+    }
+  }
+
+  function ensureSeededListings() {
+    const existing = read(STORE.listings, null);
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      write(STORE.listings, defaultListings);
+    }
+  }
+
+  function ensureSeededNetworkPosts() {
+    const existing = read(STORE.networkPosts, null);
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      write(STORE.networkPosts, defaultNetworkPosts);
+    }
+  }
+
+  function ensureSettings() {
+    const existing = read(STORE.settings, null);
+    if (!existing || typeof existing !== "object") {
+      write(STORE.settings, defaultSettings);
     }
   }
 
@@ -181,6 +264,170 @@
       lawReference: status === "implemented" ? `LAW-${Math.floor(Math.random() * 9999)}` : null
     });
     saveProposals(proposals);
+  }
+
+  function getAssemblyRoles() {
+    ensureSeededRoles();
+    return read(STORE.roles, []);
+  }
+
+  function saveAssemblyRoles(items) {
+    write(STORE.roles, items);
+  }
+
+  function claimAssemblyRole(roleId, username) {
+    const account = getAccounts().find(
+      (item) => normalizeName(item.username) === normalizeName(username)
+    );
+    if (!account) {
+      return { ok: false, message: "Account not found." };
+    }
+    const roles = getAssemblyRoles();
+    const role = roles.find((item) => item.id === roleId);
+    if (!role) {
+      return { ok: false, message: "Role not found." };
+    }
+    if (role.assignedTo && normalizeName(role.assignedTo) !== normalizeName(username)) {
+      return { ok: false, message: "Role already assigned." };
+    }
+    role.assignedTo = username;
+    saveAssemblyRoles(roles);
+    addNotification(username, `You claimed the role: ${role.title}.`, "success");
+    return { ok: true, message: `${username} is now ${role.title}.` };
+  }
+
+  function releaseAssemblyRole(roleId, username) {
+    const roles = getAssemblyRoles();
+    const role = roles.find((item) => item.id === roleId);
+    if (!role) {
+      return { ok: false, message: "Role not found." };
+    }
+    if (!role.assignedTo) {
+      return { ok: false, message: "Role is already vacant." };
+    }
+    if (normalizeName(role.assignedTo) !== normalizeName(username)) {
+      return { ok: false, message: "Only the assigned member can release this role." };
+    }
+    role.assignedTo = null;
+    saveAssemblyRoles(roles);
+    addNotification(username, `You released the role: ${role.title}.`, "notice");
+    return { ok: true, message: `${role.title} is now vacant.` };
+  }
+
+  function getListings() {
+    ensureSeededListings();
+    return read(STORE.listings, []);
+  }
+
+  function saveListings(items) {
+    write(STORE.listings, items);
+  }
+
+  function addListing({ type, title, details, scope, author }) {
+    const listings = getListings();
+    listings.unshift({
+      id: `L-${Math.floor(Math.random() * 9000 + 1000)}`,
+      type: type === "trade" ? "trade" : "barter",
+      title: String(title || "").trim(),
+      details: String(details || "").trim(),
+      scope: scope || "Neighborhood",
+      author,
+      status: "open",
+      createdAt: new Date().toISOString()
+    });
+    saveListings(listings);
+  }
+
+  function closeListing(listingId, username) {
+    const listings = getListings();
+    const target = listings.find((item) => item.id === listingId);
+    if (!target) {
+      return { ok: false, message: "Listing not found." };
+    }
+    if (normalizeName(target.author) !== normalizeName(username)) {
+      return { ok: false, message: "Only the author can close this listing." };
+    }
+    target.status = "closed";
+    target.closedAt = new Date().toISOString();
+    saveListings(listings);
+    return { ok: true, message: "Listing closed." };
+  }
+
+  function getNetworkPosts() {
+    ensureSeededNetworkPosts();
+    return read(STORE.networkPosts, []);
+  }
+
+  function saveNetworkPosts(items) {
+    write(STORE.networkPosts, items);
+  }
+
+  function addNetworkPost({ author, scope, tags, message }) {
+    const posts = getNetworkPosts();
+    posts.unshift({
+      id: `N-${Math.floor(Math.random() * 9000 + 1000)}`,
+      author,
+      scope: scope || "Neighborhood",
+      tags: Array.isArray(tags) ? tags : [],
+      message: String(message || "").trim(),
+      createdAt: new Date().toISOString()
+    });
+    saveNetworkPosts(posts);
+  }
+
+  function getSettings() {
+    ensureSettings();
+    return read(STORE.settings, defaultSettings);
+  }
+
+  function updateSettings(patch) {
+    const current = getSettings();
+    const next = { ...current, ...patch };
+    write(STORE.settings, next);
+    return next;
+  }
+
+  function getLaunchMilestoneStatus() {
+    const settings = getSettings();
+    const accounts = getAccounts();
+    const roles = getAssemblyRoles();
+    const rolesFilled = roles.every((role) => Boolean(role.assignedTo));
+    const participantCount = accounts.length;
+    const verifiedCount = accounts.filter((item) => item.isVerifiedPatriot).length;
+    const checks = [
+      {
+        id: "verification",
+        label: "Verification method ratified",
+        met: settings.verificationMethodRatified
+      },
+      {
+        id: "framework",
+        label: "Foundational governance framework published",
+        met: settings.frameworkPublished
+      },
+      {
+        id: "roles",
+        label: "Founding Assembly roles filled",
+        met: rolesFilled
+      },
+      {
+        id: "safety",
+        label: "Public safety standards adopted",
+        met: settings.safetyStandardsAdopted
+      },
+      {
+        id: "audit",
+        label: "Open audit of counts + voting integrity tests",
+        met: settings.auditPublished
+      }
+    ];
+    return {
+      participantCount,
+      verifiedCount,
+      goal: 175000000,
+      checks,
+      completedChecks: checks.filter((item) => item.met).length
+    };
   }
 
   function getVisitorMap() {
@@ -357,6 +604,10 @@
   }
 
   ensureSeededProposals();
+  ensureSeededRoles();
+  ensureSeededListings();
+  ensureSeededNetworkPosts();
+  ensureSettings();
 
   window.LiquidGovStore = {
     getAccounts,
@@ -366,6 +617,17 @@
     createAccount,
     getProposals,
     addProposal,
+    getAssemblyRoles,
+    claimAssemblyRole,
+    releaseAssemblyRole,
+    getListings,
+    addListing,
+    closeListing,
+    getNetworkPosts,
+    addNetworkPost,
+    getSettings,
+    updateSettings,
+    getLaunchMilestoneStatus,
     formatNumber,
     formatDate,
     recordProfileVisit,

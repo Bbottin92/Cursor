@@ -49,6 +49,44 @@
       </div>
 
       <div class="policy-card">
+        <h3>Launch Milestone Tracker</h3>
+        <p class="tiny-note">
+          Completed checks: <strong id="milestoneCompleted">0</strong>/5
+        </p>
+        <div class="progress-track" aria-hidden="true">
+          <div class="progress-fill" id="milestoneFill"></div>
+        </div>
+        <div id="milestoneChecks" class="stack"></div>
+        <hr />
+        <label class="checkbox-row">
+          <input id="toggleVerificationMethod" type="checkbox" />
+          Verification method ratified
+        </label>
+        <label class="checkbox-row">
+          <input id="toggleFrameworkPublished" type="checkbox" />
+          Framework published
+        </label>
+        <label class="checkbox-row">
+          <input id="toggleAuditPublished" type="checkbox" />
+          Audit published
+        </label>
+      </div>
+
+      <div class="policy-card">
+        <h3>Founding Assembly Roles</h3>
+        <label>
+          Role
+          <select id="roleSelector"></select>
+        </label>
+        <div class="hero-actions">
+          <button id="claimRoleBtn" class="secondary" type="button">Claim</button>
+          <button id="releaseRoleBtn" class="secondary" type="button">Release</button>
+        </div>
+        <p id="roleResult" class="tiny-note"></p>
+        <ul id="roleList"></ul>
+      </div>
+
+      <div class="policy-card">
         <h3>Communication Suite</h3>
         <ul class="tight">
           <li>Direct messenger</li>
@@ -197,6 +235,57 @@
           </thead>
           <tbody id="archiveTableBody"></tbody>
         </table>
+      </div>
+
+      <div class="feed-card">
+        <h3>Barter / Trade Board</h3>
+        <form id="listingForm" class="stack">
+          <label>
+            Type
+            <select id="listingType">
+              <option value="barter">Barter</option>
+              <option value="trade">Trade</option>
+            </select>
+          </label>
+          <label>
+            Title
+            <input id="listingTitle" type="text" maxlength="90" required />
+          </label>
+          <label>
+            Details
+            <textarea id="listingDetails" required></textarea>
+          </label>
+          <button class="secondary" type="submit">Post Listing</button>
+          <p id="listingResult" class="tiny-note"></p>
+        </form>
+        <table class="archive-table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="listingTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="feed-card">
+        <h3>Networking Board</h3>
+        <form id="networkForm" class="stack">
+          <label>
+            Tags (comma-separated)
+            <input id="networkTags" type="text" placeholder="organizing, design, legal, media" />
+          </label>
+          <label>
+            Intro / request
+            <textarea id="networkMessage" required></textarea>
+          </label>
+          <button class="secondary" type="submit">Publish Networking Post</button>
+          <p id="networkResult" class="tiny-note"></p>
+        </form>
+        <ul id="networkList"></ul>
       </div>
     </section>
 
