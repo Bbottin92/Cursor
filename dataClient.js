@@ -1,8 +1,10 @@
 (function initLiquidGovData() {
   const SESSION_KEY = "liquidgov.apiToken";
+  const LEGACY_TOKEN_KEY = "auth_token";
   const localStore = window.LiquidGovStore;
   let apiReady = false;
-  let token = localStorage.getItem(SESSION_KEY) || null;
+  let legacyReady = false;
+  let token = localStorage.getItem(SESSION_KEY) || localStorage.getItem(LEGACY_TOKEN_KEY) || null;
 
   async function detectBackend() {
     try {
@@ -11,6 +13,17 @@
     } catch (error) {
       apiReady = false;
     }
+    try {
+      const response = await fetch("/api/stats/participants", { cache: "no-store" });
+      if (response.ok) {
+        const data = await response.json().catch(() => ({}));
+        legacyReady = Number.isFinite(Number(data.count));
+      } else {
+        legacyReady = false;
+      }
+    } catch (error) {
+      legacyReady = false;
+    }
     return apiReady;
   }
 
@@ -18,8 +31,10 @@
     token = value || null;
     if (token) {
       localStorage.setItem(SESSION_KEY, token);
+      localStorage.setItem(LEGACY_TOKEN_KEY, token);
     } else {
       localStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(LEGACY_TOKEN_KEY);
     }
   }
 
@@ -66,11 +81,15 @@
   const api = {
     async init() {
       await detectBackend();
-      return { apiReady };
+      return { apiReady, legacyReady };
     },
 
     isBackendEnabled() {
       return apiReady;
+    },
+
+    isLegacyApiEnabled() {
+      return legacyReady;
     },
 
     formatNumber,
@@ -78,6 +97,20 @@
 
     async getAccounts() {
       if (!apiReady) {
+        if (legacyReady && token) {
+          try {
+            const data = await request("/api/users");
+            const users = Array.isArray(data.users) ? data.users : [];
+            return users.map((user) => ({
+              username: user.name,
+              isVerifiedPatriot: false,
+              role: "adult",
+              createdAt: user.created_at || null
+            }));
+          } catch (error) {
+            // Fall through to local store fallback.
+          }
+        }
         return localStore.getAccounts();
       }
       const data = await request("/api/accounts");
@@ -86,6 +119,14 @@
 
     async getParticipantCount() {
       if (!apiReady) {
+        if (legacyReady) {
+          try {
+            const data = await request("/api/stats/participants");
+            return Number(data.count || 0);
+          } catch (error) {
+            // Fall through to local store fallback.
+          }
+        }
         const milestone = localStore.getLaunchMilestoneStatus();
         return Number(milestone.participantCount || 0);
       }
@@ -95,6 +136,21 @@
 
     async getCurrentUser() {
       if (!apiReady) {
+        if (legacyReady && token) {
+          try {
+            const data = await request("/api/auth/me");
+            const user = data.user;
+            if (user?.name) {
+              return {
+                username: user.name,
+                role: "adult",
+                isVerifiedPatriot: false
+              };
+            }
+          } catch (error) {
+            setToken(null);
+          }
+        }
         return normalizeLocalSession(localStore.getCurrentUser());
       }
       if (!token) {
@@ -124,6 +180,37 @@
       }
 
       if (!apiReady) {
+        if (legacyReady) {
+          try {
+            let data;
+            try {
+              data = await request("/api/auth/login", {
+                method: "POST",
+                body: JSON.stringify({ name: username })
+              });
+            } catch (firstError) {
+              data = await request("/api/auth/login", {
+                method: "POST",
+                body: JSON.stringify({ username })
+              });
+            }
+            if (data?.token) {
+              setToken(data.token);
+            }
+            if (data?.user?.name) {
+              return {
+                username: data.user.name,
+                role: "adult",
+                isVerifiedPatriot: false
+              };
+            }
+            if (data?.account?.username) {
+              return data.account;
+            }
+          } catch (error) {
+            // Fall through to local storage login.
+          }
+        }
         localStore.setCurrentUser(username);
         return normalizeLocalSession(localStore.getCurrentUser());
       }
@@ -138,6 +225,13 @@
 
     async createAccount(payload) {
       if (!apiReady) {
+        if (legacyReady) {
+          return {
+            ok: false,
+            message:
+              "Legacy backend signup requires password fields. Use the existing live signup form for account creation."
+          };
+        }
         return localStore.createAccount(payload);
       }
       try {
@@ -162,6 +256,14 @@
 
     async getAnnouncements() {
       if (!apiReady) {
+        if (legacyReady) {
+          try {
+            const data = await request("/api/announcements");
+            return data.announcements || [];
+          } catch (error) {
+            // Fall through to local store fallback.
+          }
+        }
         return localStore.getAnnouncements();
       }
       const data = await request("/api/announcements");
@@ -170,6 +272,12 @@
 
     async addAnnouncement({ title, body, authorName, authorUsername }) {
       if (!apiReady) {
+        if (legacyReady) {
+          return request("/api/announcements", {
+            method: "POST",
+            body: JSON.stringify({ title, body })
+          });
+        }
         return localStore.addAnnouncement({ title, body, authorName, authorUsername });
       }
       return request("/api/announcements", {
