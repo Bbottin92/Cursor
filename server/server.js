@@ -35,7 +35,9 @@ function hashPassword(password) {
   return crypto.createHash("sha256").update(String(password || "")).digest("hex");
 }
 
-const ADMIN_BOOTSTRAP_USERNAMES = String(process.env.ADMIN_USERNAMES || "Brandon Bottin")
+const ADMIN_BOOTSTRAP_USERNAMES = String(
+  process.env.ADMIN_USERNAMES || "Brandon Bottin,Brandon Bottin profile,Brandon Bottin's profile"
+)
   .split(",")
   .map((item) => toLowerName(item))
   .filter(Boolean);

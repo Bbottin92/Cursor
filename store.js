@@ -106,7 +106,11 @@
     legacyParticipantOffset: 0
   };
 
-  const ADMIN_USERNAMES = ["brandon bottin"];
+  const ADMIN_USERNAMES = [
+    "brandon bottin",
+    "brandon bottin profile",
+    "brandon bottin's profile"
+  ];
 
   function read(key, fallback) {
     try {
