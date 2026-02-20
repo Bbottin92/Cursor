@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-02-20T10:23:02Z",
+  "description": "Auto-ranked files touched most often in context checkpoints.",
+  "hotspots": [
+    {
+      "file": "README.md",
+      "touches": 4
+    },
+    {
+      "file": "package.json",
+      "touches": 4
+    },
+    {
+      "file": "scripts/context_flowmap.py",
+      "touches": 4
+    },
+    {
+      "file": "scripts/context_guard.sh",
+      "touches": 4
+    },
+    {
+      "file": "scripts/deploy_cpanel_no_ssh.sh",
+      "touches": 4
+    },
+    {
+      "file": "scripts/install_context_hooks.sh",
+      "touches": 4
+    },
+    {
+      "file": "context/",
+      "touches": 3
+    },
+    {
+      "file": "context/activity_log.jsonl",
+      "touches": 1
+    }
+  ]
+}

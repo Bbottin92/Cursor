@@ -4,10 +4,16 @@
   "description": "LiquidGov.US prototype with backend API and frontend app shell",
   "main": "server/server.js",
   "scripts": {
+    "prepare": "bash scripts/install_context_hooks.sh || true",
     "start": "node server/server.js",
     "dev": "node server/server.js",
+    "context:update": "python3 scripts/context_flowmap.py --phase update --note \"npm context:update\" --print-summary",
+    "context:inspect": "python3 scripts/context_flowmap.py --phase inspect --note \"manual inspect checkpoint\" --print-summary",
+    "context:change": "python3 scripts/context_flowmap.py --phase change --note \"manual change checkpoint\" --print-summary",
+    "context:install-hooks": "bash scripts/install_context_hooks.sh",
+    "context:guard": "bash scripts/context_guard.sh inspect \"npm context guard\"",
     "import:legacy": "node server/import-legacy.js",
-    "test": "node --check server/server.js && node --check server/db.js && node --check server/import-legacy.js && node --check main.js && node --check app.js && node --check dataClient.js && node --check store.js"
+    "test": "python3 scripts/context_flowmap.py --phase test --note \"npm test context sync\" --quiet && node --check server/server.js && node --check server/db.js && node --check server/import-legacy.js && node --check main.js && node --check app.js && node --check dataClient.js && node --check store.js"
   },
   "repository": {
     "type": "git",

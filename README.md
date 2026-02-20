@@ -76,6 +76,42 @@ chmod 600 ~/.liquidgov_cpanel_token
 unset T
 ```
 
+## Persistent Context + Flowmap System (Required Workflow)
+
+This repo now includes a dynamic, persistent context system that should be
+referenced before inspecting or changing website/code.
+
+- Generator: `scripts/context_flowmap.py`
+- Guard wrapper: `scripts/context_guard.sh`
+- Outputs:
+  - `context/flowmap.json`
+  - `context/flowmap.md`
+  - `context/activity_log.jsonl`
+  - `context/state.json`
+  - `context/watchlist.json` (auto-ranked hotspot files)
+
+### Before inspection
+
+```bash
+./scripts/context_guard.sh inspect "what you are checking"
+```
+
+### Before code changes
+
+```bash
+./scripts/context_guard.sh change "what you are changing"
+```
+
+### Redundant automation (already embedded)
+
+1. `npm test` auto-syncs context before validations.
+2. `scripts/deploy_cpanel_no_ssh.sh` auto-syncs context at deploy start and deploy verification.
+3. Optional pre-commit hook auto-refreshes/stages context files:
+
+```bash
+npm run context:install-hooks
+```
+
 ## API coverage (implemented)
 
 - Auth/session:

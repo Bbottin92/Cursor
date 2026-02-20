@@ -1,0 +1,479 @@
+{
+  "generated_at": "2026-02-20T10:23:02Z",
+  "trigger": {
+    "phase": "pre_commit",
+    "note": "auto pre-commit context sync"
+  },
+  "git": {
+    "branch": "cursor/liquidgov-website-definition-d045",
+    "commit": "c64a614",
+    "changed_files": [
+      "README.md",
+      "context/activity_log.jsonl",
+      "context/flowmap.json",
+      "context/flowmap.md",
+      "context/state.json",
+      "context/watchlist.json",
+      "package.json",
+      "scripts/context_flowmap.py",
+      "scripts/context_guard.sh",
+      "scripts/deploy_cpanel_no_ssh.sh",
+      "scripts/install_context_hooks.sh"
+    ]
+  },
+  "frontend": {
+    "html_nodes": [
+      {
+        "file": "index.html",
+        "exists": true,
+        "stylesheets": [
+          "styles.css?v=20260220c"
+        ],
+        "scripts": [
+          "store.js?v=20260220c",
+          "dataClient.js?v=20260220c",
+          "main.js?v=20260220c"
+        ],
+        "links": [
+          "#start-here",
+          "#why-nusa",
+          "#updates",
+          "app.html",
+          "login.html",
+          "app.html",
+          "app.html",
+          "app.html#proposalCard"
+        ]
+      },
+      {
+        "file": "app.html",
+        "exists": true,
+        "stylesheets": [
+          "styles.css?v=20260220c"
+        ],
+        "scripts": [
+          "store.js?v=20260220c",
+          "dataClient.js?v=20260220c",
+          "app.js?v=20260220c"
+        ],
+        "links": [
+          "index.html",
+          "legal.html"
+        ]
+      },
+      {
+        "file": "legal.html",
+        "exists": true,
+        "stylesheets": [
+          "styles.css?v=20260220c"
+        ],
+        "scripts": [],
+        "links": [
+          "index.html",
+          "app.html"
+        ]
+      },
+      {
+        "file": "login.html",
+        "exists": true,
+        "stylesheets": [
+          "styles.css?v=20260220c"
+        ],
+        "scripts": [],
+        "links": [
+          "index.html"
+        ]
+      },
+      {
+        "file": "dashboard.html",
+        "exists": true,
+        "stylesheets": [],
+        "scripts": [],
+        "links": [
+          "app.html"
+        ]
+      },
+      {
+        "file": "profile.html",
+        "exists": true,
+        "stylesheets": [],
+        "scripts": [],
+        "links": [
+          "app.html"
+        ]
+      },
+      {
+        "file": "edit-profile.html",
+        "exists": true,
+        "stylesheets": [],
+        "scripts": [],
+        "links": [
+          "app.html"
+        ]
+      }
+    ],
+    "js_nodes": [
+      {
+        "file": "main.js",
+        "exists": true,
+        "api_refs": []
+      },
+      {
+        "file": "app.js",
+        "exists": true,
+        "api_refs": []
+      },
+      {
+        "file": "dataClient.js",
+        "exists": true,
+        "api_refs": [
+          "/api/accounts",
+          "/api/announcements",
+          "/api/auth/login",
+          "/api/auth/logout",
+          "/api/auth/me",
+          "/api/auth/register",
+          "/api/health",
+          "/api/listings",
+          "/api/listings/${encodeURIComponent(listingId)}/close",
+          "/api/milestone",
+          "/api/minor/approve-contact",
+          "/api/minor/can-interact?sender=${encodeURIComponent(\n            senderUsername\n          )}&receiver=${encodeURIComponent(receiverUsername)}",
+          "/api/minor/inspect",
+          "/api/network-posts",
+          "/api/notifications",
+          "/api/notifications/${encodeURIComponent(username)}",
+          "/api/profile-visits",
+          "/api/profile-visits/${encodeURIComponent(profileOwner)}",
+          "/api/proposals",
+          "/api/roles",
+          "/api/roles/claim",
+          "/api/roles/release",
+          "/api/session/current",
+          "/api/settings",
+          "/api/stats/participants",
+          "/api/users"
+        ]
+      },
+      {
+        "file": "store.js",
+        "exists": true,
+        "api_refs": []
+      }
+    ]
+  },
+  "api": {
+    "server_routes": [
+      {
+        "method": "GET",
+        "route": "/api/health"
+      },
+      {
+        "method": "POST",
+        "route": "/api/auth/register"
+      },
+      {
+        "method": "POST",
+        "route": "/api/auth/signup"
+      },
+      {
+        "method": "POST",
+        "route": "/api/auth/login"
+      },
+      {
+        "method": "POST",
+        "route": "/api/auth/logout"
+      },
+      {
+        "method": "GET",
+        "route": "/api/session/current"
+      },
+      {
+        "method": "GET",
+        "route": "/api/auth/me"
+      },
+      {
+        "method": "POST",
+        "route": "/api/auth/change-name"
+      },
+      {
+        "method": "POST",
+        "route": "/api/auth/change-password"
+      },
+      {
+        "method": "POST",
+        "route": "/api/auth/delete"
+      },
+      {
+        "method": "GET",
+        "route": "/api/accounts"
+      },
+      {
+        "method": "GET",
+        "route": "/api/stats"
+      },
+      {
+        "method": "GET",
+        "route": "/api/stats/participants"
+      },
+      {
+        "method": "GET",
+        "route": "/api/settings"
+      },
+      {
+        "method": "PATCH",
+        "route": "/api/settings"
+      },
+      {
+        "method": "GET",
+        "route": "/api/milestone"
+      },
+      {
+        "method": "GET",
+        "route": "/api/proposals"
+      },
+      {
+        "method": "POST",
+        "route": "/api/proposals"
+      },
+      {
+        "method": "GET",
+        "route": "/api/announcements"
+      },
+      {
+        "method": "POST",
+        "route": "/api/announcements"
+      },
+      {
+        "method": "GET",
+        "route": "/api/forum/posts"
+      },
+      {
+        "method": "GET",
+        "route": "/api/meetings"
+      },
+      {
+        "method": "GET",
+        "route": "/api/social-services"
+      },
+      {
+        "method": "GET",
+        "route": "/api/users"
+      },
+      {
+        "method": "GET",
+        "route": "/api/users/me"
+      },
+      {
+        "method": "GET",
+        "route": "/api/users/:id/profile"
+      },
+      {
+        "method": "PATCH",
+        "route": "/api/users/me"
+      },
+      {
+        "method": "POST",
+        "route": "/api/users/me/avatar"
+      },
+      {
+        "method": "PATCH",
+        "route": "/api/users/:id"
+      },
+      {
+        "method": "PUT",
+        "route": "/api/users/:id"
+      },
+      {
+        "method": "GET",
+        "route": "/api/roles"
+      },
+      {
+        "method": "POST",
+        "route": "/api/roles/claim"
+      },
+      {
+        "method": "POST",
+        "route": "/api/roles/release"
+      },
+      {
+        "method": "GET",
+        "route": "/api/listings"
+      },
+      {
+        "method": "POST",
+        "route": "/api/listings"
+      },
+      {
+        "method": "POST",
+        "route": "/api/listings/:listingId/close"
+      },
+      {
+        "method": "GET",
+        "route": "/api/network-posts"
+      },
+      {
+        "method": "POST",
+        "route": "/api/network-posts"
+      },
+      {
+        "method": "GET",
+        "route": "/api/notifications/:username"
+      },
+      {
+        "method": "POST",
+        "route": "/api/notifications"
+      },
+      {
+        "method": "POST",
+        "route": "/api/profile-visits"
+      },
+      {
+        "method": "GET",
+        "route": "/api/profile-visits/:username"
+      },
+      {
+        "method": "POST",
+        "route": "/api/minor/inspect"
+      },
+      {
+        "method": "POST",
+        "route": "/api/minor/approve-contact"
+      },
+      {
+        "method": "GET",
+        "route": "/api/minor/can-interact"
+      },
+      {
+        "method": "GET",
+        "route": "/"
+      }
+    ],
+    "client_api_refs": [
+      "/api/accounts",
+      "/api/announcements",
+      "/api/auth/login",
+      "/api/auth/logout",
+      "/api/auth/me",
+      "/api/auth/register",
+      "/api/health",
+      "/api/listings",
+      "/api/listings/${encodeURIComponent(listingId)}/close",
+      "/api/milestone",
+      "/api/minor/approve-contact",
+      "/api/minor/can-interact?sender=${encodeURIComponent(\n            senderUsername\n          )}&receiver=${encodeURIComponent(receiverUsername)}",
+      "/api/minor/inspect",
+      "/api/network-posts",
+      "/api/notifications",
+      "/api/notifications/${encodeURIComponent(username)}",
+      "/api/profile-visits",
+      "/api/profile-visits/${encodeURIComponent(profileOwner)}",
+      "/api/proposals",
+      "/api/roles",
+      "/api/roles/claim",
+      "/api/roles/release",
+      "/api/session/current",
+      "/api/settings",
+      "/api/stats/participants",
+      "/api/users"
+    ],
+    "route_count": 46
+  },
+  "deploy": {
+    "script": "scripts/deploy_cpanel_no_ssh.sh",
+    "required_files": [
+      "index.html",
+      "app.html",
+      "legal.html",
+      "styles.css",
+      "main.js",
+      "app.js",
+      "dataClient.js",
+      "store.js",
+      "login.html",
+      "dashboard.html",
+      "profile.html",
+      "edit-profile.html",
+      "js/error-handler.js"
+    ],
+    "optional_files": [
+      "Dripflag.tiff",
+      "Dripflag.tif",
+      "Dripflag.TIFF",
+      "Dripflag.TIF",
+      "Notax.tiff",
+      "Notax.tif",
+      "Notax.TIFF",
+      "Notax.TIF",
+      "Notax.till",
+      "Notax.TILL"
+    ]
+  },
+  "critical_flow_paths": [
+    {
+      "id": "flow_join",
+      "name": "Participant join flow",
+      "steps": [
+        "index.html -> main.js -> dataClient.createAccount",
+        "/api/auth/register (primary) or /api/auth/signup (legacy)",
+        "participant counter refresh via /api/stats/participants"
+      ]
+    },
+    {
+      "id": "flow_updates",
+      "name": "Announcement visibility flow",
+      "steps": [
+        "app.html announcement form -> app.js -> dataClient.addAnnouncement",
+        "/api/announcements persists updates",
+        "index.html preview reads /api/announcements"
+      ]
+    },
+    {
+      "id": "flow_deploy",
+      "name": "No-SSH deployment flow",
+      "steps": [
+        "scripts/deploy_cpanel_no_ssh.sh authenticates with cPanel API",
+        "uploads required frontend files to public_html",
+        "verifies homepage, member app, participant count, announcements"
+      ]
+    }
+  ],
+  "workflow_rule": "Run context guard before inspect/change: ./scripts/context_guard.sh inspect|change \"note\"",
+  "optimization": {
+    "activity_entries": 4,
+    "hotspots": [
+      {
+        "file": "README.md",
+        "touches": 4
+      },
+      {
+        "file": "package.json",
+        "touches": 4
+      },
+      {
+        "file": "scripts/context_flowmap.py",
+        "touches": 4
+      },
+      {
+        "file": "scripts/context_guard.sh",
+        "touches": 4
+      },
+      {
+        "file": "scripts/deploy_cpanel_no_ssh.sh",
+        "touches": 4
+      },
+      {
+        "file": "scripts/install_context_hooks.sh",
+        "touches": 4
+      },
+      {
+        "file": "context/",
+        "touches": 3
+      },
+      {
+        "file": "context/activity_log.jsonl",
+        "touches": 1
+      }
+    ]
+  }
+}

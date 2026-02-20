@@ -28,6 +28,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$REPO_ROOT"
 
+if command -v python3 >/dev/null 2>&1; then
+  python3 scripts/context_flowmap.py --phase deploy --note "deploy_cpanel_no_ssh invoked" --quiet || true
+fi
+
 if [[ "${SKIP_GIT:-0}" != "1" ]]; then
   echo "Updating local branch: $BRANCH"
   git fetch origin "$BRANCH"
@@ -140,6 +144,10 @@ echo "Announcements: ${announcements}"
 if [[ "$home_code" != "200" || "$app_code" != "200" ]]; then
   echo "Verification failed: expected HTTP 200 for homepage and app page." >&2
   exit 1
+fi
+
+if command -v python3 >/dev/null 2>&1; then
+  python3 scripts/context_flowmap.py --phase deploy_verify --note "deploy verification passed" --quiet || true
 fi
 
 echo "Deploy complete."
