@@ -89,8 +89,8 @@
   const defaultAnnouncements = [
     {
       id: "A-1001",
-      title: "Welcome to LiquidGov",
-      body: "This is the initial announcement channel. Updates will appear here.",
+      title: "Welcome to NUSA",
+      body: "This is the initial announcement channel. Official NUSA updates will appear here.",
       author_name: "System",
       author_username: "system",
       created_at: "2026-02-20T00:00:00Z",
