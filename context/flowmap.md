@@ -1,6 +1,6 @@
 # NUSA Context + Flowmap
 
-Generated: `2026-02-20T14:21:32Z`
+Generated: `2026-02-20T14:22:12Z`
 Trigger: `pre_commit` - auto pre-commit context sync
 
 ## Persistent Workflow Rules
@@ -11,8 +11,8 @@ Trigger: `pre_commit` - auto pre-commit context sync
 4. Pre-commit hook auto-refreshes this flowmap (install with `npm run context:install-hooks`)
 5. Deploy script auto-refreshes context at deploy start and finish
 
-State runs: `28`  
-Phase counts: `{"bootstrap": 1, "test": 5, "change": 7, "pre_commit": 11, "inspect": 4}`
+State runs: `30`  
+Phase counts: `{"bootstrap": 1, "test": 6, "change": 7, "pre_commit": 12, "inspect": 4}`
 
 ## Frontend Map
 
@@ -94,22 +94,22 @@ Phase counts: `{"bootstrap": 1, "test": 5, "change": 7, "pre_commit": 11, "inspe
 
 ## Optimization Watchlist (Auto)
 
-- `context/activity_log.jsonl` touched `15` checkpoint(s)
-- `context/current_task.md` touched `15` checkpoint(s)
-- `context/flowmap.json` touched `15` checkpoint(s)
-- `context/flowmap.md` touched `15` checkpoint(s)
-- `context/state.json` touched `15` checkpoint(s)
-- `context/watchlist.json` touched `15` checkpoint(s)
+- `context/activity_log.jsonl` touched `16` checkpoint(s)
+- `context/current_task.md` touched `16` checkpoint(s)
+- `context/flowmap.json` touched `16` checkpoint(s)
+- `context/flowmap.md` touched `16` checkpoint(s)
+- `context/state.json` touched `16` checkpoint(s)
+- `context/watchlist.json` touched `16` checkpoint(s)
 - `index.html` touched `9` checkpoint(s)
 - `README.md` touched `6` checkpoint(s)
 
 ## Recent Context Activity
 
-- `2026-02-20T12:42:24Z` [pre_commit] auto pre-commit context sync
-- `2026-02-20T13:01:58Z` [change] simplify account creation to username and password only
 - `2026-02-20T13:14:21Z` [test] npm test context sync
 - `2026-02-20T13:15:15Z` [change] finalize username-password-only signup implementation
 - `2026-02-20T13:16:27Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T13:38:38Z` [inspect] verify live signup dialog fields after successful deploy
 - `2026-02-20T14:21:23Z` [change] implement signup fix admin controls and portrait editor
 - `2026-02-20T14:21:32Z` [pre_commit] auto pre-commit context sync
+- `2026-02-20T14:21:51Z` [test] npm test context sync
+- `2026-02-20T14:22:12Z` [pre_commit] auto pre-commit context sync
