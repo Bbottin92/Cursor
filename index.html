@@ -20,45 +20,73 @@
 
   <main>
     <section class="hero">
-      <img
-        class="hero-corner hero-corner-left"
-        src="Dripflag.tiff"
-        alt=""
-        aria-hidden="true"
-        onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='Dripflag.tif';}else{this.style.display='none';}"
-      />
-      <img
-        class="hero-corner hero-corner-right"
-        src="Notax.tiff"
-        alt=""
-        aria-hidden="true"
-        onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='Notax.till';}else{this.style.display='none';}"
-      />
-
-      <div class="hero-title-row">
-        <div class="hero-brand-lockup">
-          <div class="hero-brand-name">NUSA</div>
-          <div class="hero-brand-sub">New United States of America</div>
+      <div class="hero-main">
+        <div class="hero-left">
+          <div class="hero-brand-lockup">
+            <div class="hero-brand-name">NUSA</div>
+            <div class="hero-brand-sub">New United States of America</div>
+          </div>
+          <img
+            class="hero-dripflag"
+            src="Dripflag.tiff"
+            alt=""
+            aria-hidden="true"
+            onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='Dripflag.tif';}else{this.style.display='none';}"
+          />
         </div>
-        <div>
+
+        <div class="hero-right">
           <h1>Rebuild The House<br />Keep The Foundation</h1>
+          <p class="hero-subline">Get out BEFORE the collapse</p>
           <p class="hero-copy">
             If we each commit to adopting 1 new participant per day, in just 28 days
             we can legitimately dissolve corruption from the inside out. Our goal is
             175 million.
           </p>
-        </div>
-      </div>
 
-      <div class="counter-wrap">
-        <div class="main-counter" aria-live="polite">
-          [<span id="participantCurrent">0</span> / 175,000,000 PARTICIPANTS]
-        </div>
-      </div>
+          <div class="counter-wrap">
+            <div class="main-counter" aria-live="polite">
+              [<span id="participantCurrent">0</span> / 175,000,000 PARTICIPANTS]
+            </div>
+          </div>
 
-      <div class="hero-actions">
-        <button id="openSignup" class="primary">Create Account</button>
-        <a class="secondary" href="app.html">Open Member App</a>
+          <div class="hero-actions">
+            <button id="openSignup" class="primary">Create Account</button>
+            <a class="secondary" href="app.html">Visit as a Guest</a>
+          </div>
+        </div>
+
+        <img
+          class="hero-notax"
+          src="Notax.tiff"
+          alt=""
+          aria-hidden="true"
+          onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='Notax.till';}else{this.style.display='none';}"
+        />
+      </div>
+    </section>
+
+    <section class="section honest-section">
+      <div class="honest-grid">
+        <div>
+          <h2>Lets be honest...</h2>
+          <p class="hero-copy">Do you really believe your vote has weight?</p>
+          <ul class="checklist">
+            <li>In a liquid democracy, your opinion counts in real time 24/7</li>
+            <li>Built for transparency and verifiability in public decision-making</li>
+            <li>Everyone has a voice that scales with lived experience</li>
+            <li>A culture of support over coercion drives long-term resilience</li>
+          </ul>
+        </div>
+        <div class="honest-image-wrap">
+          <img
+            class="honest-image"
+            src="Notax.tiff"
+            alt=""
+            aria-hidden="true"
+            onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='Notax.till';}else{this.style.display='none';}"
+          />
+        </div>
       </div>
     </section>
 
