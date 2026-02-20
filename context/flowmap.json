@@ -1,24 +1,19 @@
 {
-  "generated_at": "2026-02-20T10:53:46Z",
+  "generated_at": "2026-02-20T10:54:10Z",
   "trigger": {
     "phase": "pre_commit",
     "note": "auto pre-commit context sync"
   },
   "git": {
     "branch": "cursor/liquidgov-website-definition-d045",
-    "commit": "f5e98f2",
+    "commit": "b8a2b38",
     "changed_files": [
-      "app.html",
       "context/activity_log.jsonl",
       "context/current_task.md",
       "context/flowmap.json",
       "context/flowmap.md",
       "context/state.json",
-      "context/watchlist.json",
-      "index.html",
-      "legal.html",
-      "login.html",
-      "styles.css"
+      "context/watchlist.json"
     ]
   },
   "frontend": {
@@ -440,31 +435,31 @@
   ],
   "workflow_rule": "Run context guard before inspect/change: ./scripts/context_guard.sh inspect|change \"note\"",
   "optimization": {
-    "activity_entries": 15,
+    "activity_entries": 17,
     "hotspots": [
       {
         "file": "context/activity_log.jsonl",
-        "touches": 7
+        "touches": 8
       },
       {
         "file": "context/current_task.md",
-        "touches": 7
+        "touches": 8
       },
       {
         "file": "context/flowmap.json",
-        "touches": 7
+        "touches": 8
       },
       {
         "file": "context/flowmap.md",
-        "touches": 7
+        "touches": 8
       },
       {
         "file": "context/state.json",
-        "touches": 7
+        "touches": 8
       },
       {
         "file": "context/watchlist.json",
-        "touches": 7
+        "touches": 8
       },
       {
         "file": "README.md",
