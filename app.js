@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     sentMessage: false,
     activePortrait: null,
     isAdmin: false,
+    promptShownSession: {},
     groupMessages: [
       "System: Welcome to the group channel.",
       "System: Keep discussion constructive and solution-focused."
@@ -86,6 +87,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   const brushColorInput = el("brushColor");
   const brushShadeInput = el("brushShade");
   const brushSizeInput = el("brushSize");
+  const feedbackPromptDialog = el("feedbackPromptDialog");
+  const feedbackProblem = el("feedbackProblem");
+  const feedbackSolution = el("feedbackSolution");
+  const feedbackPromptEnable = el("feedbackPromptEnable");
+  const feedbackPromptClose = el("feedbackPromptClose");
+  const feedbackPromptSend = el("feedbackPromptSend");
+  const feedbackPromptResult = el("feedbackPromptResult");
+
+  const FEEDBACK_PROMPT_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
   function setOnboardingItem(itemEl, done) {
     itemEl.classList.toggle("done", done);
@@ -363,6 +373,56 @@ document.addEventListener("DOMContentLoaded", async () => {
       .join("");
   }
 
+  function shouldShowFeedbackPrompt(account) {
+    if (!account || !account.username) {
+      return false;
+    }
+    const key = String(account.username).toLowerCase();
+    if (state.promptShownSession[key]) {
+      return false;
+    }
+    if (account.promptOptOut) {
+      return false;
+    }
+    const lastSeen = Date.parse(account.promptLastSeen || "");
+    if (Number.isFinite(lastSeen) && Date.now() - lastSeen < FEEDBACK_PROMPT_COOLDOWN_MS) {
+      return false;
+    }
+    return true;
+  }
+
+  async function maybeShowFeedbackPrompt(account) {
+    if (!feedbackPromptDialog || !shouldShowFeedbackPrompt(account)) {
+      return;
+    }
+    const key = String(account.username).toLowerCase();
+    state.promptShownSession[key] = true;
+    feedbackProblem.value = "";
+    feedbackSolution.value = "";
+    feedbackPromptEnable.checked = true;
+    feedbackPromptResult.textContent = "";
+
+    // Start 24-hour cooldown when the prompt appears.
+    await data.markFeedbackPromptSeen(account.username, { optOut: false });
+
+    if (typeof feedbackPromptDialog.showModal === "function") {
+      feedbackPromptDialog.showModal();
+    } else {
+      feedbackPromptDialog.setAttribute("open", "true");
+    }
+  }
+
+  function closeFeedbackDialogUi() {
+    if (!feedbackPromptDialog) {
+      return;
+    }
+    if (typeof feedbackPromptDialog.close === "function") {
+      feedbackPromptDialog.close();
+    } else {
+      feedbackPromptDialog.removeAttribute("open");
+    }
+  }
+
   async function setActiveUser(username, { skipAuthSync = false } = {}) {
     if (!username) {
       state.activeUsername = null;
@@ -385,7 +445,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (!skipAuthSync) {
-      await data.setCurrentUser(account.username);
+      try {
+        await data.setCurrentUser(account.username);
+      } catch (error) {
+        await setActiveUser(null, { skipAuthSync: true });
+        return;
+      }
     }
 
     state.activeUsername = account.username;
@@ -402,6 +467,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await renderPortraitFromAccount();
     await renderAdminPanel();
     renderOnboarding();
+    await maybeShowFeedbackPrompt(account);
   }
 
   function renderScope() {
@@ -741,6 +807,42 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
       await renderAdminPanel();
     }
+  });
+
+  feedbackPromptClose?.addEventListener("click", async () => {
+    if (!state.activeUsername) {
+      closeFeedbackDialogUi();
+      return;
+    }
+    const optOut = !feedbackPromptEnable.checked;
+    if (optOut) {
+      await data.markFeedbackPromptSeen(state.activeUsername, { optOut: true });
+    }
+    closeFeedbackDialogUi();
+  });
+
+  feedbackPromptSend?.addEventListener("click", async () => {
+    if (!state.activeUsername) {
+      feedbackPromptResult.textContent = "Choose an account first.";
+      return;
+    }
+    const problem = feedbackProblem.value.trim();
+    const solution = feedbackSolution.value.trim();
+    const optOut = !feedbackPromptEnable.checked;
+    const result = await data.submitFeedbackPrompt(state.activeUsername, {
+      problem,
+      solution,
+      optOut
+    });
+    feedbackPromptResult.textContent = result.message || "Saved.";
+    if (!result.ok) {
+      return;
+    }
+    await renderAccountOptions();
+    await renderAdminPanel();
+    setTimeout(() => {
+      closeFeedbackDialogUi();
+    }, 320);
   });
 
   await renderMetrics();

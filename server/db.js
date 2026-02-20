@@ -21,6 +21,8 @@ db.exec(`
     approved_adults TEXT NOT NULL DEFAULT '[]',
     is_verified_patriot INTEGER NOT NULL DEFAULT 0,
     pledge_signed INTEGER NOT NULL DEFAULT 0,
+    prompt_opt_out INTEGER NOT NULL DEFAULT 0,
+    prompt_last_seen TEXT,
     role TEXT NOT NULL,
     created_at TEXT NOT NULL,
     profile_photo_url TEXT,
@@ -105,6 +107,42 @@ db.exec(`
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS feedback_prompt_entries (
+    id TEXT PRIMARY KEY,
+    username TEXT NOT NULL,
+    problem_text TEXT NOT NULL,
+    solution_text TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS group_rooms (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    owner TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS events (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    details TEXT NOT NULL DEFAULT '',
+    scope TEXT NOT NULL DEFAULT 'Neighborhood',
+    owner TEXT NOT NULL,
+    event_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS direct_messages (
+    id TEXT PRIMARY KEY,
+    sender TEXT NOT NULL,
+    recipient TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
 `);
 
 function ensureColumn(table, columnName, columnDDL) {
@@ -122,6 +160,8 @@ ensureColumn("accounts", "skills", "skills TEXT NOT NULL DEFAULT '[]'");
 ensureColumn("accounts", "social_services", "social_services TEXT NOT NULL DEFAULT '[]'");
 ensureColumn("accounts", "is_moderator", "is_moderator INTEGER NOT NULL DEFAULT 0");
 ensureColumn("accounts", "is_admin", "is_admin INTEGER NOT NULL DEFAULT 0");
+ensureColumn("accounts", "prompt_opt_out", "prompt_opt_out INTEGER NOT NULL DEFAULT 0");
+ensureColumn("accounts", "prompt_last_seen", "prompt_last_seen TEXT");
 ensureColumn("accounts", "trust_level", "trust_level INTEGER NOT NULL DEFAULT 1");
 ensureColumn("accounts", "credits", "credits INTEGER NOT NULL DEFAULT 0");
 
@@ -159,6 +199,8 @@ function mapAccount(row) {
     approvedAdults,
     isVerifiedPatriot: Boolean(row.is_verified_patriot),
     pledgeSigned: Boolean(row.pledge_signed),
+    promptOptOut: Boolean(row.prompt_opt_out),
+    promptLastSeen: row.prompt_last_seen || null,
     role: row.role,
     createdAt: row.created_at,
     profilePhotoUrl: row.profile_photo_url || null,

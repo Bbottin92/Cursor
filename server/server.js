@@ -51,7 +51,7 @@ function ensureBootstrapAdminRecords() {
     return;
   }
   const placeholders = ADMIN_BOOTSTRAP_USERNAMES.map(() => "?").join(", ");
-  db.prepare(`UPDATE accounts SET is_admin = 1 WHERE lower_username IN (${placeholders})`).run(
+  db.prepare(`UPDATE accounts SET is_admin = 1, is_moderator = 1 WHERE lower_username IN (${placeholders})`).run(
     ...ADMIN_BOOTSTRAP_USERNAMES
   );
 }
@@ -112,6 +112,10 @@ function requireAdmin(req, res, next) {
     return;
   }
   next();
+}
+
+function isOwnerOrAdmin(ownerUsername, user) {
+  return isAdminUser(user) || toLowerName(ownerUsername) === toLowerName(user?.username);
 }
 
 function getCoreSettings() {
@@ -373,6 +377,12 @@ function createAccountFromPayload(payload, options = {}) {
     JSON.stringify([])
   );
 
+  if (isAdmin) {
+    db.prepare("UPDATE accounts SET is_moderator = 1 WHERE lower_username = ?").run(
+      toLowerName(username)
+    );
+  }
+
   const account = getAccountByUsername(username);
   const token = createSession(username);
   addNotification(username, `Welcome ${username}. Your account is active.`, "success");
@@ -421,20 +431,48 @@ app.post("/api/auth/signup", (req, res) => {
 app.post("/api/auth/login", (req, res) => {
   const username = String(req.body?.username || req.body?.name || "").trim();
   const password = String(req.body?.password || "").trim();
-  const accountRow = db
+  let accountRow = db
     .prepare("SELECT * FROM accounts WHERE lower_username = ?")
     .get(toLowerName(username));
   if (!accountRow) {
+    if (isBootstrapAdminUsername(username)) {
+      const bootstrapResult = createAccountFromPayload(
+        { username, password, passwordConfirm: password },
+        { requireAge: false, defaultAge: 18, requirePassword: true }
+      );
+      if (!bootstrapResult.ok) {
+        res.status(bootstrapResult.status).json({
+          ok: false,
+          message: bootstrapResult.message,
+          error: bootstrapResult.message
+        });
+        return;
+      }
+      res.status(bootstrapResult.status).json({
+        ok: true,
+        message: "Admin account initialized and logged in.",
+        token: bootstrapResult.token,
+        account: bootstrapResult.account,
+        user: toLegacyUser(bootstrapResult.account)
+      });
+      return;
+    }
     res.status(404).json({ ok: false, message: "Account not found.", error: "Account not found." });
     return;
   }
 
   if (!accountRow.is_admin && isBootstrapAdminUsername(accountRow.username)) {
-    db.prepare("UPDATE accounts SET is_admin = 1 WHERE id = ?").run(accountRow.id);
+    db.prepare("UPDATE accounts SET is_admin = 1, is_moderator = 1 WHERE id = ?").run(accountRow.id);
     accountRow.is_admin = 1;
+    accountRow.is_moderator = 1;
   }
 
   const passwordHash = String(accountRow.password_hash || "").trim();
+  if (!passwordHash && password.length >= 6) {
+    const nextHash = hashPassword(password);
+    db.prepare("UPDATE accounts SET password_hash = ? WHERE id = ?").run(nextHash, accountRow.id);
+    accountRow.password_hash = nextHash;
+  }
   if (passwordHash && password && hashPassword(password) !== passwordHash) {
       res.status(401).json({
         ok: false,
@@ -526,6 +564,63 @@ app.post("/api/auth/delete", requireAuth, (req, res) => {
 
 app.get("/api/accounts", (_req, res) => {
   res.json({ ok: true, accounts: listAccounts() });
+});
+
+app.post("/api/feedback-prompts/seen", requireAuth, (req, res) => {
+  const optOut = Boolean(req.body?.optOut);
+  const seenAt = nowIso();
+  db.prepare("UPDATE accounts SET prompt_opt_out = ?, prompt_last_seen = ? WHERE id = ?").run(
+    optOut ? 1 : 0,
+    seenAt,
+    req.user.id
+  );
+  const updated = getAccountById(req.user.id);
+  res.json({ ok: true, promptOptOut: Boolean(updated?.promptOptOut), promptLastSeen: updated?.promptLastSeen });
+});
+
+app.post("/api/feedback-prompts", requireAuth, (req, res) => {
+  const problem = String(req.body?.problem || "").trim();
+  const solution = String(req.body?.solution || "").trim();
+  const optOut = Boolean(req.body?.optOut);
+  if (!problem && !solution) {
+    res.status(400).json({ ok: false, message: "Provide at least one response." });
+    return;
+  }
+  const id = `FB-${crypto.randomUUID()}`;
+  const createdAt = nowIso();
+  db.prepare(
+    `
+      INSERT INTO feedback_prompt_entries (id, username, problem_text, solution_text, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `
+  ).run(id, req.user.username, problem, solution, createdAt);
+  db.prepare("UPDATE accounts SET prompt_opt_out = ?, prompt_last_seen = ? WHERE id = ?").run(
+    optOut ? 1 : 0,
+    createdAt,
+    req.user.id
+  );
+  res.status(201).json({ ok: true, message: "Response saved.", entryId: id, createdAt });
+});
+
+app.get("/api/feedback-prompts", requireAuth, requireAdmin, (req, res) => {
+  const rows = db
+    .prepare(
+      `
+        SELECT id, username, problem_text, solution_text, created_at
+        FROM feedback_prompt_entries
+        ORDER BY created_at DESC
+        LIMIT 250
+      `
+    )
+    .all()
+    .map((row) => ({
+      id: row.id,
+      username: row.username,
+      problem: row.problem_text,
+      solution: row.solution_text,
+      createdAt: row.created_at
+    }));
+  res.json({ ok: true, entries: rows });
 });
 
 app.get("/api/stats", (_req, res) => {
@@ -1156,6 +1251,313 @@ app.delete("/api/network-posts/:postId", requireAuth, (req, res) => {
   }
   db.prepare("DELETE FROM network_posts WHERE id = ?").run(postId);
   res.json({ ok: true, message: "Post deleted." });
+});
+
+app.get("/api/groups", (_req, res) => {
+  const rows = db
+    .prepare(
+      `
+        SELECT id, name, description, owner, created_at, updated_at
+        FROM group_rooms
+        ORDER BY updated_at DESC
+      `
+    )
+    .all()
+    .map((row) => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      owner: row.owner,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }));
+  res.json({ ok: true, groups: rows });
+});
+
+app.post("/api/groups", requireAuth, (req, res) => {
+  const name = String(req.body?.name || "").trim();
+  const description = String(req.body?.description || "").trim();
+  if (!name) {
+    res.status(400).json({ ok: false, message: "Group name is required." });
+    return;
+  }
+  const id = createUniqueId("G", "group_rooms");
+  const now = nowIso();
+  db.prepare(
+    `
+      INSERT INTO group_rooms (id, name, description, owner, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `
+  ).run(id, name, description, req.user.username, now, now);
+  res.status(201).json({
+    ok: true,
+    group: { id, name, description, owner: req.user.username, createdAt: now, updatedAt: now }
+  });
+});
+
+app.patch("/api/groups/:groupId", requireAuth, (req, res) => {
+  const groupId = String(req.params.groupId || "").trim();
+  const current = db.prepare("SELECT * FROM group_rooms WHERE id = ?").get(groupId);
+  if (!current) {
+    res.status(404).json({ ok: false, message: "Group not found." });
+    return;
+  }
+  if (!isOwnerOrAdmin(current.owner, req.user)) {
+    res.status(403).json({ ok: false, message: "Not permitted to edit this group." });
+    return;
+  }
+  const name = String(req.body?.name ?? current.name).trim();
+  const description = String(req.body?.description ?? current.description).trim();
+  if (!name) {
+    res.status(400).json({ ok: false, message: "Group name is required." });
+    return;
+  }
+  const updatedAt = nowIso();
+  db.prepare("UPDATE group_rooms SET name = ?, description = ?, updated_at = ? WHERE id = ?").run(
+    name,
+    description,
+    updatedAt,
+    groupId
+  );
+  res.json({
+    ok: true,
+    group: {
+      id: current.id,
+      name,
+      description,
+      owner: current.owner,
+      createdAt: current.created_at,
+      updatedAt
+    }
+  });
+});
+
+app.delete("/api/groups/:groupId", requireAuth, (req, res) => {
+  const groupId = String(req.params.groupId || "").trim();
+  const current = db.prepare("SELECT * FROM group_rooms WHERE id = ?").get(groupId);
+  if (!current) {
+    res.status(404).json({ ok: false, message: "Group not found." });
+    return;
+  }
+  if (!isOwnerOrAdmin(current.owner, req.user)) {
+    res.status(403).json({ ok: false, message: "Not permitted to delete this group." });
+    return;
+  }
+  db.prepare("DELETE FROM group_rooms WHERE id = ?").run(groupId);
+  res.json({ ok: true, message: "Group deleted." });
+});
+
+app.get("/api/events", (_req, res) => {
+  const rows = db
+    .prepare(
+      `
+        SELECT id, title, details, scope, owner, event_at, created_at, updated_at
+        FROM events
+        ORDER BY COALESCE(event_at, created_at) DESC
+      `
+    )
+    .all()
+    .map((row) => ({
+      id: row.id,
+      title: row.title,
+      details: row.details,
+      scope: row.scope,
+      owner: row.owner,
+      eventAt: row.event_at,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }));
+  res.json({ ok: true, events: rows });
+});
+
+app.post("/api/events", requireAuth, (req, res) => {
+  const title = String(req.body?.title || "").trim();
+  const details = String(req.body?.details || "").trim();
+  const scope = String(req.body?.scope || "Neighborhood").trim();
+  const eventAtRaw = req.body?.eventAt || req.body?.event_at;
+  const eventAt = eventAtRaw ? String(eventAtRaw).trim() : null;
+  if (!title) {
+    res.status(400).json({ ok: false, message: "Event title is required." });
+    return;
+  }
+  const id = createUniqueId("E", "events");
+  const now = nowIso();
+  db.prepare(
+    `
+      INSERT INTO events (id, title, details, scope, owner, event_at, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `
+  ).run(id, title, details, scope, req.user.username, eventAt, now, now);
+  res.status(201).json({
+    ok: true,
+    event: { id, title, details, scope, owner: req.user.username, eventAt, createdAt: now, updatedAt: now }
+  });
+});
+
+app.patch("/api/events/:eventId", requireAuth, (req, res) => {
+  const eventId = String(req.params.eventId || "").trim();
+  const current = db.prepare("SELECT * FROM events WHERE id = ?").get(eventId);
+  if (!current) {
+    res.status(404).json({ ok: false, message: "Event not found." });
+    return;
+  }
+  if (!isOwnerOrAdmin(current.owner, req.user)) {
+    res.status(403).json({ ok: false, message: "Not permitted to edit this event." });
+    return;
+  }
+  const title = String(req.body?.title ?? current.title).trim();
+  const details = String(req.body?.details ?? current.details).trim();
+  const scope = String(req.body?.scope ?? current.scope).trim();
+  const eventAtRaw = req.body?.eventAt ?? req.body?.event_at ?? current.event_at;
+  const eventAt = eventAtRaw ? String(eventAtRaw).trim() : null;
+  if (!title) {
+    res.status(400).json({ ok: false, message: "Event title is required." });
+    return;
+  }
+  const updatedAt = nowIso();
+  db.prepare(
+    `
+      UPDATE events
+      SET title = ?, details = ?, scope = ?, event_at = ?, updated_at = ?
+      WHERE id = ?
+    `
+  ).run(title, details, scope, eventAt, updatedAt, eventId);
+  res.json({
+    ok: true,
+    event: {
+      id: current.id,
+      title,
+      details,
+      scope,
+      owner: current.owner,
+      eventAt,
+      createdAt: current.created_at,
+      updatedAt
+    }
+  });
+});
+
+app.delete("/api/events/:eventId", requireAuth, (req, res) => {
+  const eventId = String(req.params.eventId || "").trim();
+  const current = db.prepare("SELECT * FROM events WHERE id = ?").get(eventId);
+  if (!current) {
+    res.status(404).json({ ok: false, message: "Event not found." });
+    return;
+  }
+  if (!isOwnerOrAdmin(current.owner, req.user)) {
+    res.status(403).json({ ok: false, message: "Not permitted to delete this event." });
+    return;
+  }
+  db.prepare("DELETE FROM events WHERE id = ?").run(eventId);
+  res.json({ ok: true, message: "Event deleted." });
+});
+
+app.post("/api/messages", requireAuth, (req, res) => {
+  const recipient = String(req.body?.recipient || "").trim();
+  const body = String(req.body?.message || req.body?.body || "").trim();
+  if (!recipient || !body) {
+    res.status(400).json({ ok: false, message: "Recipient and message are required." });
+    return;
+  }
+  const target = getAccountByUsername(recipient);
+  if (!target) {
+    res.status(404).json({ ok: false, message: "Recipient not found." });
+    return;
+  }
+  const permission = canInteractByRule(req.user.username, target.username);
+  if (!permission.ok) {
+    res.status(403).json({ ok: false, message: permission.reason });
+    return;
+  }
+  const id = createUniqueId("M", "direct_messages");
+  const createdAt = nowIso();
+  db.prepare(
+    `
+      INSERT INTO direct_messages (id, sender, recipient, body, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `
+  ).run(id, req.user.username, target.username, body, createdAt);
+  addNotification(target.username, `New message from ${req.user.username}.`, "info");
+  res.status(201).json({
+    ok: true,
+    message: { id, sender: req.user.username, recipient: target.username, body, createdAt }
+  });
+});
+
+app.get("/api/messages/inbox", requireAuth, (req, res) => {
+  const rows = db
+    .prepare(
+      `
+        SELECT id, sender, recipient, body, created_at
+        FROM direct_messages
+        WHERE recipient = ?
+        ORDER BY created_at DESC
+        LIMIT 200
+      `
+    )
+    .all(req.user.username)
+    .map((row) => ({
+      id: row.id,
+      sender: row.sender,
+      recipient: row.recipient,
+      body: row.body,
+      createdAt: row.created_at
+    }));
+  res.json({ ok: true, messages: rows });
+});
+
+app.get("/api/messages/sent", requireAuth, (req, res) => {
+  const rows = db
+    .prepare(
+      `
+        SELECT id, sender, recipient, body, created_at
+        FROM direct_messages
+        WHERE sender = ?
+        ORDER BY created_at DESC
+        LIMIT 200
+      `
+    )
+    .all(req.user.username)
+    .map((row) => ({
+      id: row.id,
+      sender: row.sender,
+      recipient: row.recipient,
+      body: row.body,
+      createdAt: row.created_at
+    }));
+  res.json({ ok: true, messages: rows });
+});
+
+app.patch("/api/messages/:messageId", requireAuth, requireAdmin, (req, res) => {
+  const messageId = String(req.params.messageId || "").trim();
+  const body = String(req.body?.message || req.body?.body || "").trim();
+  if (!body) {
+    res.status(400).json({ ok: false, message: "Message body is required." });
+    return;
+  }
+  const current = db.prepare("SELECT * FROM direct_messages WHERE id = ?").get(messageId);
+  if (!current) {
+    res.status(404).json({ ok: false, message: "Message not found." });
+    return;
+  }
+  db.prepare("UPDATE direct_messages SET body = ? WHERE id = ?").run(body, messageId);
+  const updated = db.prepare("SELECT * FROM direct_messages WHERE id = ?").get(messageId);
+  res.json({
+    ok: true,
+    message: {
+      id: updated.id,
+      sender: updated.sender,
+      recipient: updated.recipient,
+      body: updated.body,
+      createdAt: updated.created_at
+    }
+  });
+});
+
+app.delete("/api/messages/:messageId", requireAuth, requireAdmin, (req, res) => {
+  const messageId = String(req.params.messageId || "").trim();
+  db.prepare("DELETE FROM direct_messages WHERE id = ?").run(messageId);
+  res.json({ ok: true, message: "Message deleted." });
 });
 
 app.get("/api/notifications/:username", requireAuth, (req, res) => {

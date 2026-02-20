@@ -1,38 +1,38 @@
 {
-  "generated_at": "2026-02-20T14:24:37Z",
+  "generated_at": "2026-02-20T14:52:32Z",
   "description": "Auto-ranked files touched most often in context checkpoints.",
   "hotspots": [
     {
       "file": "context/activity_log.jsonl",
-      "touches": 18
+      "touches": 22
     },
     {
       "file": "context/current_task.md",
-      "touches": 18
+      "touches": 22
     },
     {
       "file": "context/flowmap.json",
-      "touches": 18
+      "touches": 22
     },
     {
       "file": "context/flowmap.md",
-      "touches": 18
+      "touches": 22
     },
     {
       "file": "context/state.json",
-      "touches": 18
+      "touches": 22
     },
     {
       "file": "context/watchlist.json",
-      "touches": 18
-    },
-    {
-      "file": "index.html",
-      "touches": 9
+      "touches": 22
     },
     {
       "file": "server/server.js",
-      "touches": 7
+      "touches": 12
+    },
+    {
+      "file": "store.js",
+      "touches": 12
     }
   ]
 }

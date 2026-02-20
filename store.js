@@ -9,7 +9,8 @@
     listings: "liquidgov.listings",
     networkPosts: "liquidgov.networkPosts",
     settings: "liquidgov.settings",
-    announcements: "liquidgov.announcements"
+    announcements: "liquidgov.announcements",
+    feedbackPrompts: "liquidgov.feedbackPrompts"
   };
 
   const defaultProposals = [
@@ -179,6 +180,18 @@
         account.isModerator = Boolean(account.isModerator);
         changed = true;
       }
+      if (typeof account.isAdmin !== "boolean") {
+        account.isAdmin = Boolean(account.isAdmin);
+        changed = true;
+      }
+      if (typeof account.promptOptOut !== "boolean") {
+        account.promptOptOut = false;
+        changed = true;
+      }
+      if (!Object.prototype.hasOwnProperty.call(account, "promptLastSeen")) {
+        account.promptLastSeen = null;
+        changed = true;
+      }
     }
     if (changed) {
       saveAccounts(accounts);
@@ -240,6 +253,8 @@
       isAdmin: isBootstrapAdmin(username),
       isVerifiedPatriot: false,
       pledgeSigned: false,
+      promptOptOut: false,
+      promptLastSeen: null,
       profilePhotoUrl: null,
       createdAt: new Date().toISOString(),
       role: "adult"
@@ -490,6 +505,14 @@
     return all[profileOwner] || [];
   }
 
+  function getFeedbackPromptEntries() {
+    return read(STORE.feedbackPrompts, []);
+  }
+
+  function saveFeedbackPromptEntries(entries) {
+    write(STORE.feedbackPrompts, entries);
+  }
+
   function setProfilePortrait(username, dataUrl) {
     const accounts = getAccounts();
     const account = accounts.find(
@@ -532,6 +555,49 @@
       setCurrentUser(null);
     }
     return { ok: true, message: `Deleted profile for ${removed.username}.` };
+  }
+
+  function markFeedbackPromptSeen(username, { optOut = false } = {}) {
+    const accounts = getAccounts();
+    const account = accounts.find(
+      (item) => normalizeName(item.username) === normalizeName(username)
+    );
+    if (!account) {
+      return { ok: false, message: "Account not found." };
+    }
+    account.promptLastSeen = new Date().toISOString();
+    account.promptOptOut = Boolean(optOut);
+    saveAccounts(accounts);
+    return {
+      ok: true,
+      promptLastSeen: account.promptLastSeen,
+      promptOptOut: account.promptOptOut
+    };
+  }
+
+  function submitFeedbackPrompt(username, { problem = "", solution = "", optOut = false } = {}) {
+    const account = getAccounts().find(
+      (item) => normalizeName(item.username) === normalizeName(username)
+    );
+    if (!account) {
+      return { ok: false, message: "Account not found." };
+    }
+    const trimmedProblem = String(problem || "").trim();
+    const trimmedSolution = String(solution || "").trim();
+    if (!trimmedProblem && !trimmedSolution) {
+      return { ok: false, message: "Provide at least one response." };
+    }
+    const entries = getFeedbackPromptEntries();
+    entries.unshift({
+      id: crypto.randomUUID(),
+      username: account.username,
+      problem: trimmedProblem,
+      solution: trimmedSolution,
+      createdAt: new Date().toISOString()
+    });
+    saveFeedbackPromptEntries(entries.slice(0, 500));
+    markFeedbackPromptSeen(account.username, { optOut });
+    return { ok: true, message: "Response saved." };
   }
 
   function getNotificationMap() {
@@ -715,6 +781,9 @@
     setProfilePortrait,
     updateUserAccess,
     deleteProfile,
+    markFeedbackPromptSeen,
+    submitFeedbackPrompt,
+    getFeedbackPromptEntries,
     addNotification,
     getNotifications,
     inspectMinorActivity,

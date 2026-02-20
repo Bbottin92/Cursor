@@ -387,6 +387,25 @@ h1 {
   background: transparent;
 }
 
+#feedbackPromptDialog {
+  width: min(640px, 94%);
+}
+
+.feedback-prompt-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1rem;
+}
+
+.feedback-prompt-form textarea {
+  min-height: 120px;
+}
+
+#feedbackPromptResult {
+  min-height: 1.3em;
+}
+
 .compare-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));

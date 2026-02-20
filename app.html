@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NUSA Member App</title>
-  <link rel="stylesheet" href="styles.css?v=20260220g" />
+  <link rel="stylesheet" href="styles.css?v=20260220h" />
 </head>
 <body>
   <header class="site-header">
@@ -190,8 +190,31 @@
     </form>
   </dialog>
 
-  <script src="store.js?v=20260220g"></script>
-  <script src="dataClient.js?v=20260220g"></script>
-  <script src="app.js?v=20260220g"></script>
+  <dialog id="feedbackPromptDialog">
+    <form method="dialog" class="feedback-prompt-form">
+      <h3>Quick Check-In</h3>
+      <label>
+        What problem(s) have you had recently?
+        <textarea id="feedbackProblem" maxlength="1800"></textarea>
+      </label>
+      <label>
+        Can you think of a solution?
+        <textarea id="feedbackSolution" maxlength="1800"></textarea>
+      </label>
+      <label class="checkbox-row">
+        <input id="feedbackPromptEnable" type="checkbox" checked />
+        Keep showing this prompt in the future (if unchecked, it stops)
+      </label>
+      <menu>
+        <button id="feedbackPromptClose" type="button" class="secondary">Close</button>
+        <button id="feedbackPromptSend" type="button" class="primary">Send</button>
+      </menu>
+      <p id="feedbackPromptResult" class="tiny-note"></p>
+    </form>
+  </dialog>
+
+  <script src="store.js?v=20260220h"></script>
+  <script src="dataClient.js?v=20260220h"></script>
+  <script src="app.js?v=20260220h"></script>
 </body>
 </html>

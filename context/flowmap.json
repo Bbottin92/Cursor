@@ -1,19 +1,26 @@
 {
-  "generated_at": "2026-02-20T14:24:37Z",
+  "generated_at": "2026-02-20T14:52:32Z",
   "trigger": {
     "phase": "pre_commit",
     "note": "auto pre-commit context sync"
   },
   "git": {
     "branch": "cursor/liquidgov-website-definition-d045",
-    "commit": "1285c42",
+    "commit": "c98ae61",
     "changed_files": [
+      "app.html",
+      "app.js",
       "context/activity_log.jsonl",
       "context/current_task.md",
       "context/flowmap.json",
       "context/flowmap.md",
       "context/state.json",
-      "context/watchlist.json"
+      "context/watchlist.json",
+      "dataClient.js",
+      "server/db.js",
+      "server/server.js",
+      "store.js",
+      "styles.css"
     ]
   },
   "frontend": {
@@ -44,12 +51,12 @@
         "file": "app.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220g"
+          "styles.css?v=20260220h"
         ],
         "scripts": [
-          "store.js?v=20260220g",
-          "dataClient.js?v=20260220g",
-          "app.js?v=20260220g"
+          "store.js?v=20260220h",
+          "dataClient.js?v=20260220h",
+          "app.js?v=20260220h"
         ],
         "links": [
           "index.html",
@@ -129,6 +136,8 @@
           "/api/auth/me",
           "/api/auth/register",
           "/api/auth/signup",
+          "/api/feedback-prompts",
+          "/api/feedback-prompts/seen",
           "/api/health",
           "/api/listings",
           "/api/listings/${encodeURIComponent(listingId)}/close",
@@ -205,6 +214,18 @@
       {
         "method": "GET",
         "route": "/api/accounts"
+      },
+      {
+        "method": "POST",
+        "route": "/api/feedback-prompts/seen"
+      },
+      {
+        "method": "POST",
+        "route": "/api/feedback-prompts"
+      },
+      {
+        "method": "GET",
+        "route": "/api/feedback-prompts"
       },
       {
         "method": "GET",
@@ -352,6 +373,58 @@
       },
       {
         "method": "GET",
+        "route": "/api/groups"
+      },
+      {
+        "method": "POST",
+        "route": "/api/groups"
+      },
+      {
+        "method": "PATCH",
+        "route": "/api/groups/:groupId"
+      },
+      {
+        "method": "DELETE",
+        "route": "/api/groups/:groupId"
+      },
+      {
+        "method": "GET",
+        "route": "/api/events"
+      },
+      {
+        "method": "POST",
+        "route": "/api/events"
+      },
+      {
+        "method": "PATCH",
+        "route": "/api/events/:eventId"
+      },
+      {
+        "method": "DELETE",
+        "route": "/api/events/:eventId"
+      },
+      {
+        "method": "POST",
+        "route": "/api/messages"
+      },
+      {
+        "method": "GET",
+        "route": "/api/messages/inbox"
+      },
+      {
+        "method": "GET",
+        "route": "/api/messages/sent"
+      },
+      {
+        "method": "PATCH",
+        "route": "/api/messages/:messageId"
+      },
+      {
+        "method": "DELETE",
+        "route": "/api/messages/:messageId"
+      },
+      {
+        "method": "GET",
         "route": "/api/notifications/:username"
       },
       {
@@ -395,6 +468,8 @@
       "/api/auth/me",
       "/api/auth/register",
       "/api/auth/signup",
+      "/api/feedback-prompts",
+      "/api/feedback-prompts/seen",
       "/api/health",
       "/api/listings",
       "/api/listings/${encodeURIComponent(listingId)}/close",
@@ -418,7 +493,7 @@
       "/api/users/${encodeURIComponent(userId)}",
       "/api/users/me"
     ],
-    "route_count": 56
+    "route_count": 72
   },
   "deploy": {
     "script": "scripts/deploy_cpanel_no_ssh.sh",
@@ -481,39 +556,39 @@
   ],
   "workflow_rule": "Run context guard before inspect/change: ./scripts/context_guard.sh inspect|change \"note\"",
   "optimization": {
-    "activity_entries": 34,
+    "activity_entries": 39,
     "hotspots": [
       {
         "file": "context/activity_log.jsonl",
-        "touches": 18
+        "touches": 22
       },
       {
         "file": "context/current_task.md",
-        "touches": 18
+        "touches": 22
       },
       {
         "file": "context/flowmap.json",
-        "touches": 18
+        "touches": 22
       },
       {
         "file": "context/flowmap.md",
-        "touches": 18
+        "touches": 22
       },
       {
         "file": "context/state.json",
-        "touches": 18
+        "touches": 22
       },
       {
         "file": "context/watchlist.json",
-        "touches": 18
-      },
-      {
-        "file": "index.html",
-        "touches": 9
+        "touches": 22
       },
       {
         "file": "server/server.js",
-        "touches": 7
+        "touches": 12
+      },
+      {
+        "file": "store.js",
+        "touches": 12
       }
     ]
   }

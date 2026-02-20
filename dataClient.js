@@ -345,6 +345,40 @@
       }
     },
 
+    async markFeedbackPromptSeen(username, { optOut = false } = {}) {
+      if (!apiReady) {
+        return localStore.markFeedbackPromptSeen(username, { optOut });
+      }
+      try {
+        const data = await request("/api/feedback-prompts/seen", {
+          method: "POST",
+          body: JSON.stringify({ optOut })
+        });
+        return {
+          ok: true,
+          promptOptOut: Boolean(data.promptOptOut),
+          promptLastSeen: data.promptLastSeen || null
+        };
+      } catch (error) {
+        return localStore.markFeedbackPromptSeen(username, { optOut });
+      }
+    },
+
+    async submitFeedbackPrompt(username, { problem = "", solution = "", optOut = false } = {}) {
+      if (!apiReady) {
+        return localStore.submitFeedbackPrompt(username, { problem, solution, optOut });
+      }
+      try {
+        const data = await request("/api/feedback-prompts", {
+          method: "POST",
+          body: JSON.stringify({ problem, solution, optOut })
+        });
+        return { ok: true, message: data.message || "Response saved." };
+      } catch (error) {
+        return localStore.submitFeedbackPrompt(username, { problem, solution, optOut });
+      }
+    },
+
     async getProposals() {
       if (!apiReady) {
         return localStore.getProposals();

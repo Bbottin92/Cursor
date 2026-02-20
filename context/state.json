@@ -1,12 +1,12 @@
 {
-  "runs": 34,
+  "runs": 39,
   "phase_counts": {
     "bootstrap": 1,
-    "test": 7,
-    "change": 8,
-    "pre_commit": 14,
+    "test": 9,
+    "change": 10,
+    "pre_commit": 15,
     "inspect": 4
   },
-  "last_run": "2026-02-20T14:24:37Z",
+  "last_run": "2026-02-20T14:52:32Z",
   "last_note": "auto pre-commit context sync"
 }
