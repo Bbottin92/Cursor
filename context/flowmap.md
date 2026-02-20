@@ -1,6 +1,6 @@
 # NUSA Context + Flowmap
 
-Generated: `2026-02-20T10:42:57Z`
+Generated: `2026-02-20T10:43:27Z`
 Trigger: `pre_commit` - auto pre-commit context sync
 
 ## Persistent Workflow Rules
@@ -11,8 +11,8 @@ Trigger: `pre_commit` - auto pre-commit context sync
 4. Pre-commit hook auto-refreshes this flowmap (install with `npm run context:install-hooks`)
 5. Deploy script auto-refreshes context at deploy start and finish
 
-State runs: `10`  
-Phase counts: `{"bootstrap": 1, "test": 2, "change": 2, "pre_commit": 3, "inspect": 2}`
+State runs: `11`  
+Phase counts: `{"bootstrap": 1, "test": 2, "change": 2, "pre_commit": 4, "inspect": 2}`
 
 ## Frontend Map
 
@@ -105,7 +105,6 @@ Phase counts: `{"bootstrap": 1, "test": 2, "change": 2, "pre_commit": 3, "inspec
 
 ## Recent Context Activity
 
-- `2026-02-20T10:22:39Z` [change] stage and commit context system implementation
 - `2026-02-20T10:23:02Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T10:39:57Z` [inspect] collect exact hero requirements from transcript and current files
 - `2026-02-20T10:40:48Z` [change] implement auto task-intent template and final hero layout pass
@@ -113,3 +112,4 @@ Phase counts: `{"bootstrap": 1, "test": 2, "change": 2, "pre_commit": 3, "inspec
 - `2026-02-20T10:42:38Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T10:42:47Z` [test] npm test context sync
 - `2026-02-20T10:42:57Z` [pre_commit] auto pre-commit context sync
+- `2026-02-20T10:43:27Z` [pre_commit] auto pre-commit context sync
