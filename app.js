@@ -15,6 +15,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     activeScope: "Neighborhood",
     postedProposal: false,
     sentMessage: false,
+    activePortrait: null,
+    isAdmin: false,
     groupMessages: [
       "System: Welcome to the group channel.",
       "System: Keep discussion constructive and solution-focused."
@@ -66,6 +68,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   const visitProfileBtn = el("visitProfileBtn");
   const visitorLogBody = el("visitorLogBody");
   const notificationsBody = el("notificationsBody");
+  const adminCard = el("adminCard");
+  const adminUserSelect = el("adminUserSelect");
+  const grantModeratorBtn = el("grantModeratorBtn");
+  const revokeModeratorBtn = el("revokeModeratorBtn");
+  const deleteProfileBtn = el("deleteProfileBtn");
+  const adminResult = el("adminResult");
+
+  const portraitTrigger = el("portraitTrigger");
+  const portraitPreview = el("portraitPreview");
+  const portraitDialog = el("portraitDialog");
+  const portraitCanvas = el("portraitCanvas");
+  const portraitClose = el("portraitClose");
+  const portraitSave = el("portraitSave");
+  const portraitClear = el("portraitClear");
+  const portraitResult = el("portraitResult");
+  const brushColorInput = el("brushColor");
+  const brushShadeInput = el("brushShade");
+  const brushSizeInput = el("brushSize");
 
   function setOnboardingItem(itemEl, done) {
     itemEl.classList.toggle("done", done);
@@ -119,13 +139,241 @@ document.addEventListener("DOMContentLoaded", async () => {
     profileDirectory.innerHTML = options || '<option value="">No accounts yet</option>';
   }
 
+  function initialsFor(name) {
+    const parts = String(name || "Guest")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2);
+    if (!parts.length) {
+      return "G";
+    }
+    return parts.map((item) => item[0].toUpperCase()).join("");
+  }
+
+  function fillCircleBackground(ctx, canvas) {
+    const radius = canvas.width / 2;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(radius, radius, radius - 1, 0, Math.PI * 2);
+    ctx.clip();
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, "#15274d");
+    gradient.addColorStop(1, "#203768");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+
+  function drawPortraitPlaceholder(canvas, label) {
+    if (!canvas) {
+      return;
+    }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      return;
+    }
+    fillCircleBackground(ctx, canvas);
+    const text = initialsFor(label);
+    ctx.save();
+    ctx.fillStyle = "#a2edff";
+    ctx.font = `700 ${Math.floor(canvas.width * 0.34)}px Inter, Segoe UI, Tahoma, Arial, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+    ctx.restore();
+  }
+
+  function drawPortraitImage(canvas, dataUrl, fallbackLabel) {
+    if (!canvas) {
+      return;
+    }
+    if (!dataUrl) {
+      drawPortraitPlaceholder(canvas, fallbackLabel);
+      return;
+    }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      return;
+    }
+    const image = new Image();
+    image.onload = () => {
+      fillCircleBackground(ctx, canvas);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2 - 1, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    };
+    image.onerror = () => {
+      drawPortraitPlaceholder(canvas, fallbackLabel);
+    };
+    image.src = dataUrl;
+  }
+
+  function normalizeHexColor(value) {
+    const hex = String(value || "").trim();
+    return /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : "#57d5ff";
+  }
+
+  function adjustedBrushColor() {
+    const hex = normalizeHexColor(brushColorInput?.value);
+    const shade = Number(brushShadeInput?.value || 50);
+    const rgb = [1, 3, 5].map((idx) => parseInt(hex.slice(idx, idx + 2), 16));
+    const clamp = (n) => Math.max(0, Math.min(255, n));
+    const mix = (base, target, factor) => clamp(Math.round(base + (target - base) * factor));
+    let out;
+    if (shade < 50) {
+      const factor = shade / 50;
+      out = rgb.map((channel) => mix(0, channel, factor));
+    } else if (shade > 50) {
+      const factor = (shade - 50) / 50;
+      out = rgb.map((channel) => mix(channel, 255, factor));
+    } else {
+      out = rgb;
+    }
+    return `rgb(${out[0]}, ${out[1]}, ${out[2]})`;
+  }
+
+  function clearPortraitEditor() {
+    if (!portraitCanvas) {
+      return;
+    }
+    const ctx = portraitCanvas.getContext("2d");
+    if (!ctx) {
+      return;
+    }
+    fillCircleBackground(ctx, portraitCanvas);
+    drawPortraitPlaceholder(portraitCanvas, state.activeUsername || "Guest");
+  }
+
+  function loadPortraitIntoEditor(dataUrl) {
+    if (!portraitCanvas) {
+      return;
+    }
+    if (!dataUrl) {
+      clearPortraitEditor();
+      return;
+    }
+    const ctx = portraitCanvas.getContext("2d");
+    if (!ctx) {
+      return;
+    }
+    const image = new Image();
+    image.onload = () => {
+      fillCircleBackground(ctx, portraitCanvas);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(
+        portraitCanvas.width / 2,
+        portraitCanvas.height / 2,
+        portraitCanvas.width / 2 - 1,
+        0,
+        Math.PI * 2
+      );
+      ctx.clip();
+      ctx.drawImage(image, 0, 0, portraitCanvas.width, portraitCanvas.height);
+      ctx.restore();
+    };
+    image.onerror = () => {
+      clearPortraitEditor();
+    };
+    image.src = dataUrl;
+  }
+
+  function exportPortraitDataUrl() {
+    if (!portraitCanvas) {
+      return null;
+    }
+    const output = document.createElement("canvas");
+    output.width = portraitCanvas.width;
+    output.height = portraitCanvas.height;
+    const ctx = output.getContext("2d");
+    if (!ctx) {
+      return null;
+    }
+    ctx.beginPath();
+    ctx.arc(output.width / 2, output.height / 2, output.width / 2 - 1, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(portraitCanvas, 0, 0);
+    return output.toDataURL("image/png");
+  }
+
+  function paintAtPointer(event) {
+    if (!portraitCanvas) {
+      return;
+    }
+    const ctx = portraitCanvas.getContext("2d");
+    if (!ctx) {
+      return;
+    }
+    const rect = portraitCanvas.getBoundingClientRect();
+    const scaleX = portraitCanvas.width / rect.width;
+    const scaleY = portraitCanvas.height / rect.height;
+    const x = (event.clientX - rect.left) * scaleX;
+    const y = (event.clientY - rect.top) * scaleY;
+    const radius = portraitCanvas.width / 2 - 1;
+    const centerX = portraitCanvas.width / 2;
+    const centerY = portraitCanvas.height / 2;
+    const distance = Math.hypot(x - centerX, y - centerY);
+    if (distance > radius) {
+      return;
+    }
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = adjustedBrushColor();
+    ctx.beginPath();
+    ctx.arc(x, y, Number(brushSizeInput?.value || 10), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  async function renderPortraitFromAccount() {
+    const account = state.activeUsername ? await findAccount(state.activeUsername) : null;
+    state.activePortrait = account?.profilePhotoUrl || null;
+    drawPortraitImage(portraitPreview, state.activePortrait, state.activeUsername || "Guest");
+  }
+
+  async function renderAdminPanel() {
+    if (!adminCard) {
+      return;
+    }
+    adminCard.classList.toggle("active", Boolean(state.isAdmin));
+    if (!state.isAdmin) {
+      adminResult.textContent = "";
+      return;
+    }
+    const accounts = await getAccounts();
+    if (!accounts.length) {
+      adminUserSelect.innerHTML = '<option value="">No profiles</option>';
+      return;
+    }
+    adminUserSelect.innerHTML = accounts
+      .map((item) => {
+        const tags = [item.isAdmin ? "Admin" : "", item.isModerator ? "Moderator" : ""]
+          .filter(Boolean)
+          .join(" / ");
+        const suffix = tags ? ` - ${tags}` : "";
+        return `<option value="${item.id}">${item.username}${suffix}</option>`;
+      })
+      .join("");
+  }
+
   async function setActiveUser(username, { skipAuthSync = false } = {}) {
     if (!username) {
       state.activeUsername = null;
+      state.activePortrait = null;
+      state.isAdmin = false;
       currentUsername.textContent = "Guest";
       currentBadge.textContent = "Participant";
       visitorLogBody.innerHTML = "<tr><td colspan='2'>Sign in to view visitor logs.</td></tr>";
       notificationsBody.innerHTML = "<tr><td colspan='2'>Sign in to view notifications.</td></tr>";
+      drawPortraitPlaceholder(portraitPreview, "Guest");
+      await renderAdminPanel();
       renderOnboarding();
       return;
     }
@@ -141,11 +389,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     state.activeUsername = account.username;
+    state.isAdmin = Boolean(account.isAdmin);
     currentUsername.textContent = account.username;
-    currentBadge.textContent = account.isVerifiedPatriot ? "Verified Patriot" : "Participant";
+    currentBadge.textContent = state.isAdmin
+      ? "Admin"
+      : account.isVerifiedPatriot
+        ? "Verified Patriot"
+        : "Participant";
 
     await renderNotifications();
     await renderVisitorLog();
+    await renderPortraitFromAccount();
+    await renderAdminPanel();
     renderOnboarding();
   }
 
@@ -365,12 +620,136 @@ document.addEventListener("DOMContentLoaded", async () => {
     await renderNotifications();
   });
 
+  let isPaintingPortrait = false;
+  if (portraitCanvas) {
+    portraitCanvas.addEventListener("pointerdown", (event) => {
+      isPaintingPortrait = true;
+      portraitCanvas.setPointerCapture?.(event.pointerId);
+      paintAtPointer(event);
+    });
+    portraitCanvas.addEventListener("pointermove", (event) => {
+      if (!isPaintingPortrait) {
+        return;
+      }
+      paintAtPointer(event);
+    });
+    const stopPaint = (event) => {
+      isPaintingPortrait = false;
+      portraitCanvas.releasePointerCapture?.(event.pointerId);
+    };
+    portraitCanvas.addEventListener("pointerup", stopPaint);
+    portraitCanvas.addEventListener("pointercancel", stopPaint);
+    portraitCanvas.addEventListener("pointerleave", () => {
+      isPaintingPortrait = false;
+    });
+  }
+
+  portraitTrigger?.addEventListener("click", async () => {
+    portraitResult.textContent = "";
+    if (!state.activeUsername) {
+      portraitResult.textContent = "Choose an account first.";
+      return;
+    }
+    await renderPortraitFromAccount();
+    loadPortraitIntoEditor(state.activePortrait);
+    if (typeof portraitDialog.showModal === "function") {
+      portraitDialog.showModal();
+    } else {
+      portraitDialog.setAttribute("open", "true");
+    }
+  });
+
+  portraitClose?.addEventListener("click", () => {
+    if (typeof portraitDialog.close === "function") {
+      portraitDialog.close();
+    } else {
+      portraitDialog.removeAttribute("open");
+    }
+  });
+
+  portraitSave?.addEventListener("click", async () => {
+    if (!state.activeUsername) {
+      portraitResult.textContent = "Choose an account first.";
+      return;
+    }
+    const portraitDataUrl = exportPortraitDataUrl();
+    const result = await data.setProfilePortrait(state.activeUsername, portraitDataUrl);
+    portraitResult.textContent = result.message || "Portrait saved.";
+    await renderPortraitFromAccount();
+  });
+
+  portraitClear?.addEventListener("click", async () => {
+    if (!state.activeUsername) {
+      portraitResult.textContent = "Choose an account first.";
+      return;
+    }
+    clearPortraitEditor();
+    const result = await data.setProfilePortrait(state.activeUsername, null);
+    portraitResult.textContent = result.message || "Portrait cleared.";
+    await renderPortraitFromAccount();
+  });
+
+  grantModeratorBtn?.addEventListener("click", async () => {
+    if (!state.isAdmin) {
+      adminResult.textContent = "Admin access required.";
+      return;
+    }
+    const userId = adminUserSelect.value;
+    if (!userId) {
+      adminResult.textContent = "Choose a profile.";
+      return;
+    }
+    const result = await data.updateUserAccess(userId, { is_moderator: true });
+    adminResult.textContent = result.message;
+    await renderAccountOptions();
+    await renderAdminPanel();
+  });
+
+  revokeModeratorBtn?.addEventListener("click", async () => {
+    if (!state.isAdmin) {
+      adminResult.textContent = "Admin access required.";
+      return;
+    }
+    const userId = adminUserSelect.value;
+    if (!userId) {
+      adminResult.textContent = "Choose a profile.";
+      return;
+    }
+    const result = await data.updateUserAccess(userId, { is_moderator: false });
+    adminResult.textContent = result.message;
+    await renderAccountOptions();
+    await renderAdminPanel();
+  });
+
+  deleteProfileBtn?.addEventListener("click", async () => {
+    if (!state.isAdmin) {
+      adminResult.textContent = "Admin access required.";
+      return;
+    }
+    const userId = adminUserSelect.value;
+    if (!userId) {
+      adminResult.textContent = "Choose a profile.";
+      return;
+    }
+    const result = await data.deleteProfile(userId);
+    adminResult.textContent = result.message;
+    await renderAccountOptions();
+    await renderMetrics();
+    const selectedUser = await findAccount(state.activeUsername);
+    if (!selectedUser) {
+      await setActiveUser(null, { skipAuthSync: true });
+    } else {
+      await renderAdminPanel();
+    }
+  });
+
   await renderMetrics();
   await renderAccountOptions();
   await renderAnnouncements();
   await renderArchive();
   renderScope();
   renderGroupMessages();
+  drawPortraitPlaceholder(portraitPreview, "Guest");
 
   const session = await data.getCurrentUser();
   await setActiveUser(session ? session.username : accountSwitcher.value, {

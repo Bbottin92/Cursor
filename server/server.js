@@ -35,6 +35,25 @@ function hashPassword(password) {
   return crypto.createHash("sha256").update(String(password || "")).digest("hex");
 }
 
+const ADMIN_BOOTSTRAP_USERNAMES = String(process.env.ADMIN_USERNAMES || "Brandon Bottin")
+  .split(",")
+  .map((item) => toLowerName(item))
+  .filter(Boolean);
+
+function isBootstrapAdminUsername(username) {
+  return ADMIN_BOOTSTRAP_USERNAMES.includes(toLowerName(username));
+}
+
+function ensureBootstrapAdminRecords() {
+  if (!ADMIN_BOOTSTRAP_USERNAMES.length) {
+    return;
+  }
+  const placeholders = ADMIN_BOOTSTRAP_USERNAMES.map(() => "?").join(", ");
+  db.prepare(`UPDATE accounts SET is_admin = 1 WHERE lower_username IN (${placeholders})`).run(
+    ...ADMIN_BOOTSTRAP_USERNAMES
+  );
+}
+
 function readToken(req) {
   const auth = req.headers.authorization;
   if (auth && auth.startsWith("Bearer ")) {
@@ -78,6 +97,18 @@ function requireAuth(req, res, next) {
   }
   req.authToken = token;
   req.user = user;
+  next();
+}
+
+function isAdminUser(user) {
+  return Boolean(user?.isAdmin) || isBootstrapAdminUsername(user?.username);
+}
+
+function requireAdmin(req, res, next) {
+  if (!isAdminUser(req.user)) {
+    res.status(403).json({ ok: false, message: "Admin access required." });
+    return;
+  }
   next();
 }
 
@@ -220,6 +251,7 @@ function toLegacyUser(account) {
     name: account.username,
     email: account.email || null,
     is_moderator: account.isModerator ? 1 : 0,
+    is_admin: isAdminUser(account) ? 1 : 0,
     trust_level: account.trustLevel || 1,
     credits: account.credits || 0,
     created_at: account.createdAt,
@@ -243,6 +275,8 @@ const SOCIAL_SERVICE_CATALOG = [
   { id: "housing-support", name: "Housing support" },
   { id: "mental-health", name: "Mental health support" }
 ];
+
+ensureBootstrapAdminRecords();
 
 function createAccountFromPayload(payload, options = {}) {
   const requireAge = options.requireAge !== false;
@@ -297,6 +331,7 @@ function createAccountFromPayload(payload, options = {}) {
   }
 
   const role = "adult";
+  const isAdmin = isBootstrapAdminUsername(username);
   const createdAt = nowIso();
   db.prepare(
     `
@@ -310,12 +345,13 @@ function createAccountFromPayload(payload, options = {}) {
         approved_adults,
         is_verified_patriot,
         pledge_signed,
+        is_admin,
         role,
         created_at,
         bio,
         skills,
         social_services
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
   ).run(
     username,
@@ -327,6 +363,7 @@ function createAccountFromPayload(payload, options = {}) {
     JSON.stringify([]),
     0,
     0,
+    isAdmin ? 1 : 0,
     role,
     createdAt,
     "",
@@ -388,6 +425,11 @@ app.post("/api/auth/login", (req, res) => {
   if (!accountRow) {
     res.status(404).json({ ok: false, message: "Account not found.", error: "Account not found." });
     return;
+  }
+
+  if (!accountRow.is_admin && isBootstrapAdminUsername(accountRow.username)) {
+    db.prepare("UPDATE accounts SET is_admin = 1 WHERE id = ?").run(accountRow.id);
+    accountRow.is_admin = 1;
   }
 
   const passwordHash = String(accountRow.password_hash || "").trim();
@@ -461,9 +503,17 @@ app.post("/api/auth/change-name", requireAuth, (req, res) => {
   res.json({ ok: true, user: toLegacyUser(getAccountById(req.user.id)) });
 });
 
-app.post("/api/auth/change-password", requireAuth, (_req, res) => {
-  // Password auth is not enabled in this prototype compatibility layer.
-  res.json({ ok: true, message: "Password change acknowledged." });
+app.post("/api/auth/change-password", requireAuth, (req, res) => {
+  const newPassword = String(req.body?.newPassword || req.body?.password || "").trim();
+  if (newPassword.length < 6) {
+    res.status(400).json({ ok: false, message: "Password must be at least 6 characters." });
+    return;
+  }
+  db.prepare("UPDATE accounts SET password_hash = ? WHERE id = ?").run(
+    hashPassword(newPassword),
+    req.user.id
+  );
+  res.json({ ok: true, message: "Password updated." });
 });
 
 app.post("/api/auth/delete", requireAuth, (req, res) => {
@@ -561,6 +611,59 @@ app.post("/api/proposals", requireAuth, (req, res) => {
   res.status(201).json({ ok: true, proposal });
 });
 
+app.patch("/api/proposals/:proposalId", requireAuth, (req, res) => {
+  const proposalId = String(req.params.proposalId || "").trim();
+  const current = db.prepare("SELECT * FROM proposals WHERE id = ?").get(proposalId);
+  if (!current) {
+    res.status(404).json({ ok: false, message: "Proposal not found." });
+    return;
+  }
+  const canModerate =
+    isAdminUser(req.user) || toLowerName(current.author) === toLowerName(req.user.username);
+  if (!canModerate) {
+    res.status(403).json({ ok: false, message: "Not permitted to edit this proposal." });
+    return;
+  }
+  const body = req.body || {};
+  const nextTitle = String(body.title ?? current.title).trim();
+  const nextCategory = String(body.category ?? current.category).trim();
+  const nextStatus = String(body.status ?? current.status).trim();
+  const nextLawReference =
+    body.lawReference === null || body.law_reference === null
+      ? null
+      : String(body.lawReference ?? body.law_reference ?? current.law_reference ?? "").trim() || null;
+  if (!nextTitle) {
+    res.status(400).json({ ok: false, message: "Title is required." });
+    return;
+  }
+  db.prepare(
+    `
+      UPDATE proposals
+      SET title = ?, category = ?, status = ?, law_reference = ?
+      WHERE id = ?
+    `
+  ).run(nextTitle, nextCategory, nextStatus, nextLawReference, proposalId);
+  const updated = db.prepare("SELECT * FROM proposals WHERE id = ?").get(proposalId);
+  res.json({ ok: true, proposal: mapProposal(updated) });
+});
+
+app.delete("/api/proposals/:proposalId", requireAuth, (req, res) => {
+  const proposalId = String(req.params.proposalId || "").trim();
+  const current = db.prepare("SELECT * FROM proposals WHERE id = ?").get(proposalId);
+  if (!current) {
+    res.status(404).json({ ok: false, message: "Proposal not found." });
+    return;
+  }
+  const canModerate =
+    isAdminUser(req.user) || toLowerName(current.author) === toLowerName(req.user.username);
+  if (!canModerate) {
+    res.status(403).json({ ok: false, message: "Not permitted to delete this proposal." });
+    return;
+  }
+  db.prepare("DELETE FROM proposals WHERE id = ?").run(proposalId);
+  res.json({ ok: true, message: "Proposal deleted." });
+});
+
 app.get("/api/announcements", (_req, res) => {
   const announcements = listAnnouncements(100);
   res.json({ announcements });
@@ -581,6 +684,56 @@ app.post("/api/announcements", requireAuth, (req, res) => {
   });
   const created = db.prepare("SELECT * FROM announcements WHERE id = ?").get(id);
   res.status(201).json({ ok: true, announcement: mapAnnouncement(created) });
+});
+
+app.patch("/api/announcements/:announcementId", requireAuth, (req, res) => {
+  const announcementId = String(req.params.announcementId || "").trim();
+  const current = db.prepare("SELECT * FROM announcements WHERE id = ?").get(announcementId);
+  if (!current) {
+    res.status(404).json({ ok: false, message: "Announcement not found." });
+    return;
+  }
+  const canModerate =
+    isAdminUser(req.user) ||
+    toLowerName(current.author_username) === toLowerName(req.user.username);
+  if (!canModerate) {
+    res.status(403).json({ ok: false, message: "Not permitted to edit this announcement." });
+    return;
+  }
+  const body = req.body || {};
+  const nextTitle = String(body.title ?? current.title).trim();
+  const nextBody = String(body.body ?? current.body).trim();
+  if (!nextTitle || !nextBody) {
+    res.status(400).json({ ok: false, message: "Title and body are required." });
+    return;
+  }
+  db.prepare(
+    `
+      UPDATE announcements
+      SET title = ?, body = ?, updated_at = ?
+      WHERE id = ?
+    `
+  ).run(nextTitle, nextBody, nowIso(), announcementId);
+  const updated = db.prepare("SELECT * FROM announcements WHERE id = ?").get(announcementId);
+  res.json({ ok: true, announcement: mapAnnouncement(updated) });
+});
+
+app.delete("/api/announcements/:announcementId", requireAuth, (req, res) => {
+  const announcementId = String(req.params.announcementId || "").trim();
+  const current = db.prepare("SELECT * FROM announcements WHERE id = ?").get(announcementId);
+  if (!current) {
+    res.status(404).json({ ok: false, message: "Announcement not found." });
+    return;
+  }
+  const canModerate =
+    isAdminUser(req.user) ||
+    toLowerName(current.author_username) === toLowerName(req.user.username);
+  if (!canModerate) {
+    res.status(403).json({ ok: false, message: "Not permitted to delete this announcement." });
+    return;
+  }
+  db.prepare("DELETE FROM announcements WHERE id = ?").run(announcementId);
+  res.json({ ok: true, message: "Announcement deleted." });
 });
 
 // Legacy forum feed compatibility: map proposals as posts.
@@ -690,27 +843,36 @@ app.patch("/api/users/:id", requireAuth, (req, res) => {
     return;
   }
 
-  if (Object.prototype.hasOwnProperty.call(req.body || {}, "is_moderator")) {
-    const requesterIsAdmin = Boolean(req.user.isModerator) || Number(req.user.id) === 1;
+  const body = req.body || {};
+  const requesterIsAdmin = isAdminUser(req.user);
+  const touchesModerator = Object.prototype.hasOwnProperty.call(body, "is_moderator");
+  const touchesAdmin = Object.prototype.hasOwnProperty.call(body, "is_admin");
+
+  if (touchesModerator || touchesAdmin) {
     if (!requesterIsAdmin) {
       res.status(403).json({ error: "Admin access required" });
       return;
     }
-    db.prepare("UPDATE accounts SET is_moderator = ? WHERE id = ?").run(
-      req.body.is_moderator ? 1 : 0,
-      target.id
-    );
+    if (touchesModerator) {
+      db.prepare("UPDATE accounts SET is_moderator = ? WHERE id = ?").run(
+        body.is_moderator ? 1 : 0,
+        target.id
+      );
+    }
+    if (touchesAdmin) {
+      db.prepare("UPDATE accounts SET is_admin = ? WHERE id = ?").run(body.is_admin ? 1 : 0, target.id);
+    }
     const updated = getAccountById(target.id);
     res.json({ ok: true, user: toLegacyUser(updated) });
     return;
   }
 
-  if (Number(target.id) !== Number(req.user.id)) {
+  if (Number(target.id) !== Number(req.user.id) && !requesterIsAdmin) {
     res.status(403).json({ error: "You can only edit your own profile." });
     return;
   }
 
-  patchProfile(target, req.body || {});
+  patchProfile(target, body);
   const updated = getAccountById(target.id);
   res.json({ ok: true, user: toLegacyUser(updated) });
 });
@@ -721,7 +883,8 @@ app.put("/api/users/:id", requireAuth, (req, res) => {
     res.status(404).json({ error: "User not found" });
     return;
   }
-  if (Number(target.id) !== Number(req.user.id)) {
+  const requesterIsAdmin = isAdminUser(req.user);
+  if (Number(target.id) !== Number(req.user.id) && !requesterIsAdmin) {
     res.status(403).json({ error: "You can only edit your own profile." });
     return;
   }
@@ -730,6 +893,17 @@ app.put("/api/users/:id", requireAuth, (req, res) => {
 
   const updated = getAccountById(target.id);
   res.json({ ok: true, user: toLegacyUser(updated) });
+});
+
+app.delete("/api/users/:id", requireAuth, requireAdmin, (req, res) => {
+  const target = getAccountById(req.params.id);
+  if (!target) {
+    res.status(404).json({ ok: false, message: "User not found." });
+    return;
+  }
+  db.prepare("DELETE FROM sessions WHERE username = ?").run(target.username);
+  db.prepare("DELETE FROM accounts WHERE id = ?").run(target.id);
+  res.json({ ok: true, message: `Deleted profile for ${target.username}.` });
 });
 
 app.get("/api/roles", (_req, res) => {
@@ -839,6 +1013,58 @@ app.post("/api/listings/:listingId/close", requireAuth, (req, res) => {
   res.json({ ok: true, message: "Listing closed." });
 });
 
+app.patch("/api/listings/:listingId", requireAuth, (req, res) => {
+  const listingId = String(req.params.listingId || "").trim();
+  const current = db.prepare("SELECT * FROM listings WHERE id = ?").get(listingId);
+  if (!current) {
+    res.status(404).json({ ok: false, message: "Listing not found." });
+    return;
+  }
+  const canModerate =
+    isAdminUser(req.user) || toLowerName(current.author) === toLowerName(req.user.username);
+  if (!canModerate) {
+    res.status(403).json({ ok: false, message: "Not permitted to edit this listing." });
+    return;
+  }
+  const body = req.body || {};
+  const nextType = body.type === "trade" ? "trade" : body.type === "barter" ? "barter" : current.type;
+  const nextTitle = String(body.title ?? current.title).trim();
+  const nextDetails = String(body.details ?? current.details).trim();
+  const nextScope = String(body.scope ?? current.scope).trim();
+  const nextStatus = String(body.status ?? current.status).trim();
+  if (!nextTitle || !nextDetails) {
+    res.status(400).json({ ok: false, message: "Provide title and details." });
+    return;
+  }
+  const closedAt = nextStatus === "closed" ? nowIso() : null;
+  db.prepare(
+    `
+      UPDATE listings
+      SET type = ?, title = ?, details = ?, scope = ?, status = ?, closed_at = ?
+      WHERE id = ?
+    `
+  ).run(nextType, nextTitle, nextDetails, nextScope, nextStatus, closedAt, listingId);
+  const updated = db.prepare("SELECT * FROM listings WHERE id = ?").get(listingId);
+  res.json({ ok: true, listing: mapListing(updated) });
+});
+
+app.delete("/api/listings/:listingId", requireAuth, (req, res) => {
+  const listingId = String(req.params.listingId || "").trim();
+  const current = db.prepare("SELECT * FROM listings WHERE id = ?").get(listingId);
+  if (!current) {
+    res.status(404).json({ ok: false, message: "Listing not found." });
+    return;
+  }
+  const canModerate =
+    isAdminUser(req.user) || toLowerName(current.author) === toLowerName(req.user.username);
+  if (!canModerate) {
+    res.status(403).json({ ok: false, message: "Not permitted to delete this listing." });
+    return;
+  }
+  db.prepare("DELETE FROM listings WHERE id = ?").run(listingId);
+  res.json({ ok: true, message: "Listing deleted." });
+});
+
 app.get("/api/network-posts", (_req, res) => {
   const rows = db.prepare("SELECT * FROM network_posts ORDER BY created_at DESC").all();
   res.json({ ok: true, posts: rows.map(mapNetworkPost) });
@@ -871,6 +1097,65 @@ app.post("/api/network-posts", requireAuth, (req, res) => {
   res.status(201).json({ ok: true, post });
 });
 
+app.patch("/api/network-posts/:postId", requireAuth, (req, res) => {
+  const postId = String(req.params.postId || "").trim();
+  const current = db.prepare("SELECT * FROM network_posts WHERE id = ?").get(postId);
+  if (!current) {
+    res.status(404).json({ ok: false, message: "Post not found." });
+    return;
+  }
+  const canModerate =
+    isAdminUser(req.user) || toLowerName(current.author) === toLowerName(req.user.username);
+  if (!canModerate) {
+    res.status(403).json({ ok: false, message: "Not permitted to edit this post." });
+    return;
+  }
+  const body = req.body || {};
+  const nextScope = String(body.scope ?? current.scope).trim();
+  const nextMessage = String(body.message ?? current.message).trim();
+  let nextTags;
+  if (Array.isArray(body.tags)) {
+    nextTags = body.tags.map((item) => String(item).trim().toLowerCase()).filter(Boolean).slice(0, 8);
+  } else {
+    try {
+      const parsed = JSON.parse(current.tags || "[]");
+      nextTags = Array.isArray(parsed) ? parsed : [];
+    } catch (_error) {
+      nextTags = [];
+    }
+  }
+  if (!nextMessage) {
+    res.status(400).json({ ok: false, message: "Message cannot be empty." });
+    return;
+  }
+  db.prepare(
+    `
+      UPDATE network_posts
+      SET scope = ?, tags = ?, message = ?
+      WHERE id = ?
+    `
+  ).run(nextScope, JSON.stringify(nextTags), nextMessage, postId);
+  const updated = db.prepare("SELECT * FROM network_posts WHERE id = ?").get(postId);
+  res.json({ ok: true, post: mapNetworkPost(updated) });
+});
+
+app.delete("/api/network-posts/:postId", requireAuth, (req, res) => {
+  const postId = String(req.params.postId || "").trim();
+  const current = db.prepare("SELECT * FROM network_posts WHERE id = ?").get(postId);
+  if (!current) {
+    res.status(404).json({ ok: false, message: "Post not found." });
+    return;
+  }
+  const canModerate =
+    isAdminUser(req.user) || toLowerName(current.author) === toLowerName(req.user.username);
+  if (!canModerate) {
+    res.status(403).json({ ok: false, message: "Not permitted to delete this post." });
+    return;
+  }
+  db.prepare("DELETE FROM network_posts WHERE id = ?").run(postId);
+  res.json({ ok: true, message: "Post deleted." });
+});
+
 app.get("/api/notifications/:username", requireAuth, (req, res) => {
   const username = String(req.params.username || "").trim();
   if (toLowerName(username) !== toLowerName(req.user.username)) {
@@ -898,6 +1183,12 @@ app.post("/api/notifications", requireAuth, (req, res) => {
   }
   addNotification(target.username, message, type);
   res.json({ ok: true });
+});
+
+app.delete("/api/notifications/:notificationId", requireAuth, requireAdmin, (req, res) => {
+  const notificationId = String(req.params.notificationId || "").trim();
+  db.prepare("DELETE FROM notifications WHERE id = ?").run(notificationId);
+  res.json({ ok: true, message: "Notification deleted." });
 });
 
 app.post("/api/profile-visits", requireAuth, (req, res) => {

@@ -28,6 +28,7 @@ db.exec(`
     skills TEXT NOT NULL DEFAULT '[]',
     social_services TEXT NOT NULL DEFAULT '[]',
     is_moderator INTEGER NOT NULL DEFAULT 0,
+    is_admin INTEGER NOT NULL DEFAULT 0,
     trust_level INTEGER NOT NULL DEFAULT 1,
     credits INTEGER NOT NULL DEFAULT 0
   );
@@ -120,6 +121,7 @@ ensureColumn("accounts", "bio", "bio TEXT NOT NULL DEFAULT ''");
 ensureColumn("accounts", "skills", "skills TEXT NOT NULL DEFAULT '[]'");
 ensureColumn("accounts", "social_services", "social_services TEXT NOT NULL DEFAULT '[]'");
 ensureColumn("accounts", "is_moderator", "is_moderator INTEGER NOT NULL DEFAULT 0");
+ensureColumn("accounts", "is_admin", "is_admin INTEGER NOT NULL DEFAULT 0");
 ensureColumn("accounts", "trust_level", "trust_level INTEGER NOT NULL DEFAULT 1");
 ensureColumn("accounts", "credits", "credits INTEGER NOT NULL DEFAULT 0");
 
@@ -164,6 +166,7 @@ function mapAccount(row) {
     skills,
     socialServices,
     isModerator: Boolean(row.is_moderator),
+    isAdmin: Boolean(row.is_admin),
     trustLevel: Number(row.trust_level || 1),
     credits: Number(row.credits || 0)
   };

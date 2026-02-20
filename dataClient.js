@@ -9,7 +9,12 @@
   async function detectBackend() {
     try {
       const response = await fetch("/api/health", { cache: "no-store" });
-      apiReady = response.ok;
+      if (response.ok) {
+        const data = await response.json().catch(() => null);
+        apiReady = Boolean(data && data.ok && data.service === "liquidgov-api");
+      } else {
+        apiReady = false;
+      }
     } catch (error) {
       apiReady = false;
     }
@@ -102,7 +107,10 @@
             const data = await request("/api/users");
             const users = Array.isArray(data.users) ? data.users : [];
             return users.map((user) => ({
+              id: user.id || user.user_id || user.name,
               username: user.name,
+              isAdmin: Boolean(user.is_admin),
+              isModerator: Boolean(user.is_moderator),
               isVerifiedPatriot: false,
               role: "adult",
               createdAt: user.created_at || null
@@ -250,8 +258,23 @@
                 }
               };
             }
+            return { ok: true, message: "Account created." };
           } catch (error) {
-            // Fall through to local storage fallback.
+            try {
+              const data = await request("/api/auth/register", {
+                method: "POST",
+                body: JSON.stringify({
+                  username: payload?.username,
+                  password: payload?.password
+                })
+              });
+              if (data?.token) {
+                setToken(data.token);
+              }
+              return { ok: true, message: data?.message || "Account created.", account: data?.account };
+            } catch (_registerError) {
+              // Fall through to local storage fallback.
+            }
           }
         }
         return localStore.createAccount(payload);
@@ -263,6 +286,60 @@
         });
         setToken(data.token);
         return { ok: true, message: data.message, account: data.account };
+      } catch (error) {
+        // If backend detection was optimistic/misconfigured, still allow local fallback.
+        try {
+          return localStore.createAccount(payload);
+        } catch (_fallbackError) {
+          return { ok: false, message: error.message };
+        }
+      }
+    },
+
+    async setProfilePortrait(username, dataUrl) {
+      const normalized = String(username || "").trim();
+      if (!normalized) {
+        return { ok: false, message: "Username is required." };
+      }
+      if (!apiReady) {
+        return localStore.setProfilePortrait(normalized, dataUrl || null);
+      }
+      try {
+        await request("/api/users/me", {
+          method: "PATCH",
+          body: JSON.stringify({ profile_photo_url: dataUrl || null })
+        });
+        return { ok: true, message: "Portrait saved." };
+      } catch (error) {
+        return localStore.setProfilePortrait(normalized, dataUrl || null);
+      }
+    },
+
+    async updateUserAccess(userId, patch) {
+      if (!apiReady) {
+        return localStore.updateUserAccess(userId, patch || {});
+      }
+      try {
+        const data = await request(`/api/users/${encodeURIComponent(userId)}`, {
+          method: "PATCH",
+          body: JSON.stringify(patch || {})
+        });
+        return { ok: true, message: "Access updated.", user: data.user };
+      } catch (error) {
+        return { ok: false, message: error.message };
+      }
+    },
+
+    async deleteProfile(userId) {
+      if (!apiReady) {
+        return localStore.deleteProfile(userId);
+      }
+      try {
+        const data = await request(`/api/users/${encodeURIComponent(userId)}`, {
+          method: "DELETE",
+          body: JSON.stringify({})
+        });
+        return { ok: true, message: data.message || "Profile deleted." };
       } catch (error) {
         return { ok: false, message: error.message };
       }

@@ -311,6 +311,82 @@ h1 {
   gap: 1rem;
 }
 
+.portrait-dock {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.portrait-trigger {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid #4b66a8;
+  padding: 0;
+  background: #142347;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+#portraitPreview {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.portrait-editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1rem;
+}
+
+.portrait-canvas-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+#portraitCanvas {
+  width: min(78vw, 420px);
+  height: min(78vw, 420px);
+  border-radius: 50%;
+  border: 2px solid #4865aa;
+  background: #0f1a39;
+  touch-action: none;
+  cursor:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M2 20l6-2 11-11-4-4L4 14z' fill='%2357d5ff' stroke='%230b1b36' stroke-width='1'/%3E%3Ccircle cx='18' cy='6' r='3' fill='%23ffffff'/%3E%3C/svg%3E")
+      2 22,
+    crosshair;
+}
+
+.portrait-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.7rem;
+}
+
+.portrait-controls input[type="range"] {
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #000, #fff);
+  height: 14px;
+}
+
+#brushSize {
+  background: linear-gradient(90deg, #2f4f83, #7cefff);
+}
+
+#brushColor {
+  width: 100%;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px solid #3b4f84;
+  background: transparent;
+}
+
 .compare-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -610,6 +686,14 @@ menu {
   padding: 0.8rem;
 }
 
+.admin-only {
+  display: none;
+}
+
+.admin-only.active {
+  display: block;
+}
+
 .feed-item {
   border-top: 1px solid #364a7e;
   padding-top: 0.6rem;
@@ -824,5 +908,14 @@ menu {
 
   .manifesto-card {
     padding: 0.85rem;
+  }
+
+  .portrait-dock {
+    align-items: flex-start;
+  }
+
+  .portrait-trigger {
+    width: 88px;
+    height: 88px;
   }
 }

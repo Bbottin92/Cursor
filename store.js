@@ -106,6 +106,8 @@
     legacyParticipantOffset: 0
   };
 
+  const ADMIN_USERNAMES = ["brandon bottin"];
+
   function read(key, fallback) {
     try {
       const raw = localStorage.getItem(key);
@@ -162,7 +164,22 @@
   }
 
   function getAccounts() {
-    return read(STORE.accounts, []);
+    const accounts = read(STORE.accounts, []);
+    let changed = false;
+    for (const account of accounts) {
+      if (isBootstrapAdmin(account.username) && !account.isAdmin) {
+        account.isAdmin = true;
+        changed = true;
+      }
+      if (typeof account.isModerator !== "boolean") {
+        account.isModerator = Boolean(account.isModerator);
+        changed = true;
+      }
+    }
+    if (changed) {
+      saveAccounts(accounts);
+    }
+    return accounts;
   }
 
   function saveAccounts(accounts) {
@@ -183,6 +200,10 @@
 
   function normalizeName(name) {
     return String(name || "").trim().toLowerCase();
+  }
+
+  function isBootstrapAdmin(username) {
+    return ADMIN_USERNAMES.includes(normalizeName(username));
   }
 
   function createAccount(payload) {
@@ -211,8 +232,11 @@
       age: 18,
       parentLink: null,
       approvedAdults: [],
+      isModerator: false,
+      isAdmin: isBootstrapAdmin(username),
       isVerifiedPatriot: false,
       pledgeSigned: false,
+      profilePhotoUrl: null,
       createdAt: new Date().toISOString(),
       role: "adult"
     };
@@ -462,6 +486,50 @@
     return all[profileOwner] || [];
   }
 
+  function setProfilePortrait(username, dataUrl) {
+    const accounts = getAccounts();
+    const account = accounts.find(
+      (item) => normalizeName(item.username) === normalizeName(username)
+    );
+    if (!account) {
+      return { ok: false, message: "Account not found." };
+    }
+    account.profilePhotoUrl = dataUrl || null;
+    saveAccounts(accounts);
+    return { ok: true, message: dataUrl ? "Portrait saved." : "Portrait cleared." };
+  }
+
+  function updateUserAccess(userId, patch = {}) {
+    const accounts = getAccounts();
+    const target = accounts.find((item) => String(item.id) === String(userId));
+    if (!target) {
+      return { ok: false, message: "User not found." };
+    }
+    if (Object.prototype.hasOwnProperty.call(patch, "is_moderator")) {
+      target.isModerator = Boolean(patch.is_moderator);
+    }
+    if (Object.prototype.hasOwnProperty.call(patch, "is_admin")) {
+      target.isAdmin = Boolean(patch.is_admin);
+    }
+    saveAccounts(accounts);
+    return { ok: true, message: "Access updated.", user: target };
+  }
+
+  function deleteProfile(userId) {
+    const accounts = getAccounts();
+    const idx = accounts.findIndex((item) => String(item.id) === String(userId));
+    if (idx < 0) {
+      return { ok: false, message: "User not found." };
+    }
+    const [removed] = accounts.splice(idx, 1);
+    saveAccounts(accounts);
+    const session = getCurrentUser();
+    if (session?.username && normalizeName(session.username) === normalizeName(removed.username)) {
+      setCurrentUser(null);
+    }
+    return { ok: true, message: `Deleted profile for ${removed.username}.` };
+  }
+
   function getNotificationMap() {
     return read(STORE.notifications, {});
   }
@@ -640,6 +708,9 @@
     formatDate,
     recordProfileVisit,
     getProfileVisitors,
+    setProfilePortrait,
+    updateUserAccess,
+    deleteProfile,
     addNotification,
     getNotifications,
     inspectMinorActivity,

@@ -1,13 +1,15 @@
 {
-  "generated_at": "2026-02-20T13:16:27Z",
+  "generated_at": "2026-02-20T14:21:32Z",
   "trigger": {
     "phase": "pre_commit",
     "note": "auto pre-commit context sync"
   },
   "git": {
     "branch": "cursor/liquidgov-website-definition-d045",
-    "commit": "a550c7f",
+    "commit": "32cb86e",
     "changed_files": [
+      "app.html",
+      "app.js",
       "context/activity_log.jsonl",
       "context/current_task.md",
       "context/flowmap.json",
@@ -16,11 +18,12 @@
       "context/watchlist.json",
       "dataClient.js",
       "index.html",
+      "legal.html",
       "login.html",
-      "main.js",
       "server/db.js",
       "server/server.js",
-      "store.js"
+      "store.js",
+      "styles.css"
     ]
   },
   "frontend": {
@@ -29,12 +32,12 @@
         "file": "index.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220f"
+          "styles.css?v=20260220g"
         ],
         "scripts": [
-          "store.js?v=20260220f",
-          "dataClient.js?v=20260220f",
-          "main.js?v=20260220f"
+          "store.js?v=20260220g",
+          "dataClient.js?v=20260220g",
+          "main.js?v=20260220g"
         ],
         "links": [
           "#start-here",
@@ -51,12 +54,12 @@
         "file": "app.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220d"
+          "styles.css?v=20260220g"
         ],
         "scripts": [
-          "store.js?v=20260220d",
-          "dataClient.js?v=20260220d",
-          "app.js?v=20260220d"
+          "store.js?v=20260220g",
+          "dataClient.js?v=20260220g",
+          "app.js?v=20260220g"
         ],
         "links": [
           "index.html",
@@ -67,7 +70,7 @@
         "file": "legal.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220d"
+          "styles.css?v=20260220g"
         ],
         "scripts": [],
         "links": [
@@ -79,7 +82,7 @@
         "file": "login.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220f"
+          "styles.css?v=20260220g"
         ],
         "scripts": [],
         "links": [
@@ -155,7 +158,9 @@
           "/api/session/current",
           "/api/settings",
           "/api/stats/participants",
-          "/api/users"
+          "/api/users",
+          "/api/users/${encodeURIComponent(userId)}",
+          "/api/users/me"
         ]
       },
       {
@@ -240,12 +245,28 @@
         "route": "/api/proposals"
       },
       {
+        "method": "PATCH",
+        "route": "/api/proposals/:proposalId"
+      },
+      {
+        "method": "DELETE",
+        "route": "/api/proposals/:proposalId"
+      },
+      {
         "method": "GET",
         "route": "/api/announcements"
       },
       {
         "method": "POST",
         "route": "/api/announcements"
+      },
+      {
+        "method": "PATCH",
+        "route": "/api/announcements/:announcementId"
+      },
+      {
+        "method": "DELETE",
+        "route": "/api/announcements/:announcementId"
       },
       {
         "method": "GET",
@@ -288,6 +309,10 @@
         "route": "/api/users/:id"
       },
       {
+        "method": "DELETE",
+        "route": "/api/users/:id"
+      },
+      {
         "method": "GET",
         "route": "/api/roles"
       },
@@ -312,12 +337,28 @@
         "route": "/api/listings/:listingId/close"
       },
       {
+        "method": "PATCH",
+        "route": "/api/listings/:listingId"
+      },
+      {
+        "method": "DELETE",
+        "route": "/api/listings/:listingId"
+      },
+      {
         "method": "GET",
         "route": "/api/network-posts"
       },
       {
         "method": "POST",
         "route": "/api/network-posts"
+      },
+      {
+        "method": "PATCH",
+        "route": "/api/network-posts/:postId"
+      },
+      {
+        "method": "DELETE",
+        "route": "/api/network-posts/:postId"
       },
       {
         "method": "GET",
@@ -326,6 +367,10 @@
       {
         "method": "POST",
         "route": "/api/notifications"
+      },
+      {
+        "method": "DELETE",
+        "route": "/api/notifications/:notificationId"
       },
       {
         "method": "POST",
@@ -379,9 +424,11 @@
       "/api/session/current",
       "/api/settings",
       "/api/stats/participants",
-      "/api/users"
+      "/api/users",
+      "/api/users/${encodeURIComponent(userId)}",
+      "/api/users/me"
     ],
-    "route_count": 46
+    "route_count": 56
   },
   "deploy": {
     "script": "scripts/deploy_cpanel_no_ssh.sh",
@@ -444,35 +491,35 @@
   ],
   "workflow_rule": "Run context guard before inspect/change: ./scripts/context_guard.sh inspect|change \"note\"",
   "optimization": {
-    "activity_entries": 25,
+    "activity_entries": 28,
     "hotspots": [
       {
         "file": "context/activity_log.jsonl",
-        "touches": 13
+        "touches": 15
       },
       {
         "file": "context/current_task.md",
-        "touches": 13
+        "touches": 15
       },
       {
         "file": "context/flowmap.json",
-        "touches": 13
+        "touches": 15
       },
       {
         "file": "context/flowmap.md",
-        "touches": 13
+        "touches": 15
       },
       {
         "file": "context/state.json",
-        "touches": 13
+        "touches": 15
       },
       {
         "file": "context/watchlist.json",
-        "touches": 13
+        "touches": 15
       },
       {
         "file": "index.html",
-        "touches": 7
+        "touches": 9
       },
       {
         "file": "README.md",

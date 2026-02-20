@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NUSA Member App</title>
-  <link rel="stylesheet" href="styles.css?v=20260220d" />
+  <link rel="stylesheet" href="styles.css?v=20260220g" />
 </head>
 <body>
   <header class="site-header">
@@ -16,6 +16,16 @@
   </header>
 
   <main class="simple-app">
+    <section class="section portrait-dock">
+      <button id="portraitTrigger" class="portrait-trigger" type="button" aria-label="Edit self portrait">
+        <canvas id="portraitPreview" width="120" height="120"></canvas>
+      </button>
+      <div>
+        <h3 class="tight">Self Portrait</h3>
+        <p class="tiny-note">Draw your own profile portrait. Click the circle to edit or clear it.</p>
+      </div>
+    </section>
+
     <section class="section">
       <div class="layout-title">
         <h2 class="tight">Start Here</h2>
@@ -53,6 +63,21 @@
         <p id="scopeHint" class="tiny-note"></p>
         <div class="metric">[<span id="participantsCount">0</span> / 175,000,000 PARTICIPANTS]</div>
         <div class="metric">Verified Patriots: <strong id="verifiedCount">0</strong></div>
+      </article>
+
+      <article class="feed-card admin-only" id="adminCard">
+        <h3>Admin Tools</h3>
+        <p class="tiny-note">Grant moderator access or remove abusive profiles.</p>
+        <label>
+          Select profile
+          <select id="adminUserSelect"></select>
+        </label>
+        <div class="hero-actions">
+          <button id="grantModeratorBtn" class="secondary" type="button">Grant Moderator</button>
+          <button id="revokeModeratorBtn" class="secondary" type="button">Revoke Moderator</button>
+          <button id="deleteProfileBtn" class="secondary" type="button">Delete Profile</button>
+        </div>
+        <p id="adminResult" class="tiny-note"></p>
       </article>
 
       <article class="feed-card">
@@ -135,8 +160,38 @@
     </section>
   </main>
 
-  <script src="store.js?v=20260220d"></script>
-  <script src="dataClient.js?v=20260220d"></script>
-  <script src="app.js?v=20260220d"></script>
+  <dialog id="portraitDialog">
+    <form method="dialog" class="portrait-editor-form">
+      <h3>Portrait Editor</h3>
+      <p class="tiny-note">Draw inside the circle. Use color, shade, and brush size wheels.</p>
+      <div class="portrait-canvas-wrap">
+        <canvas id="portraitCanvas" width="420" height="420"></canvas>
+      </div>
+      <div class="portrait-controls">
+        <label>
+          Color wheel
+          <input id="brushColor" type="color" value="#57d5ff" />
+        </label>
+        <label>
+          White-black wheel
+          <input id="brushShade" type="range" min="0" max="100" value="50" />
+        </label>
+        <label>
+          Brush size wheel
+          <input id="brushSize" type="range" min="2" max="42" value="10" />
+        </label>
+      </div>
+      <menu>
+        <button id="portraitClear" type="button" class="secondary">Clear</button>
+        <button id="portraitSave" type="button" class="primary">Save</button>
+        <button type="button" id="portraitClose" class="secondary">Close</button>
+      </menu>
+      <p id="portraitResult" class="tiny-note"></p>
+    </form>
+  </dialog>
+
+  <script src="store.js?v=20260220g"></script>
+  <script src="dataClient.js?v=20260220g"></script>
+  <script src="app.js?v=20260220g"></script>
 </body>
 </html>
