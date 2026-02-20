@@ -108,6 +108,11 @@ main {
   margin: 0 auto;
 }
 
+.simple-app {
+  width: min(1200px, 94%);
+  margin: 1rem auto;
+}
+
 .hero {
   position: relative;
   padding: 4rem 0 2.5rem;
@@ -260,6 +265,12 @@ h1 {
   background: var(--card);
   border-radius: 12px;
   padding: 1rem;
+}
+
+.app-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 1rem;
 }
 
 .compare-grid {

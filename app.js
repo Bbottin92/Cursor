@@ -3,148 +3,88 @@ document.addEventListener("DOMContentLoaded", async () => {
   await data.init();
 
   const scopes = {
-    Neighborhood: {
-      summary: "Hyper-local issues, nearby resources, and street-level collaboration.",
-      pins: ["Community watchboard", "Local trade exchange", "Shared tools hub"]
-    },
-    Town: {
-      summary: "Townwide proposals, school board notes, and civic priorities.",
-      pins: ["Town hall livestream", "Civic signal trends", "Emergency resource map"]
-    },
-    State: {
-      summary: "Statewide policy clusters, chapter growth, and regional events.",
-      pins: ["Chapter growth heatmap", "State proposal ranking", "Volunteer network"]
-    },
-    National: {
-      summary: "National policy discussion, transparency scorecards, and assembly planning.",
-      pins: ["National launch metrics", "Founding assembly agenda", "Constitution drafts"]
-    },
-    International: {
-      summary: "Global observer channels and cooperative civics experimentation.",
-      pins: ["Sister movement hubs", "Global dialogue circles", "Translation commons"]
-    }
+    Neighborhood: "Local block-level issues and opportunities.",
+    Town: "Town-level projects, events, and policy proposals.",
+    State: "State-level initiatives and chapter coordination.",
+    National: "National strategy, policy, and movement updates.",
+    International: "Global observers and allied network conversations."
   };
 
-  let activeScope = "Neighborhood";
-  let activeUsername = null;
-  let hasSelectedScope = false;
-  let hasPostedProposal = false;
-  let hasSentMessage = false;
+  const state = {
+    activeUsername: null,
+    activeScope: "Neighborhood",
+    postedProposal: false,
+    sentMessage: false,
+    groupMessages: [
+      "System: Welcome to the group channel.",
+      "System: Keep discussion constructive and solution-focused."
+    ]
+  };
 
-  const currentUsername = document.getElementById("currentUsername");
-  const currentBadge = document.getElementById("currentBadge");
-  const onboardAccount = document.getElementById("onboardAccount");
-  const onboardScope = document.getElementById("onboardScope");
-  const onboardProposal = document.getElementById("onboardProposal");
-  const onboardMessage = document.getElementById("onboardMessage");
-  const onboardingProgress = document.getElementById("onboardingProgress");
-  const jumpToProposalBtn = document.getElementById("jumpToProposalBtn");
-  const jumpToMessagesBtn = document.getElementById("jumpToMessagesBtn");
-  const proposalCard = document.getElementById("proposalCard");
-  const messagesCard = document.getElementById("messagesCard");
-  const avatarInitial = document.getElementById("avatarInitial");
-  const profileVerifiedCounter = document.getElementById("profileVerifiedCounter");
-  const participantsCount = document.getElementById("participantsCount");
-  const verifiedCount = document.getElementById("verifiedCount");
-  const milestoneCompleted = document.getElementById("milestoneCompleted");
-  const milestoneFill = document.getElementById("milestoneFill");
-  const milestoneChecks = document.getElementById("milestoneChecks");
-  const toggleVerificationMethod = document.getElementById("toggleVerificationMethod");
-  const toggleFrameworkPublished = document.getElementById("toggleFrameworkPublished");
-  const toggleAuditPublished = document.getElementById("toggleAuditPublished");
-  const roleSelector = document.getElementById("roleSelector");
-  const claimRoleBtn = document.getElementById("claimRoleBtn");
-  const releaseRoleBtn = document.getElementById("releaseRoleBtn");
-  const roleResult = document.getElementById("roleResult");
-  const roleList = document.getElementById("roleList");
-  const accountSwitcher = document.getElementById("accountSwitcher");
-  const useAccountBtn = document.getElementById("useAccountBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const scopeChips = document.getElementById("scopeChips");
-  const scopeName = document.getElementById("scopeName");
-  const scopeSummary = document.getElementById("scopeSummary");
-  const scopePins = document.getElementById("scopePins");
-  const mapTitle = document.getElementById("mapTitle");
-  const profileDirectory = document.getElementById("profileDirectory");
-  const visitProfileBtn = document.getElementById("visitProfileBtn");
-  const visitorLogBody = document.getElementById("visitorLogBody");
-  const notificationsBody = document.getElementById("notificationsBody");
-  const proposalForm = document.getElementById("proposalForm");
-  const announcementForm = document.getElementById("announcementForm");
-  const announcementTitle = document.getElementById("announcementTitle");
-  const announcementBody = document.getElementById("announcementBody");
-  const announcementResult = document.getElementById("announcementResult");
-  const announcementsList = document.getElementById("announcementsList");
-  const painPointInput = document.getElementById("painPointInput");
-  const solutionInput = document.getElementById("solutionInput");
-  const proposalCategory = document.getElementById("proposalCategory");
-  const proposalResult = document.getElementById("proposalResult");
-  const archiveTableBody = document.getElementById("archiveTableBody");
-  const listingForm = document.getElementById("listingForm");
-  const listingType = document.getElementById("listingType");
-  const listingTitle = document.getElementById("listingTitle");
-  const listingDetails = document.getElementById("listingDetails");
-  const listingResult = document.getElementById("listingResult");
-  const listingTableBody = document.getElementById("listingTableBody");
-  const networkForm = document.getElementById("networkForm");
-  const networkTags = document.getElementById("networkTags");
-  const networkMessage = document.getElementById("networkMessage");
-  const networkResult = document.getElementById("networkResult");
-  const networkList = document.getElementById("networkList");
-  const groupInput = document.getElementById("groupInput");
-  const groupSendBtn = document.getElementById("groupSendBtn");
-  const groupStream = document.getElementById("groupStream");
-  const dmRecipient = document.getElementById("dmRecipient");
-  const dmInput = document.getElementById("dmInput");
-  const dmResult = document.getElementById("dmResult");
-  const audioNoteInput = document.getElementById("audioNoteInput");
-  const dmSendBtn = document.getElementById("dmSendBtn");
-  const audioSendBtn = document.getElementById("audioSendBtn");
-  const startVideoBtn = document.getElementById("startVideoBtn");
-  const startGroupVideoBtn = document.getElementById("startGroupVideoBtn");
-  const profileHtmlInput = document.getElementById("profileHtmlInput");
-  const profilePreview = document.getElementById("profilePreview");
-  const renderProfileBtn = document.getElementById("renderProfileBtn");
-  const inspectBtn = document.getElementById("inspectBtn");
-  const childInspectName = document.getElementById("childInspectName");
-  const inspectArea = document.getElementById("inspectArea");
-  const inspectResult = document.getElementById("inspectResult");
-  const approveChildName = document.getElementById("approveChildName");
-  const approveAdultName = document.getElementById("approveAdultName");
-  const approveContactBtn = document.getElementById("approveContactBtn");
-  const approveResult = document.getElementById("approveResult");
-
-  const groupMessages = [
-    "System: Welcome to the group channel.",
-    "System: Keep discussion constructive and solution-focused."
-  ];
-
-  function setOnboardingState(el, done) {
-    if (!el) {
-      return;
-    }
-    el.classList.toggle("done", done);
-    const status = el.querySelector("strong");
-    if (status) {
-      status.textContent = done ? "Done" : "Pending";
-    }
+  function el(id) {
+    return document.getElementById(id);
   }
 
-  function updateOnboarding() {
-    const doneAccount = Boolean(activeUsername);
-    const doneScope = Boolean(hasSelectedScope);
-    const doneProposal = Boolean(hasPostedProposal);
-    const doneMessage = Boolean(hasSentMessage);
+  const currentUsername = el("currentUsername");
+  const currentBadge = el("currentBadge");
+  const accountSwitcher = el("accountSwitcher");
+  const useAccountBtn = el("useAccountBtn");
+  const logoutBtn = el("logoutBtn");
+  const scopeSelect = el("scopeSelect");
+  const scopeHint = el("scopeHint");
+  const participantsCount = el("participantsCount");
+  const verifiedCount = el("verifiedCount");
 
-    setOnboardingState(onboardAccount, doneAccount);
-    setOnboardingState(onboardScope, doneScope);
-    setOnboardingState(onboardProposal, doneProposal);
-    setOnboardingState(onboardMessage, doneMessage);
+  const onboardAccount = el("onboardAccount");
+  const onboardScope = el("onboardScope");
+  const onboardProposal = el("onboardProposal");
+  const onboardMessage = el("onboardMessage");
+  const onboardingProgress = el("onboardingProgress");
 
-    const total = [doneAccount, doneScope, doneProposal, doneMessage].filter(Boolean).length;
-    if (onboardingProgress) {
-      onboardingProgress.textContent = `${total}/4`;
-    }
+  const announcementForm = el("announcementForm");
+  const announcementTitle = el("announcementTitle");
+  const announcementBody = el("announcementBody");
+  const announcementResult = el("announcementResult");
+  const announcementsList = el("announcementsList");
+
+  const proposalForm = el("proposalForm");
+  const painPointInput = el("painPointInput");
+  const solutionInput = el("solutionInput");
+  const proposalCategory = el("proposalCategory");
+  const proposalResult = el("proposalResult");
+  const archiveTableBody = el("archiveTableBody");
+
+  const dmRecipient = el("dmRecipient");
+  const dmInput = el("dmInput");
+  const dmSendBtn = el("dmSendBtn");
+  const dmResult = el("dmResult");
+  const groupInput = el("groupInput");
+  const groupSendBtn = el("groupSendBtn");
+  const groupStream = el("groupStream");
+
+  const profileDirectory = el("profileDirectory");
+  const visitProfileBtn = el("visitProfileBtn");
+  const visitorLogBody = el("visitorLogBody");
+  const notificationsBody = el("notificationsBody");
+
+  function setOnboardingItem(itemEl, done) {
+    itemEl.classList.toggle("done", done);
+    const status = itemEl.querySelector("strong");
+    status.textContent = done ? "Done" : "Pending";
+  }
+
+  function renderOnboarding() {
+    const doneAccount = Boolean(state.activeUsername);
+    const doneScope = Boolean(state.activeScope);
+    const doneProposal = Boolean(state.postedProposal);
+    const doneMessage = Boolean(state.sentMessage);
+    setOnboardingItem(onboardAccount, doneAccount);
+    setOnboardingItem(onboardScope, doneScope);
+    setOnboardingItem(onboardProposal, doneProposal);
+    setOnboardingItem(onboardMessage, doneMessage);
+    onboardingProgress.textContent = `${
+      [doneAccount, doneScope, doneProposal, doneMessage].filter(Boolean).length
+    }/4`;
   }
 
   async function getAccounts() {
@@ -158,109 +98,35 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
-  async function refreshMetrics() {
+  async function renderMetrics() {
     const accounts = await getAccounts();
+    const verified = accounts.filter((item) => item.isVerifiedPatriot).length;
     const participantCount = await data.getParticipantCount();
-    const verifiedTotal = accounts.filter((item) => item.isVerifiedPatriot).length;
     participantsCount.textContent = data.formatNumber(participantCount);
-    verifiedCount.textContent = data.formatNumber(verifiedTotal);
-    profileVerifiedCounter.textContent = data.formatNumber(verifiedTotal);
+    verifiedCount.textContent = data.formatNumber(verified);
   }
 
-  async function renderLaunchMilestone() {
-    const milestone = await data.getLaunchMilestoneStatus();
-    milestoneCompleted.textContent = String(milestone.completedChecks);
-    milestoneFill.style.width = `${(milestone.completedChecks / 5) * 100}%`;
-    milestoneChecks.innerHTML = milestone.checks
-      .map((item) => {
-        const labelClass = item.met ? "done" : "todo";
-        const labelText = item.met ? "Met" : "Pending";
-        return `
-          <div class="check-item">
-            <span>${item.label}</span>
-            <strong class="${labelClass}">${labelText}</strong>
-          </div>
-        `;
-      })
-      .join("");
-
-    const settings = await data.getSettings();
-    toggleVerificationMethod.checked = Boolean(settings.verificationMethodRatified);
-    toggleFrameworkPublished.checked = Boolean(settings.frameworkPublished);
-    toggleAuditPublished.checked = Boolean(settings.auditPublished);
-  }
-
-  async function renderRoles() {
-    const roles = await data.getAssemblyRoles();
-    roleSelector.innerHTML = roles
-      .map((role) => `<option value="${role.id}">${role.title}</option>`)
-      .join("");
-
-    roleList.innerHTML = roles
-      .map((role) => {
-        const assignee = role.assignedTo ? role.assignedTo : "Vacant";
-        return `<li>${role.title}: <strong>${assignee}</strong></li>`;
-      })
-      .join("");
-  }
-
-  async function renderListings() {
-    const listings = await data.getListings();
-    listingTableBody.innerHTML = listings
-      .slice(0, 20)
-      .map((item) => {
-        const tagClass = item.status === "open" ? "status-under-review" : "status-archived";
-        const label = item.status === "open" ? "Open" : "Closed";
-        return `
-          <tr>
-            <td>${item.type}</td>
-            <td>${item.title}</td>
-            <td>${item.author}</td>
-            <td><span class="status-tag ${tagClass}">${label}</span></td>
-          </tr>
-        `;
-      })
-      .join("");
-  }
-
-  async function renderNetworkPosts() {
-    const posts = await data.getNetworkPosts();
-    networkList.innerHTML = posts
-      .slice(0, 20)
-      .map((post) => {
-        const tags = post.tags.length ? `#${post.tags.join(" #")}` : "No tags";
-        return `<li><strong>${post.author}</strong> (${post.scope}) · ${tags}<br />${post.message}</li>`;
-      })
-      .join("");
-  }
-
-  async function renderAccountSelectors() {
+  async function renderAccountOptions() {
     const accounts = await getAccounts();
-    const options = accounts.length
-      ? accounts
-          .map((item) => {
-            const tag = item.isVerifiedPatriot ? "Verified Patriot" : "Participant";
-            return `<option value="${item.username}">${item.username} (${tag})</option>`;
-          })
-          .join("")
-      : '<option value="">No accounts yet</option>';
+    const options = accounts
+      .map((item) => {
+        const tag = item.isVerifiedPatriot ? "Verified Patriot" : "Participant";
+        return `<option value="${item.username}">${item.username} (${tag})</option>`;
+      })
+      .join("");
 
-    accountSwitcher.innerHTML = options;
-    profileDirectory.innerHTML = options;
+    accountSwitcher.innerHTML = options || '<option value="">No accounts yet</option>';
+    profileDirectory.innerHTML = options || '<option value="">No accounts yet</option>';
   }
 
-  async function setActiveUser(username, options = {}) {
-    const { skipAuthSync = false } = options;
+  async function setActiveUser(username, { skipAuthSync = false } = {}) {
     if (!username) {
-      activeUsername = null;
+      state.activeUsername = null;
       currentUsername.textContent = "Guest";
       currentBadge.textContent = "Participant";
-      avatarInitial.textContent = "G";
-      hasPostedProposal = false;
-      hasSentMessage = false;
-      visitorLogBody.innerHTML = '<tr><td colspan="2">Sign in to view logs.</td></tr>';
-      notificationsBody.innerHTML = '<tr><td colspan="2">Sign in to view notifications.</td></tr>';
-      updateOnboarding();
+      visitorLogBody.innerHTML = "<tr><td colspan='2'>Sign in to view visitor logs.</td></tr>";
+      notificationsBody.innerHTML = "<tr><td colspan='2'>Sign in to view notifications.</td></tr>";
+      renderOnboarding();
       return;
     }
 
@@ -270,73 +136,47 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    activeUsername = account.username;
     if (!skipAuthSync) {
-      try {
-        await data.setCurrentUser(account.username);
-      } catch (error) {
-        roleResult.textContent = error.message;
-      }
+      await data.setCurrentUser(account.username);
     }
 
+    state.activeUsername = account.username;
     currentUsername.textContent = account.username;
-    avatarInitial.textContent = account.username.slice(0, 1).toUpperCase();
+    currentBadge.textContent = account.isVerifiedPatriot ? "Verified Patriot" : "Participant";
 
-    if (account.isVerifiedPatriot && account.role === "minor") {
-      currentBadge.textContent = "Verified Patriot (Minor)";
-    } else if (account.isVerifiedPatriot) {
-      currentBadge.textContent = "Verified Patriot";
-    } else {
-      currentBadge.textContent = "Participant";
-    }
-
-    updateOnboarding();
-    await renderVisitorLog();
     await renderNotifications();
+    await renderVisitorLog();
+    renderOnboarding();
   }
 
-  function renderScopes() {
-    const keys = Object.keys(scopes);
-    scopeChips.innerHTML = keys
-      .map((name) => {
-        const activeClass = name === activeScope ? "chip active" : "chip";
-        return `<button type="button" class="${activeClass}" data-scope="${name}">${name}</button>`;
-      })
+  function renderScope() {
+    scopeSelect.value = state.activeScope;
+    scopeHint.textContent = scopes[state.activeScope];
+    renderOnboarding();
+  }
+
+  async function renderAnnouncements() {
+    const items = (await data.getAnnouncements()).slice(0, 12);
+    if (!items.length) {
+      announcementsList.innerHTML = "<li>No announcements yet.</li>";
+      return;
+    }
+    announcementsList.innerHTML = items
+      .map(
+        (item) =>
+          `<li><strong>${item.title}</strong> · ${item.author_name || item.author_username || "Unknown"}<br />${item.body}</li>`
+      )
       .join("");
-
-    scopeChips.querySelectorAll("button").forEach((button) => {
-      button.addEventListener("click", () => {
-        activeScope = button.dataset.scope;
-        hasSelectedScope = true;
-        updateOnboarding();
-        renderScopes();
-        renderScopePanel();
-      });
-    });
-  }
-
-  function renderScopePanel() {
-    const scope = scopes[activeScope];
-    mapTitle.textContent = `${activeScope} Scope Map`;
-    scopeName.textContent = activeScope;
-    scopeSummary.textContent = scope.summary;
-    scopePins.innerHTML = scope.pins.map((item) => `<li>${item}</li>`).join("");
   }
 
   async function renderArchive() {
     const proposals = (await data.getProposals())
       .slice()
-      .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-
+      .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))
+      .slice(0, 25);
     archiveTableBody.innerHTML = proposals
       .map((item) => {
-        const statusClass =
-          item.status === "implemented"
-            ? "status-implemented"
-            : item.status === "archived"
-              ? "status-archived"
-              : "status-under-review";
-        const statusLabel =
+        const status =
           item.status === "implemented"
             ? "Implemented"
             : item.status === "archived"
@@ -347,35 +187,38 @@ document.addEventListener("DOMContentLoaded", async () => {
             <td>${data.formatDate(item.submittedAt)}</td>
             <td>${item.author}</td>
             <td>${item.title}</td>
-            <td><span class="status-tag ${statusClass}">${statusLabel}</span></td>
-            <td>${item.lawReference || "-"}</td>
+            <td>${status}</td>
           </tr>
         `;
       })
       .join("");
   }
 
-  async function renderAnnouncements() {
-    const announcements = (await data.getAnnouncements()).slice(0, 12);
-    if (!announcements.length) {
-      announcementsList.innerHTML = "<li>No announcements yet.</li>";
+  async function renderNotifications() {
+    if (!state.activeUsername) {
       return;
     }
-    announcementsList.innerHTML = announcements
+    const notifications = await data.getNotifications(state.activeUsername);
+    if (!notifications.length) {
+      notificationsBody.innerHTML = "<tr><td colspan='2'>No notifications yet.</td></tr>";
+      return;
+    }
+    notificationsBody.innerHTML = notifications
+      .slice(0, 12)
       .map(
-        (item) =>
-          `<li><strong>${item.title}</strong> · ${item.author_name || item.author_username || "Unknown"}<br />${item.body}</li>`
+        (entry) =>
+          `<tr><td>${data.formatDate(entry.createdAt)}</td><td>${entry.message}</td></tr>`
       )
       .join("");
   }
 
   async function renderVisitorLog() {
-    if (!activeUsername) {
+    if (!state.activeUsername) {
       return;
     }
-    const visitors = await data.getProfileVisitors(activeUsername);
+    const visitors = await data.getProfileVisitors(state.activeUsername);
     if (!visitors.length) {
-      visitorLogBody.innerHTML = "<tr><td colspan='2'>No profile visitors logged yet.</td></tr>";
+      visitorLogBody.innerHTML = "<tr><td colspan='2'>No visitors logged yet.</td></tr>";
       return;
     }
     visitorLogBody.innerHTML = visitors
@@ -387,189 +230,108 @@ document.addEventListener("DOMContentLoaded", async () => {
       .join("");
   }
 
-  async function renderNotifications() {
-    if (!activeUsername) {
-      return;
-    }
-    const notes = await data.getNotifications(activeUsername);
-    if (!notes.length) {
-      notificationsBody.innerHTML =
-        "<tr><td colspan='2'>No notifications yet for this account.</td></tr>";
-      return;
-    }
-    notificationsBody.innerHTML = notes
-      .slice(0, 15)
-      .map(
-        (entry) =>
-          `<tr><td>${data.formatDate(entry.createdAt)}</td><td>${entry.message}</td></tr>`
-      )
-      .join("");
+  function renderGroupMessages() {
+    groupStream.innerHTML = state.groupMessages.map((line) => `<li>${line}</li>`).join("");
   }
-
-  function renderGroupStream() {
-    groupStream.innerHTML = groupMessages.map((item) => `<li>${item}</li>`).join("");
-  }
-
-  function renderProfileTheme() {
-    const html = profileHtmlInput.value || "";
-    const frame = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8" />
-        <style>
-          body { margin: 0; font-family: Arial, sans-serif; color: #ecf1ff; background: #1a2240; padding: 0.8rem; }
-          a { color: #57d5ff; }
-        </style>
-      </head>
-      <body>
-        ${html}
-      </body>
-      </html>
-    `;
-    profilePreview.srcdoc = frame;
-  }
-
-  jumpToProposalBtn.addEventListener("click", () => {
-    proposalCard.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-
-  jumpToMessagesBtn.addEventListener("click", () => {
-    messagesCard.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
 
   announcementForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     announcementResult.textContent = "";
-    if (!activeUsername) {
-      announcementResult.textContent = "Select an account first.";
+    if (!state.activeUsername) {
+      announcementResult.textContent = "Choose an account first.";
       return;
     }
-
     const title = announcementTitle.value.trim();
     const body = announcementBody.value.trim();
     if (!title || !body) {
       announcementResult.textContent = "Provide both title and message.";
       return;
     }
-
-    try {
-      await data.addAnnouncement({
-        title,
-        body,
-        authorName: activeUsername,
-        authorUsername: activeUsername
-      });
-      announcementResult.textContent = "Announcement posted.";
-      announcementTitle.value = "";
-      announcementBody.value = "";
-      await renderAnnouncements();
-    } catch (error) {
-      announcementResult.textContent = error.message;
-    }
+    await data.addAnnouncement({
+      title,
+      body,
+      authorName: state.activeUsername,
+      authorUsername: state.activeUsername
+    });
+    announcementTitle.value = "";
+    announcementBody.value = "";
+    announcementResult.textContent = "Announcement posted.";
+    await renderAnnouncements();
   });
 
   proposalForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (!activeUsername) {
-      proposalResult.textContent = "Select an account first.";
+    proposalResult.textContent = "";
+    if (!state.activeUsername) {
+      proposalResult.textContent = "Choose an account first.";
       return;
     }
-    const painPoint = painPointInput.value.trim();
+    const pain = painPointInput.value.trim();
     const solution = solutionInput.value.trim();
-    const category = proposalCategory.value;
-    if (!painPoint || !solution) {
-      proposalResult.textContent = "Please provide both pain point and solution.";
+    if (!pain || !solution) {
+      proposalResult.textContent = "Provide both pain point and solution.";
       return;
     }
 
-    const combinedTitle = `${painPoint.slice(0, 58)} -> ${solution.slice(0, 58)}`;
     await data.addProposal({
-      title: combinedTitle,
-      category,
-      author: activeUsername,
+      title: `${pain.slice(0, 58)} -> ${solution.slice(0, 58)}`,
+      category: proposalCategory.value,
+      author: state.activeUsername,
       status: "under_review"
     });
-    hasPostedProposal = true;
-    updateOnboarding();
-    proposalResult.textContent = "Proposal submitted to archive with author credit.";
     painPointInput.value = "";
     solutionInput.value = "";
+    state.postedProposal = true;
+    renderOnboarding();
+    proposalResult.textContent = "Proposal submitted.";
     await renderArchive();
   });
 
   dmSendBtn.addEventListener("click", async () => {
     dmResult.textContent = "";
-    if (!activeUsername || !dmInput.value.trim()) {
+    if (!state.activeUsername) {
+      dmResult.textContent = "Choose an account first.";
       return;
     }
     const recipient = dmRecipient.value.trim();
-    if (!recipient) {
-      dmResult.textContent = "Add a recipient username.";
+    const message = dmInput.value.trim();
+    if (!recipient || !message) {
+      dmResult.textContent = "Provide recipient and message.";
       return;
     }
-    const permission = await data.canInteract(activeUsername, recipient);
+    const permission = await data.canInteract(state.activeUsername, recipient);
     if (!permission.ok) {
       dmResult.textContent = permission.reason;
       return;
     }
 
     await data.addNotification(
-      activeUsername,
-      `DM sent to ${recipient}: "${dmInput.value.trim().slice(0, 60)}"`,
+      state.activeUsername,
+      `DM sent to ${recipient}: "${message.slice(0, 60)}"`,
       "info"
     );
     await data.addNotification(
       recipient,
-      `DM received from ${activeUsername}: "${dmInput.value.trim().slice(0, 60)}"`,
+      `DM received from ${state.activeUsername}: "${message.slice(0, 60)}"`,
       "info"
     );
     dmInput.value = "";
-    dmResult.textContent = "Message delivered.";
-    hasSentMessage = true;
-    updateOnboarding();
-    await renderNotifications();
-  });
-
-  audioSendBtn.addEventListener("click", async () => {
-    if (!activeUsername || !audioNoteInput.value.trim()) {
-      return;
-    }
-    await data.addNotification(activeUsername, "Audio message submitted.", "info");
-    audioNoteInput.value = "";
-    hasSentMessage = true;
-    updateOnboarding();
-    await renderNotifications();
-  });
-
-  startVideoBtn.addEventListener("click", async () => {
-    if (!activeUsername) {
-      return;
-    }
-    await data.addNotification(activeUsername, "1:1 video room token generated.", "info");
-    await renderNotifications();
-  });
-
-  startGroupVideoBtn.addEventListener("click", async () => {
-    if (!activeUsername) {
-      return;
-    }
-    await data.addNotification(activeUsername, "Group video room opened.", "info");
+    state.sentMessage = true;
+    renderOnboarding();
+    dmResult.textContent = "Message sent.";
     await renderNotifications();
   });
 
   groupSendBtn.addEventListener("click", () => {
-    if (!activeUsername || !groupInput.value.trim()) {
+    if (!state.activeUsername || !groupInput.value.trim()) {
       return;
     }
-    groupMessages.unshift(`${activeUsername}: ${groupInput.value.trim()}`);
+    state.groupMessages.unshift(`${state.activeUsername}: ${groupInput.value.trim()}`);
     groupInput.value = "";
-    hasSentMessage = true;
-    updateOnboarding();
-    renderGroupStream();
+    state.sentMessage = true;
+    renderOnboarding();
+    renderGroupMessages();
   });
-
-  renderProfileBtn.addEventListener("click", renderProfileTheme);
 
   useAccountBtn.addEventListener("click", async () => {
     const selected = accountSwitcher.value;
@@ -577,7 +339,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
     await setActiveUser(selected);
-    await renderAccountSelectors();
+    await renderAccountOptions();
   });
 
   logoutBtn.addEventListener("click", async () => {
@@ -585,168 +347,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     await setActiveUser(null, { skipAuthSync: true });
   });
 
+  scopeSelect.addEventListener("change", () => {
+    state.activeScope = scopeSelect.value;
+    renderScope();
+  });
+
   visitProfileBtn.addEventListener("click", async () => {
-    if (!activeUsername) {
+    if (!state.activeUsername) {
       return;
     }
     const target = profileDirectory.value;
-    if (!target || target === activeUsername) {
+    if (!target || target === state.activeUsername) {
       return;
     }
-    await data.recordProfileVisit(target, activeUsername);
+    await data.recordProfileVisit(target, state.activeUsername);
     await renderVisitorLog();
     await renderNotifications();
   });
 
-  inspectBtn.addEventListener("click", async () => {
-    inspectResult.textContent = "";
-    if (!activeUsername) {
-      inspectResult.textContent = "Sign in as the guardian account first.";
-      return;
-    }
-    const child = childInspectName.value.trim();
-    if (!child) {
-      inspectResult.textContent = "Provide child username.";
-      return;
-    }
-    const result = await data.inspectMinorActivity(activeUsername, child, inspectArea.value);
-    inspectResult.textContent = result.message;
-    if (result.ok) {
-      await data.addNotification(activeUsername, `Inspection logged for ${child}.`, "notice");
-      await renderNotifications();
-    }
-  });
-
-  approveContactBtn.addEventListener("click", async () => {
-    approveResult.textContent = "";
-    if (!activeUsername) {
-      approveResult.textContent = "Sign in as the guardian account first.";
-      return;
-    }
-    const child = approveChildName.value.trim();
-    const adult = approveAdultName.value.trim();
-    if (!child || !adult) {
-      approveResult.textContent = "Provide both child and adult usernames.";
-      return;
-    }
-    const result = await data.approveMinorContact(activeUsername, child, adult);
-    approveResult.textContent = result.message;
-    if (result.ok) {
-      await data.addNotification(activeUsername, `Approved ${adult} for ${child}.`, "notice");
-      await renderNotifications();
-    }
-  });
-
-  [toggleVerificationMethod, toggleFrameworkPublished, toggleAuditPublished].forEach(
-    (checkbox) => {
-      checkbox.addEventListener("change", async () => {
-        await data.updateSettings({
-          verificationMethodRatified: toggleVerificationMethod.checked,
-          frameworkPublished: toggleFrameworkPublished.checked,
-          auditPublished: toggleAuditPublished.checked
-        });
-        await renderLaunchMilestone();
-      });
-    }
-  );
-
-  claimRoleBtn.addEventListener("click", async () => {
-    roleResult.textContent = "";
-    if (!activeUsername) {
-      roleResult.textContent = "Select an account first.";
-      return;
-    }
-    const roleId = roleSelector.value;
-    const result = await data.claimAssemblyRole(roleId, activeUsername);
-    roleResult.textContent = result.message;
-    await renderRoles();
-    await renderLaunchMilestone();
-    await renderNotifications();
-  });
-
-  releaseRoleBtn.addEventListener("click", async () => {
-    roleResult.textContent = "";
-    if (!activeUsername) {
-      roleResult.textContent = "Select an account first.";
-      return;
-    }
-    const roleId = roleSelector.value;
-    const result = await data.releaseAssemblyRole(roleId, activeUsername);
-    roleResult.textContent = result.message;
-    await renderRoles();
-    await renderLaunchMilestone();
-    await renderNotifications();
-  });
-
-  listingForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    listingResult.textContent = "";
-    if (!activeUsername) {
-      listingResult.textContent = "Select an account first.";
-      return;
-    }
-    const title = listingTitle.value.trim();
-    const details = listingDetails.value.trim();
-    if (!title || !details) {
-      listingResult.textContent = "Provide title and details.";
-      return;
-    }
-    await data.addListing({
-      type: listingType.value,
-      title,
-      details,
-      scope: activeScope,
-      author: activeUsername
-    });
-    listingResult.textContent = "Listing posted.";
-    listingTitle.value = "";
-    listingDetails.value = "";
-    await renderListings();
-  });
-
-  networkForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    networkResult.textContent = "";
-    if (!activeUsername) {
-      networkResult.textContent = "Select an account first.";
-      return;
-    }
-    const message = networkMessage.value.trim();
-    if (!message) {
-      networkResult.textContent = "Write a networking message.";
-      return;
-    }
-    const tags = networkTags.value
-      .split(",")
-      .map((item) => item.trim().toLowerCase())
-      .filter(Boolean)
-      .slice(0, 7);
-
-    await data.addNetworkPost({
-      author: activeUsername,
-      scope: activeScope,
-      tags,
-      message
-    });
-    networkResult.textContent = "Networking post published.";
-    networkTags.value = "";
-    networkMessage.value = "";
-    await renderNetworkPosts();
-  });
-
-  await refreshMetrics();
-  await renderLaunchMilestone();
-  await renderRoles();
-  await renderAccountSelectors();
-  renderScopes();
-  renderScopePanel();
+  await renderMetrics();
+  await renderAccountOptions();
   await renderAnnouncements();
   await renderArchive();
-  await renderListings();
-  await renderNetworkPosts();
-  renderGroupStream();
-  renderProfileTheme();
-  updateOnboarding();
+  renderScope();
+  renderGroupMessages();
 
   const session = await data.getCurrentUser();
   await setActiveUser(session ? session.username : accountSwitcher.value, {
