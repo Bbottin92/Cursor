@@ -17,7 +17,7 @@ set -euo pipefail
 
 if command -v python3 >/dev/null 2>&1; then
   python3 scripts/context_flowmap.py --phase pre_commit --note "auto pre-commit context sync" --quiet
-  git add context/flowmap.json context/flowmap.md context/activity_log.jsonl context/state.json context/watchlist.json
+  git add context/flowmap.json context/flowmap.md context/activity_log.jsonl context/state.json context/watchlist.json context/current_task.md
 fi
 HOOK
 

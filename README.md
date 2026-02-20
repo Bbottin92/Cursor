@@ -86,6 +86,7 @@ referenced before inspecting or changing website/code.
 - Outputs:
   - `context/flowmap.json`
   - `context/flowmap.md`
+  - `context/current_task.md` (active task intent template)
   - `context/activity_log.jsonl`
   - `context/state.json`
   - `context/watchlist.json` (auto-ranked hotspot files)

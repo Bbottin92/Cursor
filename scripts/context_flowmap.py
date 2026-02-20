@@ -27,6 +27,7 @@ FLOWMAP_MD = CONTEXT_DIR / "flowmap.md"
 ACTIVITY_LOG = CONTEXT_DIR / "activity_log.jsonl"
 STATE_JSON = CONTEXT_DIR / "state.json"
 WATCHLIST_JSON = CONTEXT_DIR / "watchlist.json"
+CURRENT_TASK_MD = CONTEXT_DIR / "current_task.md"
 
 KNOWN_HTML = [
     "index.html",
@@ -314,6 +315,76 @@ def update_state(phase: str, note: str) -> Dict:
     return state
 
 
+def write_current_task_template(flowmap: Dict, state: Dict) -> None:
+    changed_files = flowmap.get("git", {}).get("changed_files", [])
+    if not isinstance(changed_files, list):
+        changed_files = []
+
+    changed_lines = [f"- `{item}`" for item in changed_files[:12] if isinstance(item, str)]
+    if not changed_lines:
+        changed_lines = ["- No uncommitted file changes currently detected."]
+
+    hotspot_lines = []
+    for item in flowmap.get("optimization", {}).get("hotspots", [])[:8]:
+        if not isinstance(item, dict):
+            continue
+        hotspot_lines.append(f"- `{item.get('file', '?')}` ({item.get('touches', 0)} touches)")
+    if not hotspot_lines:
+        hotspot_lines = ["- No hotspots yet."]
+
+    flow_lines = []
+    for flow in flowmap.get("critical_flow_paths", [])[:3]:
+        name = flow.get("name", "Unnamed flow")
+        flow_lines.append(f"### {name}")
+        for step in flow.get("steps", [])[:4]:
+            flow_lines.append(f"- {step}")
+        flow_lines.append("")
+
+    phase = flowmap.get("trigger", {}).get("phase", "update")
+    note = flowmap.get("trigger", {}).get("note", "manual update")
+
+    CURRENT_TASK_MD.write_text(
+        f"""# Current Task Intent (Auto)
+
+Updated: `{flowmap.get('generated_at', now_iso())}`  
+Checkpoint: `{phase}`  
+Intent note: {note}
+
+## Mandatory Use
+
+Before inspection:
+- `./scripts/context_guard.sh inspect "what you are checking"`
+
+Before edits:
+- `./scripts/context_guard.sh change "what you are changing"`
+
+## Active Working Context
+
+Branch: `{flowmap.get('git', {}).get('branch', 'unknown')}`  
+Commit: `{flowmap.get('git', {}).get('commit', 'unknown')}`  
+Context runs: `{state.get('runs', 0)}`
+
+### Currently changed files
+{chr(10).join(changed_lines)}
+
+### Auto optimization watchlist
+{chr(10).join(hotspot_lines)}
+
+## High Priority Flow References
+
+{chr(10).join(flow_lines)}
+
+## Pre-change checklist
+
+- [ ] Read `context/flowmap.md`
+- [ ] Validate this task intent matches current request
+- [ ] Confirm in-scope files only
+- [ ] Run context guard before commit/push
+""",
+        encoding="utf-8",
+    )
+
+
 def render_markdown(flowmap: Dict, state: Dict) -> str:
     routes = flowmap["api"]["server_routes"]
     route_lines = "\n".join([f"- `{r['method']} {r['route']}`" for r in routes[:40]])
@@ -363,8 +434,9 @@ Trigger: `{flowmap['trigger']['phase']}` - {flowmap['trigger']['note']}
 
 1. Before inspecting files: `./scripts/context_guard.sh inspect "what you are checking"`
 2. Before changing files: `./scripts/context_guard.sh change "what you are changing"`
-3. Pre-commit hook auto-refreshes this flowmap (install with `npm run context:install-hooks`)
-4. Deploy script auto-refreshes context at deploy start and finish
+3. Read `context/current_task.md` to align active intent before edits
+4. Pre-commit hook auto-refreshes this flowmap (install with `npm run context:install-hooks`)
+5. Deploy script auto-refreshes context at deploy start and finish
 
 State runs: `{state['runs']}`  
 Phase counts: `{json.dumps(state['phase_counts'])}`
@@ -427,6 +499,7 @@ def main() -> int:
     write_json(FLOWMAP_JSON, flowmap)
     write_watchlist(hotspots)
     FLOWMAP_MD.write_text(render_markdown(flowmap, state), encoding="utf-8")
+    write_current_task_template(flowmap, state)
 
     if args.print_summary or not args.quiet:
         print_summary(flowmap, state)

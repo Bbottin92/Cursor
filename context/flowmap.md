@@ -1,17 +1,18 @@
 # NUSA Context + Flowmap
 
-Generated: `2026-02-20T10:23:02Z`
+Generated: `2026-02-20T10:42:38Z`
 Trigger: `pre_commit` - auto pre-commit context sync
 
 ## Persistent Workflow Rules
 
 1. Before inspecting files: `./scripts/context_guard.sh inspect "what you are checking"`
 2. Before changing files: `./scripts/context_guard.sh change "what you are changing"`
-3. Pre-commit hook auto-refreshes this flowmap (install with `npm run context:install-hooks`)
-4. Deploy script auto-refreshes context at deploy start and finish
+3. Read `context/current_task.md` to align active intent before edits
+4. Pre-commit hook auto-refreshes this flowmap (install with `npm run context:install-hooks`)
+5. Deploy script auto-refreshes context at deploy start and finish
 
-State runs: `4`  
-Phase counts: `{"bootstrap": 1, "test": 1, "change": 1, "pre_commit": 1}`
+State runs: `8`  
+Phase counts: `{"bootstrap": 1, "test": 1, "change": 2, "pre_commit": 2, "inspect": 2}`
 
 ## Frontend Map
 
@@ -93,14 +94,14 @@ Phase counts: `{"bootstrap": 1, "test": 1, "change": 1, "pre_commit": 1}`
 
 ## Optimization Watchlist (Auto)
 
-- `README.md` touched `4` checkpoint(s)
-- `package.json` touched `4` checkpoint(s)
-- `scripts/context_flowmap.py` touched `4` checkpoint(s)
-- `scripts/context_guard.sh` touched `4` checkpoint(s)
-- `scripts/deploy_cpanel_no_ssh.sh` touched `4` checkpoint(s)
-- `scripts/install_context_hooks.sh` touched `4` checkpoint(s)
-- `context/` touched `3` checkpoint(s)
-- `context/activity_log.jsonl` touched `1` checkpoint(s)
+- `README.md` touched `6` checkpoint(s)
+- `scripts/context_flowmap.py` touched `6` checkpoint(s)
+- `scripts/install_context_hooks.sh` touched `6` checkpoint(s)
+- `context/activity_log.jsonl` touched `4` checkpoint(s)
+- `context/flowmap.json` touched `4` checkpoint(s)
+- `context/flowmap.md` touched `4` checkpoint(s)
+- `context/state.json` touched `4` checkpoint(s)
+- `context/watchlist.json` touched `4` checkpoint(s)
 
 ## Recent Context Activity
 
@@ -108,3 +109,7 @@ Phase counts: `{"bootstrap": 1, "test": 1, "change": 1, "pre_commit": 1}`
 - `2026-02-20T10:22:22Z` [test] npm test context sync
 - `2026-02-20T10:22:39Z` [change] stage and commit context system implementation
 - `2026-02-20T10:23:02Z` [pre_commit] auto pre-commit context sync
+- `2026-02-20T10:39:57Z` [inspect] collect exact hero requirements from transcript and current files
+- `2026-02-20T10:40:48Z` [change] implement auto task-intent template and final hero layout pass
+- `2026-02-20T10:42:23Z` [inspect] verify hero pass and regenerate current task template
+- `2026-02-20T10:42:38Z` [pre_commit] auto pre-commit context sync
