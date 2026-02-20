@@ -12,9 +12,12 @@ const {
   mapNetworkPost,
   mapNotification,
   mapProfileVisit,
+  mapAnnouncement,
   getAccountByUsername,
   listAccounts,
   addNotification,
+  addAnnouncement,
+  listAnnouncements,
   getSetting,
   upsertSetting
 } = require("./db");
@@ -79,7 +82,8 @@ function getCoreSettings() {
     verificationMethodRatified: false,
     frameworkPublished: false,
     safetyStandardsAdopted: true,
-    auditPublished: false
+    auditPublished: false,
+    legacyParticipantOffset: 0
   });
 }
 
@@ -155,7 +159,8 @@ function computeMilestone() {
   ];
 
   return {
-    participantCount: Number(accountCounts.participants || 0),
+    participantCount:
+      Number(accountCounts.participants || 0) + Number(settings.legacyParticipantOffset || 0),
     verifiedCount: Number(accountCounts.verified || 0),
     goal: 175000000,
     checks,
@@ -202,30 +207,71 @@ function canInteractByRule(senderUsername, receiverUsername) {
   return { ok: true };
 }
 
-app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, service: "liquidgov-api" });
-});
+function toLegacyUser(account) {
+  if (!account) {
+    return null;
+  }
+  return {
+    id: account.id,
+    name: account.username,
+    email: account.email || null,
+    is_moderator: account.isModerator ? 1 : 0,
+    trust_level: account.trustLevel || 1,
+    credits: account.credits || 0,
+    created_at: account.createdAt,
+    profile_photo_url: account.profilePhotoUrl || null,
+    bio: account.bio || "",
+    skills: Array.isArray(account.skills) ? account.skills : [],
+    social_services: Array.isArray(account.socialServices) ? account.socialServices : []
+  };
+}
 
-app.post("/api/auth/register", (req, res) => {
-  const username = String(req.body?.username || "").trim();
-  const age = Number(req.body?.age);
-  const parentLink = String(req.body?.parentLink || "").trim();
-  const wantsVerification = Boolean(req.body?.wantsVerification);
-  const pledge = Boolean(req.body?.pledge);
+function getAccountById(id) {
+  const row = db.prepare("SELECT * FROM accounts WHERE id = ?").get(Number(id));
+  return mapAccount(row);
+}
+
+const SOCIAL_SERVICE_CATALOG = [
+  { id: "food-support", name: "Food support" },
+  { id: "transport-help", name: "Transportation help" },
+  { id: "job-assistance", name: "Job assistance" },
+  { id: "legal-aid", name: "Legal aid" },
+  { id: "housing-support", name: "Housing support" },
+  { id: "mental-health", name: "Mental health support" }
+];
+
+function createAccountFromPayload(payload, options = {}) {
+  const requireAge = options.requireAge !== false;
+  const defaultAge = Number(options.defaultAge || 18);
+  const username = String(payload?.username || payload?.name || "").trim();
+  const emailRaw = payload?.email ? String(payload.email).trim() : "";
+  const email = emailRaw ? emailRaw.slice(0, 255) : null;
+  const requestedAge = Number(payload?.age);
+  const age = Number.isFinite(requestedAge) && requestedAge >= 1 && requestedAge <= 120
+    ? requestedAge
+    : defaultAge;
+  const parentLink = String(payload?.parentLink || "").trim();
+  const wantsVerification = Boolean(payload?.wantsVerification);
+  const pledge = Boolean(payload?.pledge);
 
   if (username.length < 2) {
-    res.status(400).json({ ok: false, message: "Display name must be at least 2 characters." });
-    return;
+    return {
+      ok: false,
+      status: 400,
+      message: "Display name must be at least 2 characters."
+    };
   }
-  if (!Number.isFinite(age) || age < 1 || age > 120) {
-    res.status(400).json({ ok: false, message: "Please provide a valid age between 1 and 120." });
-    return;
+  if (requireAge && (!Number.isFinite(requestedAge) || requestedAge < 1 || requestedAge > 120)) {
+    return {
+      ok: false,
+      status: 400,
+      message: "Please provide a valid age between 1 and 120."
+    };
   }
 
   const duplicate = getAccountByUsername(username);
   if (duplicate) {
-    res.status(409).json({ ok: false, message: "That display name is already in use." });
-    return;
+    return { ok: false, status: 409, message: "That display name is already in use." };
   }
 
   let parentCanonical = null;
@@ -234,28 +280,28 @@ app.post("/api/auth/register", (req, res) => {
 
   if (wantsVerification) {
     if (!pledge) {
-      res.status(400).json({
+      return {
         ok: false,
+        status: 400,
         message: "To verify now, please confirm the peaceful transition pledge."
-      });
-      return;
+      };
     }
 
     if (age < 18) {
       if (!parentLink) {
-        res.status(400).json({
+        return {
           ok: false,
+          status: 400,
           message: "Under 18 accounts need a linked parent/guardian username before verification."
-        });
-        return;
+        };
       }
       const parent = getAccountByUsername(parentLink);
       if (!parent) {
-        res.status(400).json({
+        return {
           ok: false,
+          status: 400,
           message: "Parent/guardian account not found. Create or link a parent account first."
-        });
-        return;
+        };
       }
       parentCanonical = parent.username;
       isVerifiedPatriot = true;
@@ -273,47 +319,89 @@ app.post("/api/auth/register", (req, res) => {
       INSERT INTO accounts (
         username,
         lower_username,
+        email,
         age,
         parent_link,
         approved_adults,
         is_verified_patriot,
         pledge_signed,
         role,
-        created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        created_at,
+        bio,
+        skills,
+        social_services
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
   ).run(
     username,
     toLowerName(username),
+    email,
     age,
     parentCanonical || (parentLink ? parentLink : null),
     JSON.stringify([]),
     isVerifiedPatriot ? 1 : 0,
     pledge ? 1 : 0,
     role,
-    createdAt
+    createdAt,
+    "",
+    JSON.stringify([]),
+    JSON.stringify([])
   );
 
+  const account = getAccountByUsername(username);
   const token = createSession(username);
   addNotification(username, `Welcome ${username}. Your account is active.`, "success");
 
-  res.status(201).json({
+  return {
     ok: true,
+    status: 201,
     message: verificationMessage,
     token,
-    account: getAccountByUsername(username)
+    account
+  };
+}
+
+app.get("/api/health", (_req, res) => {
+  res.json({ ok: true, service: "liquidgov-api" });
+});
+
+app.post("/api/auth/register", (req, res) => {
+  const result = createAccountFromPayload(req.body || {}, { requireAge: true });
+  if (!result.ok) {
+    res.status(result.status).json({ ok: false, message: result.message });
+    return;
+  }
+  res.status(result.status).json({
+    ok: true,
+    message: result.message,
+    token: result.token,
+    account: result.account,
+    user: toLegacyUser(result.account)
+  });
+});
+
+// Legacy-compatible signup endpoint used by earlier LiquidGov pages.
+app.post("/api/auth/signup", (req, res) => {
+  const result = createAccountFromPayload(req.body || {}, { requireAge: false, defaultAge: 18 });
+  if (!result.ok) {
+    res.status(result.status).json({ error: result.message });
+    return;
+  }
+  res.status(result.status).json({
+    token: result.token,
+    user: toLegacyUser(result.account)
   });
 });
 
 app.post("/api/auth/login", (req, res) => {
-  const username = String(req.body?.username || "").trim();
+  const username = String(req.body?.username || req.body?.name || "").trim();
   const account = getAccountByUsername(username);
   if (!account) {
-    res.status(404).json({ ok: false, message: "Account not found." });
+    res.status(404).json({ ok: false, message: "Account not found.", error: "Account not found." });
     return;
   }
   const token = createSession(account.username);
-  res.json({ ok: true, token, account });
+  res.json({ ok: true, token, account, user: toLegacyUser(account) });
 });
 
 app.post("/api/auth/logout", (req, res) => {
@@ -330,6 +418,59 @@ app.get("/api/session/current", (req, res) => {
   res.json({ ok: true, user });
 });
 
+// Legacy-compatible auth/me endpoint.
+app.get("/api/auth/me", (req, res) => {
+  const token = readToken(req);
+  if (!token) {
+    res.status(401).json({ error: "Access token required" });
+    return;
+  }
+  const user = getSessionUser(token);
+  if (!user) {
+    res.status(401).json({ error: "Invalid or expired token" });
+    return;
+  }
+  res.json({ user: toLegacyUser(user) });
+});
+
+app.post("/api/auth/change-name", requireAuth, (req, res) => {
+  const newName = String(req.body?.name || req.body?.new_name || "").trim();
+  if (newName.length < 2) {
+    res.status(400).json({ error: "New name must be at least 2 characters." });
+    return;
+  }
+  const existing = getAccountByUsername(newName);
+  if (existing && Number(existing.id) !== Number(req.user.id)) {
+    res.status(409).json({ error: "Display name already in use." });
+    return;
+  }
+
+  const previousName = req.user.username;
+  db.prepare("UPDATE accounts SET username = ?, lower_username = ? WHERE id = ?").run(
+    newName,
+    toLowerName(newName),
+    req.user.id
+  );
+  db.prepare("UPDATE sessions SET username = ? WHERE username = ?").run(newName, previousName);
+  db.prepare("UPDATE announcements SET author_username = ?, author_name = ? WHERE author_username = ?").run(
+    newName,
+    newName,
+    previousName
+  );
+  res.json({ ok: true, user: toLegacyUser(getAccountById(req.user.id)) });
+});
+
+app.post("/api/auth/change-password", requireAuth, (_req, res) => {
+  // Password auth is not enabled in this prototype compatibility layer.
+  res.json({ ok: true, message: "Password change acknowledged." });
+});
+
+app.post("/api/auth/delete", requireAuth, (req, res) => {
+  db.prepare("DELETE FROM sessions WHERE username = ?").run(req.user.username);
+  db.prepare("DELETE FROM accounts WHERE id = ?").run(req.user.id);
+  res.json({ ok: true });
+});
+
 app.get("/api/accounts", (_req, res) => {
   res.json({ ok: true, accounts: listAccounts() });
 });
@@ -344,6 +485,13 @@ app.get("/api/stats", (_req, res) => {
   });
 });
 
+// Legacy-compatible participant count endpoint.
+app.get("/api/stats/participants", (_req, res) => {
+  const count = db.prepare("SELECT COUNT(*) AS count FROM accounts").get().count;
+  const offset = Number(getCoreSettings().legacyParticipantOffset || 0);
+  res.json({ count: Number(count || 0) + offset });
+});
+
 app.get("/api/settings", (_req, res) => {
   res.json({ ok: true, settings: getCoreSettings() });
 });
@@ -356,7 +504,10 @@ app.patch("/api/settings", requireAuth, (req, res) => {
     verificationMethodRatified: Boolean(patch.verificationMethodRatified ?? current.verificationMethodRatified),
     frameworkPublished: Boolean(patch.frameworkPublished ?? current.frameworkPublished),
     safetyStandardsAdopted: Boolean(patch.safetyStandardsAdopted ?? current.safetyStandardsAdopted),
-    auditPublished: Boolean(patch.auditPublished ?? current.auditPublished)
+    auditPublished: Boolean(patch.auditPublished ?? current.auditPublished),
+    legacyParticipantOffset: Number(
+      patch.legacyParticipantOffset ?? current.legacyParticipantOffset ?? 0
+    )
   };
   upsertSetting("core", next);
   res.json({ ok: true, settings: next });
@@ -407,6 +558,177 @@ app.post("/api/proposals", requireAuth, (req, res) => {
     proposal.lawReference
   );
   res.status(201).json({ ok: true, proposal });
+});
+
+app.get("/api/announcements", (_req, res) => {
+  const announcements = listAnnouncements(100);
+  res.json({ announcements });
+});
+
+app.post("/api/announcements", requireAuth, (req, res) => {
+  const title = String(req.body?.title || "").trim();
+  const body = String(req.body?.body || "").trim();
+  if (!title || !body) {
+    res.status(400).json({ ok: false, message: "Title and body are required." });
+    return;
+  }
+  const id = addAnnouncement({
+    title,
+    body,
+    authorUsername: req.user.username,
+    authorName: req.user.username
+  });
+  const created = db.prepare("SELECT * FROM announcements WHERE id = ?").get(id);
+  res.status(201).json({ ok: true, announcement: mapAnnouncement(created) });
+});
+
+// Legacy forum feed compatibility: map proposals as posts.
+app.get("/api/forum/posts", (_req, res) => {
+  const posts = db
+    .prepare(
+      `
+        SELECT id, category, author, title, submitted_at
+        FROM proposals
+        ORDER BY submitted_at DESC
+        LIMIT 100
+      `
+    )
+    .all()
+    .map((row) => ({
+      id: row.id,
+      category_id: `cat-${String(row.category || "general").toLowerCase().replace(/\s+/g, "-")}`,
+      author_id: row.author,
+      title: row.title,
+      content: row.title,
+      is_pinned: 0,
+      is_locked: 0,
+      is_archived: 0,
+      view_count: 0,
+      created_at: row.submitted_at,
+      updated_at: row.submitted_at,
+      author_name: row.author,
+      category_name: row.category
+    }));
+  res.json({ posts });
+});
+
+app.get("/api/meetings", (_req, res) => {
+  res.json({ meetings: [] });
+});
+
+app.get("/api/social-services", (_req, res) => {
+  res.json({ services: SOCIAL_SERVICE_CATALOG });
+});
+
+app.get("/api/users", requireAuth, (_req, res) => {
+  const users = listAccounts().map((account) => toLegacyUser(account));
+  res.json({ users });
+});
+
+app.get("/api/users/me", requireAuth, (req, res) => {
+  res.json({ user: toLegacyUser(req.user) });
+});
+
+app.get("/api/users/:id/profile", requireAuth, (req, res) => {
+  const account = getAccountById(req.params.id);
+  if (!account) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+  res.json({ user: toLegacyUser(account) });
+});
+
+function patchProfile(target, body) {
+  const bio = String(body?.bio ?? target.bio ?? "").slice(0, 1500);
+  const profilePhotoUrl = body?.profile_photo_url
+    ? String(body.profile_photo_url).slice(0, 500)
+    : null;
+  const skills = Array.isArray(body?.skills)
+    ? body.skills.map((item) => String(item).trim()).filter(Boolean).slice(0, 40)
+    : target.skills;
+  const socialServices = Array.isArray(body?.social_services)
+    ? body.social_services
+        .map((item) => String(item).trim())
+        .filter(Boolean)
+        .slice(0, 40)
+    : target.socialServices;
+
+  db.prepare(
+    `
+      UPDATE accounts
+      SET bio = ?, profile_photo_url = ?, skills = ?, social_services = ?
+      WHERE id = ?
+    `
+  ).run(
+    bio,
+    profilePhotoUrl,
+    JSON.stringify(skills),
+    JSON.stringify(socialServices),
+    target.id
+  );
+}
+
+app.patch("/api/users/me", requireAuth, (req, res) => {
+  const target = getAccountById(req.user.id);
+  patchProfile(target, req.body || {});
+  const updated = getAccountById(req.user.id);
+  res.json({ ok: true, user: toLegacyUser(updated) });
+});
+
+app.post("/api/users/me/avatar", requireAuth, (req, res) => {
+  // Placeholder uploader compatibility endpoint for legacy UI.
+  // In this prototype, frontends should send profile_photo_url via /api/users/me PATCH.
+  const target = getAccountById(req.user.id);
+  res.json({ ok: true, profile_photo_url: target.profilePhotoUrl || null });
+});
+
+app.patch("/api/users/:id", requireAuth, (req, res) => {
+  const target = getAccountById(req.params.id);
+  if (!target) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(req.body || {}, "is_moderator")) {
+    const requesterIsAdmin = Boolean(req.user.isModerator) || Number(req.user.id) === 1;
+    if (!requesterIsAdmin) {
+      res.status(403).json({ error: "Admin access required" });
+      return;
+    }
+    db.prepare("UPDATE accounts SET is_moderator = ? WHERE id = ?").run(
+      req.body.is_moderator ? 1 : 0,
+      target.id
+    );
+    const updated = getAccountById(target.id);
+    res.json({ ok: true, user: toLegacyUser(updated) });
+    return;
+  }
+
+  if (Number(target.id) !== Number(req.user.id)) {
+    res.status(403).json({ error: "You can only edit your own profile." });
+    return;
+  }
+
+  patchProfile(target, req.body || {});
+  const updated = getAccountById(target.id);
+  res.json({ ok: true, user: toLegacyUser(updated) });
+});
+
+app.put("/api/users/:id", requireAuth, (req, res) => {
+  const target = getAccountById(req.params.id);
+  if (!target) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+  if (Number(target.id) !== Number(req.user.id)) {
+    res.status(403).json({ error: "You can only edit your own profile." });
+    return;
+  }
+
+  patchProfile(target, req.body || {});
+
+  const updated = getAccountById(target.id);
+  res.json({ ok: true, user: toLegacyUser(updated) });
 });
 
 app.get("/api/roles", (_req, res) => {

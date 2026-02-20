@@ -35,7 +35,7 @@
     const response = await fetch(path, { ...options, headers });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const message = data?.message || `Request failed: ${response.status}`;
+      const message = data?.message || data?.error || `Request failed: ${response.status}`;
       throw new Error(message);
     }
     return data;
@@ -82,6 +82,15 @@
       }
       const data = await request("/api/accounts");
       return data.accounts || [];
+    },
+
+    async getParticipantCount() {
+      if (!apiReady) {
+        const milestone = localStore.getLaunchMilestoneStatus();
+        return Number(milestone.participantCount || 0);
+      }
+      const data = await request("/api/stats/participants");
+      return Number(data.count || 0);
     },
 
     async getCurrentUser() {
@@ -149,6 +158,24 @@
       }
       const data = await request("/api/proposals");
       return data.proposals || [];
+    },
+
+    async getAnnouncements() {
+      if (!apiReady) {
+        return localStore.getAnnouncements();
+      }
+      const data = await request("/api/announcements");
+      return data.announcements || [];
+    },
+
+    async addAnnouncement({ title, body, authorName, authorUsername }) {
+      if (!apiReady) {
+        return localStore.addAnnouncement({ title, body, authorName, authorUsername });
+      }
+      return request("/api/announcements", {
+        method: "POST",
+        body: JSON.stringify({ title, body })
+      });
     },
 
     async addProposal({ title, category, author, status = "under_review" }) {

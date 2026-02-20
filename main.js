@@ -10,10 +10,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const closeSignup = document.getElementById("closeSignup");
   const implementedPreview = document.getElementById("implementedPreview");
   const archivedPreview = document.getElementById("archivedPreview");
+  const publicAnnouncementsPreview = document.getElementById("publicAnnouncementsPreview");
 
   async function updateCounter() {
-    const accounts = await data.getAccounts();
-    participantCurrent.textContent = data.formatNumber(accounts.length);
+    const participantCount = await data.getParticipantCount();
+    participantCurrent.textContent = data.formatNumber(participantCount);
   }
 
   async function renderArchivePreview() {
@@ -32,6 +33,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       .map(
         (item) =>
           `<li><strong>${item.title}</strong> by ${item.author} · ${data.formatDate(item.submittedAt)}</li>`
+      )
+      .join("");
+  }
+
+  async function renderAnnouncementPreview() {
+    const announcements = (await data.getAnnouncements()).slice(0, 5);
+    if (!announcements.length) {
+      publicAnnouncementsPreview.innerHTML = "<li>No announcements published yet.</li>";
+      return;
+    }
+    publicAnnouncementsPreview.innerHTML = announcements
+      .map(
+        (item) =>
+          `<li><strong>${item.title}</strong> · ${item.author_name || item.author_username || "Unknown"}<br />${item.body}</li>`
       )
       .join("");
   }
@@ -97,4 +112,5 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await updateCounter();
   await renderArchivePreview();
+  await renderAnnouncementPreview();
 });

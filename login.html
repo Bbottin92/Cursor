@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiquidGov Login</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="legal-container stack">
+    <section class="section">
+      <h1>Log In</h1>
+      <p class="tiny-note">
+        Legacy-compatible login page. Existing accounts continue working.
+      </p>
+      <form id="legacyLoginForm" class="stack">
+        <label>
+          Username
+          <input id="legacyUsername" type="text" required />
+        </label>
+        <button class="primary" type="submit">Log In</button>
+        <p id="legacyLoginResult" class="tiny-note"></p>
+      </form>
+      <p><a href="index.html">Back to homepage</a></p>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById("legacyLoginForm");
+    const usernameInput = document.getElementById("legacyUsername");
+    const result = document.getElementById("legacyLoginResult");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      result.textContent = "";
+      const username = usernameInput.value.trim();
+      if (!username) {
+        return;
+      }
+      try {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || data.message || "Login failed.");
+        }
+        if (data.token) {
+          localStorage.setItem("auth_token", data.token);
+        }
+        result.textContent = "Login successful. Redirecting...";
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 500);
+      } catch (error) {
+        result.textContent = error.message;
+      }
+    });
+  </script>
+</body>
+</html>

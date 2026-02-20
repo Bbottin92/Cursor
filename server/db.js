@@ -12,13 +12,21 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL,
     lower_username TEXT NOT NULL UNIQUE,
+    email TEXT,
     age INTEGER NOT NULL,
     parent_link TEXT,
     approved_adults TEXT NOT NULL DEFAULT '[]',
     is_verified_patriot INTEGER NOT NULL DEFAULT 0,
     pledge_signed INTEGER NOT NULL DEFAULT 0,
     role TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    profile_photo_url TEXT,
+    bio TEXT NOT NULL DEFAULT '',
+    skills TEXT NOT NULL DEFAULT '[]',
+    social_services TEXT NOT NULL DEFAULT '[]',
+    is_moderator INTEGER NOT NULL DEFAULT 0,
+    trust_level INTEGER NOT NULL DEFAULT 1,
+    credits INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS sessions (
@@ -83,7 +91,33 @@ db.exec(`
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS announcements (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    author_username TEXT NOT NULL,
+    author_name TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
 `);
+
+function ensureColumn(table, columnName, columnDDL) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!columns.some((column) => column.name === columnName)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${columnDDL}`);
+  }
+}
+
+ensureColumn("accounts", "profile_photo_url", "profile_photo_url TEXT");
+ensureColumn("accounts", "email", "email TEXT");
+ensureColumn("accounts", "bio", "bio TEXT NOT NULL DEFAULT ''");
+ensureColumn("accounts", "skills", "skills TEXT NOT NULL DEFAULT '[]'");
+ensureColumn("accounts", "social_services", "social_services TEXT NOT NULL DEFAULT '[]'");
+ensureColumn("accounts", "is_moderator", "is_moderator INTEGER NOT NULL DEFAULT 0");
+ensureColumn("accounts", "trust_level", "trust_level INTEGER NOT NULL DEFAULT 1");
+ensureColumn("accounts", "credits", "credits INTEGER NOT NULL DEFAULT 0");
 
 function toLowerName(name) {
   return String(name || "").trim().toLowerCase();
@@ -93,30 +127,41 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function parseArray(raw, fallback = []) {
+  try {
+    const parsed = JSON.parse(raw || "[]");
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch (error) {
+    return fallback;
+  }
+}
+
 function mapAccount(row) {
   if (!row) {
     return null;
   }
-  let approvedAdults = [];
-  try {
-    approvedAdults = JSON.parse(row.approved_adults || "[]");
-    if (!Array.isArray(approvedAdults)) {
-      approvedAdults = [];
-    }
-  } catch (error) {
-    approvedAdults = [];
-  }
+  const approvedAdults = parseArray(row.approved_adults, []);
+  const skills = parseArray(row.skills, []);
+  const socialServices = parseArray(row.social_services, []);
 
   return {
     id: row.id,
     username: row.username,
+    email: row.email || null,
     age: row.age,
     parentLink: row.parent_link,
     approvedAdults,
     isVerifiedPatriot: Boolean(row.is_verified_patriot),
     pledgeSigned: Boolean(row.pledge_signed),
     role: row.role,
-    createdAt: row.created_at
+    createdAt: row.created_at,
+    profilePhotoUrl: row.profile_photo_url || null,
+    bio: row.bio || "",
+    skills,
+    socialServices,
+    isModerator: Boolean(row.is_moderator),
+    trustLevel: Number(row.trust_level || 1),
+    credits: Number(row.credits || 0)
   };
 }
 
@@ -155,16 +200,7 @@ function mapListing(row) {
 }
 
 function mapNetworkPost(row) {
-  let tags = [];
-  try {
-    tags = JSON.parse(row.tags || "[]");
-    if (!Array.isArray(tags)) {
-      tags = [];
-    }
-  } catch (error) {
-    tags = [];
-  }
-
+  const tags = parseArray(row.tags, []);
   return {
     id: row.id,
     author: row.author,
@@ -189,6 +225,18 @@ function mapProfileVisit(row) {
   return {
     visitor: row.visitor,
     visitedAt: row.visited_at
+  };
+}
+
+function mapAnnouncement(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    body: row.body,
+    author_username: row.author_username,
+    author_name: row.author_name,
+    created_at: row.created_at,
+    updated_at: row.updated_at
   };
 }
 
@@ -234,6 +282,32 @@ function addNotification(username, message, type = "info") {
       VALUES (?, ?, ?, ?, ?)
     `
   ).run(id, username, message, type, nowIso());
+}
+
+function addAnnouncement({ title, body, authorUsername, authorName }) {
+  const id = `A-${crypto.randomUUID()}`;
+  const now = nowIso();
+  db.prepare(
+    `
+      INSERT INTO announcements (id, title, body, author_username, author_name, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `
+  ).run(id, title, body, authorUsername, authorName, now, now);
+  return id;
+}
+
+function listAnnouncements(limit = 50) {
+  const rows = db
+    .prepare(
+      `
+        SELECT *
+        FROM announcements
+        ORDER BY created_at DESC
+        LIMIT ?
+      `
+    )
+    .all(limit);
+  return rows.map(mapAnnouncement);
 }
 
 function seedProposals() {
@@ -400,7 +474,8 @@ function seedSettings() {
     verificationMethodRatified: false,
     frameworkPublished: false,
     safetyStandardsAdopted: true,
-    auditPublished: false
+    auditPublished: false,
+    legacyParticipantOffset: 0
   };
 
   const current = getSetting("core", null);
@@ -409,11 +484,19 @@ function seedSettings() {
   }
 }
 
+function seedAnnouncements() {
+  const hasRows = db.prepare("SELECT COUNT(*) AS count FROM announcements").get().count > 0;
+  if (hasRows) {
+    return;
+  }
+}
+
 seedProposals();
 seedRoles();
 seedListings();
 seedNetworkPosts();
 seedSettings();
+seedAnnouncements();
 
 module.exports = {
   db,
@@ -426,9 +509,12 @@ module.exports = {
   mapNetworkPost,
   mapNotification,
   mapProfileVisit,
+  mapAnnouncement,
   getAccountByUsername,
   listAccounts,
   addNotification,
+  addAnnouncement,
+  listAnnouncements,
   getSetting,
   upsertSetting
 };

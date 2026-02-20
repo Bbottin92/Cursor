@@ -14,6 +14,7 @@ This repository now includes:
   - networking board
   - profile visitor logs and notifications
 - Backend API + SQLite persistence (`server/`)
+- Legacy compatibility routes to preserve old LiquidGov API behavior
 
 ## Architecture
 
@@ -28,6 +29,7 @@ This repository now includes:
 - `index.html` - public homepage
 - `app.html` - member experience shell
 - `legal.html` - policy and definitions
+- `login.html`, `dashboard.html`, `profile.html`, `edit-profile.html` - legacy route compatibility pages
 - `styles.css` - shared styles
 - `store.js` - local fallback data layer
 - `dataClient.js` - API client with fallback behavior
@@ -53,17 +55,23 @@ Then open:
 
 - Auth/session:
   - `POST /api/auth/register`
+  - `POST /api/auth/signup` (legacy alias)
   - `POST /api/auth/login`
   - `POST /api/auth/logout`
   - `GET /api/session/current`
+  - `GET /api/auth/me` (legacy alias)
 - Accounts/stats/settings:
   - `GET /api/accounts`
   - `GET /api/stats`
+  - `GET /api/stats/participants` (legacy alias)
   - `GET /api/settings`
   - `PATCH /api/settings`
   - `GET /api/milestone`
 - Civic modules:
   - `GET/POST /api/proposals`
+  - `GET/POST /api/announcements`
+  - `GET /api/forum/posts` (legacy compatibility)
+  - `GET /api/meetings` (legacy compatibility)
   - `GET /api/roles`
   - `POST /api/roles/claim`
   - `POST /api/roles/release`
@@ -77,6 +85,25 @@ Then open:
   - `POST /api/minor/inspect`
   - `POST /api/minor/approve-contact`
   - `GET /api/minor/can-interact`
+
+## Preserving existing accounts and announcements
+
+The backend now includes legacy-compatible endpoints and a one-time import tool:
+
+```bash
+# Optional env vars:
+# LEGACY_BASE defaults to https://liquidgov.us
+# LEGACY_TOKEN allows importing legacy protected /api/users
+LEGACY_BASE=https://liquidgov.us LEGACY_TOKEN=your_token npm run import:legacy
+```
+
+What it imports:
+
+- Public legacy announcements -> `announcements` table
+- Public legacy forum posts -> `proposals` table
+- Legacy users/accounts -> `accounts` table (only when `LEGACY_TOKEN` is provided)
+
+This avoids forcing members to recreate accounts once legacy user export/token access is available.
 
 ## Current behavior notes
 

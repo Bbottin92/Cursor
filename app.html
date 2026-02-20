@@ -163,6 +163,23 @@
       </div>
 
       <div class="feed-card">
+        <h3>Announcements</h3>
+        <form id="announcementForm" class="stack">
+          <label>
+            Title
+            <input id="announcementTitle" type="text" maxlength="160" required />
+          </label>
+          <label>
+            Message
+            <textarea id="announcementBody" required></textarea>
+          </label>
+          <button class="secondary" type="submit">Post Announcement</button>
+          <p id="announcementResult" class="tiny-note"></p>
+        </form>
+        <ul id="announcementsList"></ul>
+      </div>
+
+      <div class="feed-card">
         <h3>Civic Signal</h3>
         <p class="tiny-note">
           On login, submit a recent pain point and your proposed solution.

@@ -8,7 +8,8 @@
     roles: "liquidgov.roles",
     listings: "liquidgov.listings",
     networkPosts: "liquidgov.networkPosts",
-    settings: "liquidgov.settings"
+    settings: "liquidgov.settings",
+    announcements: "liquidgov.announcements"
   };
 
   const defaultProposals = [
@@ -85,11 +86,24 @@
     }
   ];
 
+  const defaultAnnouncements = [
+    {
+      id: "A-1001",
+      title: "Welcome to LiquidGov",
+      body: "This is the initial announcement channel. Updates will appear here.",
+      author_name: "System",
+      author_username: "system",
+      created_at: "2026-02-20T00:00:00Z",
+      updated_at: "2026-02-20T00:00:00Z"
+    }
+  ];
+
   const defaultSettings = {
     verificationMethodRatified: false,
     frameworkPublished: false,
     safetyStandardsAdopted: true,
-    auditPublished: false
+    auditPublished: false,
+    legacyParticipantOffset: 0
   };
 
   function read(key, fallback) {
@@ -137,6 +151,13 @@
     const existing = read(STORE.settings, null);
     if (!existing || typeof existing !== "object") {
       write(STORE.settings, defaultSettings);
+    }
+  }
+
+  function ensureSeededAnnouncements() {
+    const existing = read(STORE.announcements, null);
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      write(STORE.announcements, defaultAnnouncements);
     }
   }
 
@@ -380,6 +401,29 @@
     return read(STORE.settings, defaultSettings);
   }
 
+  function getAnnouncements() {
+    ensureSeededAnnouncements();
+    return read(STORE.announcements, []);
+  }
+
+  function saveAnnouncements(items) {
+    write(STORE.announcements, items);
+  }
+
+  function addAnnouncement({ title, body, authorName, authorUsername }) {
+    const announcements = getAnnouncements();
+    announcements.unshift({
+      id: `A-${Math.floor(Math.random() * 9000 + 1000)}`,
+      title: String(title || "").trim(),
+      body: String(body || "").trim(),
+      author_name: String(authorName || authorUsername || "Unknown"),
+      author_username: String(authorUsername || "unknown"),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    });
+    saveAnnouncements(announcements);
+  }
+
   function updateSettings(patch) {
     const current = getSettings();
     const next = { ...current, ...patch };
@@ -392,7 +436,7 @@
     const accounts = getAccounts();
     const roles = getAssemblyRoles();
     const rolesFilled = roles.every((role) => Boolean(role.assignedTo));
-    const participantCount = accounts.length;
+    const participantCount = accounts.length + Number(settings.legacyParticipantOffset || 0);
     const verifiedCount = accounts.filter((item) => item.isVerifiedPatriot).length;
     const checks = [
       {
@@ -608,6 +652,7 @@
   ensureSeededListings();
   ensureSeededNetworkPosts();
   ensureSettings();
+  ensureSeededAnnouncements();
 
   window.LiquidGovStore = {
     getAccounts,
@@ -625,6 +670,8 @@
     closeListing,
     getNetworkPosts,
     addNetworkPost,
+    getAnnouncements,
+    addAnnouncement,
     getSettings,
     updateSettings,
     getLaunchMilestoneStatus,

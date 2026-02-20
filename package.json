@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server/server.js",
     "dev": "node server/server.js",
-    "test": "node --check server/server.js && node --check server/db.js && node --check main.js && node --check app.js && node --check dataClient.js && node --check store.js"
+    "import:legacy": "node server/import-legacy.js",
+    "test": "node --check server/server.js && node --check server/db.js && node --check server/import-legacy.js && node --check main.js && node --check app.js && node --check dataClient.js && node --check store.js"
   },
   "repository": {
     "type": "git",

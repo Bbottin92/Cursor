@@ -58,6 +58,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const visitorLogBody = document.getElementById("visitorLogBody");
   const notificationsBody = document.getElementById("notificationsBody");
   const proposalForm = document.getElementById("proposalForm");
+  const announcementForm = document.getElementById("announcementForm");
+  const announcementTitle = document.getElementById("announcementTitle");
+  const announcementBody = document.getElementById("announcementBody");
+  const announcementResult = document.getElementById("announcementResult");
+  const announcementsList = document.getElementById("announcementsList");
   const painPointInput = document.getElementById("painPointInput");
   const solutionInput = document.getElementById("solutionInput");
   const proposalCategory = document.getElementById("proposalCategory");
@@ -115,8 +120,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function refreshMetrics() {
     const accounts = await getAccounts();
+    const participantCount = await data.getParticipantCount();
     const verifiedTotal = accounts.filter((item) => item.isVerifiedPatriot).length;
-    participantsCount.textContent = data.formatNumber(accounts.length);
+    participantsCount.textContent = data.formatNumber(participantCount);
     verifiedCount.textContent = data.formatNumber(verifiedTotal);
     profileVerifiedCounter.textContent = data.formatNumber(verifiedTotal);
   }
@@ -303,6 +309,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       .join("");
   }
 
+  async function renderAnnouncements() {
+    const announcements = (await data.getAnnouncements()).slice(0, 12);
+    if (!announcements.length) {
+      announcementsList.innerHTML = "<li>No announcements yet.</li>";
+      return;
+    }
+    announcementsList.innerHTML = announcements
+      .map(
+        (item) =>
+          `<li><strong>${item.title}</strong> · ${item.author_name || item.author_username || "Unknown"}<br />${item.body}</li>`
+      )
+      .join("");
+  }
+
   async function renderVisitorLog() {
     if (!activeUsername) {
       return;
@@ -363,6 +383,37 @@ document.addEventListener("DOMContentLoaded", async () => {
     `;
     profilePreview.srcdoc = frame;
   }
+
+  announcementForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    announcementResult.textContent = "";
+    if (!activeUsername) {
+      announcementResult.textContent = "Select an account first.";
+      return;
+    }
+
+    const title = announcementTitle.value.trim();
+    const body = announcementBody.value.trim();
+    if (!title || !body) {
+      announcementResult.textContent = "Provide both title and message.";
+      return;
+    }
+
+    try {
+      await data.addAnnouncement({
+        title,
+        body,
+        authorName: activeUsername,
+        authorUsername: activeUsername
+      });
+      announcementResult.textContent = "Announcement posted.";
+      announcementTitle.value = "";
+      announcementBody.value = "";
+      await renderAnnouncements();
+    } catch (error) {
+      announcementResult.textContent = error.message;
+    }
+  });
 
   proposalForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -627,6 +678,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await renderAccountSelectors();
   renderScopes();
   renderScopePanel();
+  await renderAnnouncements();
   await renderArchive();
   await renderListings();
   await renderNetworkPosts();
