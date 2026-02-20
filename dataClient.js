@@ -165,7 +165,7 @@
       }
     },
 
-    async setCurrentUser(username) {
+    async setCurrentUser(username, password = "") {
       if (!username) {
         if (apiReady && token) {
           try {
@@ -186,12 +186,12 @@
             try {
               data = await request("/api/auth/login", {
                 method: "POST",
-                body: JSON.stringify({ name: username })
+                body: JSON.stringify({ name: username, password })
               });
             } catch (firstError) {
               data = await request("/api/auth/login", {
                 method: "POST",
-                body: JSON.stringify({ username })
+                body: JSON.stringify({ username, password })
               });
             }
             if (data?.token) {
@@ -217,7 +217,7 @@
 
       const data = await request("/api/auth/login", {
         method: "POST",
-        body: JSON.stringify({ username })
+        body: JSON.stringify({ username, password })
       });
       setToken(data.token);
       return data.account || null;
@@ -226,11 +226,33 @@
     async createAccount(payload) {
       if (!apiReady) {
         if (legacyReady) {
-          return {
-            ok: false,
-            message:
-              "Legacy backend signup requires password fields. Use the existing live signup form for account creation."
-          };
+          try {
+            const data = await request("/api/auth/signup", {
+              method: "POST",
+              body: JSON.stringify({
+                name: payload?.username,
+                password: payload?.password,
+                password1: payload?.password,
+                password2: payload?.password
+              })
+            });
+            if (data?.token) {
+              setToken(data.token);
+            }
+            if (data?.user?.name) {
+              return {
+                ok: true,
+                message: "Account created.",
+                account: {
+                  username: data.user.name,
+                  role: "adult",
+                  isVerifiedPatriot: false
+                }
+              };
+            }
+          } catch (error) {
+            // Fall through to local storage fallback.
+          }
         }
         return localStore.createAccount(payload);
       }

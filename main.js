@@ -80,10 +80,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const formData = new FormData(signupForm);
     const payload = {
       username: formData.get("username"),
-      age: Number(formData.get("age")),
-      parentLink: formData.get("parentLink"),
-      wantsVerification: formData.get("wantsVerification") === "on",
-      pledge: formData.get("pledge") === "on"
+      password: formData.get("password")
     };
 
     const result = await data.createAccount(payload);

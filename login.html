@@ -4,19 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NUSA Login</title>
-  <link rel="stylesheet" href="styles.css?v=20260220d" />
+  <link rel="stylesheet" href="styles.css?v=20260220f" />
 </head>
 <body>
   <main class="legal-container stack">
     <section class="section">
       <h1>Log In</h1>
       <p class="tiny-note">
-        Legacy-compatible login page. Existing accounts continue working.
+        Use your username and password.
       </p>
       <form id="legacyLoginForm" class="stack">
         <label>
           Username
           <input id="legacyUsername" type="text" required />
+        </label>
+        <label>
+          Password
+          <input id="legacyPassword" type="password" required />
         </label>
         <button class="primary" type="submit">Log In</button>
         <p id="legacyLoginResult" class="tiny-note"></p>
@@ -28,20 +32,22 @@
   <script>
     const form = document.getElementById("legacyLoginForm");
     const usernameInput = document.getElementById("legacyUsername");
+    const passwordInput = document.getElementById("legacyPassword");
     const result = document.getElementById("legacyLoginResult");
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       result.textContent = "";
       const username = usernameInput.value.trim();
-      if (!username) {
+      const password = passwordInput.value.trim();
+      if (!username || !password) {
         return;
       }
       try {
         const response = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username })
+          body: JSON.stringify({ username, password })
         });
         const data = await response.json();
         if (!response.ok) {

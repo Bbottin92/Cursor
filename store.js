@@ -188,72 +188,33 @@
   function createAccount(payload) {
     const accounts = getAccounts();
     const username = String(payload.username || "").trim();
-    const age = Number(payload.age);
-    const parentLink = String(payload.parentLink || "").trim();
-    const wantsVerification = Boolean(payload.wantsVerification);
-    const pledge = Boolean(payload.pledge);
+    const password = String(payload.password || "").trim();
 
     if (username.length < 2) {
-      return { ok: false, message: "Display name must be at least 2 characters." };
+      return { ok: false, message: "Username must be at least 2 characters." };
     }
-    if (!Number.isFinite(age) || age < 1 || age > 120) {
-      return { ok: false, message: "Please provide a valid age between 1 and 120." };
+    if (password.length < 6) {
+      return { ok: false, message: "Password must be at least 6 characters." };
     }
 
     const duplicate = accounts.find(
       (item) => normalizeName(item.username) === normalizeName(username)
     );
     if (duplicate) {
-      return { ok: false, message: "That display name is already in use." };
-    }
-
-    let isVerifiedPatriot = false;
-    let verificationMessage = "Participant account created.";
-
-    if (wantsVerification) {
-      if (!pledge) {
-        return {
-          ok: false,
-          message: "To verify now, please confirm the peaceful transition pledge."
-        };
-      }
-
-      if (age < 18) {
-        if (!parentLink) {
-          return {
-            ok: false,
-            message:
-              "Under 18 accounts need a linked parent/guardian username before verification."
-          };
-        }
-        const parent = accounts.find(
-          (item) => normalizeName(item.username) === normalizeName(parentLink)
-        );
-        if (!parent) {
-          return {
-            ok: false,
-            message:
-              "Parent/guardian account not found. Create or link a parent account first."
-          };
-        }
-        isVerifiedPatriot = true;
-        verificationMessage = "Verified Patriot (Minor) account created.";
-      } else {
-        isVerifiedPatriot = true;
-        verificationMessage = "Verified Patriot account created.";
-      }
+      return { ok: false, message: "That username is already in use." };
     }
 
     const account = {
       id: crypto.randomUUID(),
       username,
-      age,
-      parentLink: parentLink || null,
+      password,
+      age: 18,
+      parentLink: null,
       approvedAdults: [],
-      isVerifiedPatriot,
-      pledgeSigned: pledge,
+      isVerifiedPatriot: false,
+      pledgeSigned: false,
       createdAt: new Date().toISOString(),
-      role: age < 18 ? "minor" : "adult"
+      role: "adult"
     };
 
     accounts.push(account);
@@ -261,7 +222,7 @@
     setCurrentUser(username);
     addNotification(username, `Welcome ${username}. Your account is active.`, "success");
 
-    return { ok: true, message: verificationMessage, account };
+    return { ok: true, message: "Account created.", account };
   }
 
   function getProposals() {

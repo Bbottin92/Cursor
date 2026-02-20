@@ -31,6 +31,10 @@ function randomFourDigit() {
   return Math.floor(Math.random() * 9000 + 1000);
 }
 
+function hashPassword(password) {
+  return crypto.createHash("sha256").update(String(password || "")).digest("hex");
+}
+
 function readToken(req) {
   const auth = req.headers.authorization;
   if (auth && auth.startsWith("Bearer ")) {
@@ -243,22 +247,40 @@ const SOCIAL_SERVICE_CATALOG = [
 function createAccountFromPayload(payload, options = {}) {
   const requireAge = options.requireAge !== false;
   const defaultAge = Number(options.defaultAge || 18);
+  const requirePassword = options.requirePassword !== false;
   const username = String(payload?.username || payload?.name || "").trim();
   const emailRaw = payload?.email ? String(payload.email).trim() : "";
   const email = emailRaw ? emailRaw.slice(0, 255) : null;
+  const password = String(payload?.password || payload?.password1 || "").trim();
+  const passwordConfirmRaw = payload?.password2 ?? payload?.passwordConfirm;
+  const passwordConfirm =
+    passwordConfirmRaw === undefined || passwordConfirmRaw === null
+      ? password
+      : String(passwordConfirmRaw).trim();
   const requestedAge = Number(payload?.age);
   const age = Number.isFinite(requestedAge) && requestedAge >= 1 && requestedAge <= 120
     ? requestedAge
     : defaultAge;
-  const parentLink = String(payload?.parentLink || "").trim();
-  const wantsVerification = Boolean(payload?.wantsVerification);
-  const pledge = Boolean(payload?.pledge);
 
   if (username.length < 2) {
     return {
       ok: false,
       status: 400,
-      message: "Display name must be at least 2 characters."
+      message: "Username must be at least 2 characters."
+    };
+  }
+  if (requirePassword && password.length < 6) {
+    return {
+      ok: false,
+      status: 400,
+      message: "Password must be at least 6 characters."
+    };
+  }
+  if (passwordConfirm !== password) {
+    return {
+      ok: false,
+      status: 400,
+      message: "Passwords do not match."
     };
   }
   if (requireAge && (!Number.isFinite(requestedAge) || requestedAge < 1 || requestedAge > 120)) {
@@ -271,48 +293,10 @@ function createAccountFromPayload(payload, options = {}) {
 
   const duplicate = getAccountByUsername(username);
   if (duplicate) {
-    return { ok: false, status: 409, message: "That display name is already in use." };
+    return { ok: false, status: 409, message: "That username is already in use." };
   }
 
-  let parentCanonical = null;
-  let isVerifiedPatriot = false;
-  let verificationMessage = "Participant account created.";
-
-  if (wantsVerification) {
-    if (!pledge) {
-      return {
-        ok: false,
-        status: 400,
-        message: "To verify now, please confirm the peaceful transition pledge."
-      };
-    }
-
-    if (age < 18) {
-      if (!parentLink) {
-        return {
-          ok: false,
-          status: 400,
-          message: "Under 18 accounts need a linked parent/guardian username before verification."
-        };
-      }
-      const parent = getAccountByUsername(parentLink);
-      if (!parent) {
-        return {
-          ok: false,
-          status: 400,
-          message: "Parent/guardian account not found. Create or link a parent account first."
-        };
-      }
-      parentCanonical = parent.username;
-      isVerifiedPatriot = true;
-      verificationMessage = "Verified Patriot (Minor) account created.";
-    } else {
-      isVerifiedPatriot = true;
-      verificationMessage = "Verified Patriot account created.";
-    }
-  }
-
-  const role = age < 18 ? "minor" : "adult";
+  const role = "adult";
   const createdAt = nowIso();
   db.prepare(
     `
@@ -320,6 +304,7 @@ function createAccountFromPayload(payload, options = {}) {
         username,
         lower_username,
         email,
+        password_hash,
         age,
         parent_link,
         approved_adults,
@@ -330,17 +315,18 @@ function createAccountFromPayload(payload, options = {}) {
         bio,
         skills,
         social_services
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
   ).run(
     username,
     toLowerName(username),
     email,
+    hashPassword(password),
     age,
-    parentCanonical || (parentLink ? parentLink : null),
+    null,
     JSON.stringify([]),
-    isVerifiedPatriot ? 1 : 0,
-    pledge ? 1 : 0,
+    0,
+    0,
     role,
     createdAt,
     "",
@@ -355,7 +341,7 @@ function createAccountFromPayload(payload, options = {}) {
   return {
     ok: true,
     status: 201,
-    message: verificationMessage,
+    message: "Account created.",
     token,
     account
   };
@@ -366,7 +352,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.post("/api/auth/register", (req, res) => {
-  const result = createAccountFromPayload(req.body || {}, { requireAge: true });
+  const result = createAccountFromPayload(req.body || {}, { requireAge: false, defaultAge: 18 });
   if (!result.ok) {
     res.status(result.status).json({ ok: false, message: result.message });
     return;
@@ -395,11 +381,26 @@ app.post("/api/auth/signup", (req, res) => {
 
 app.post("/api/auth/login", (req, res) => {
   const username = String(req.body?.username || req.body?.name || "").trim();
-  const account = getAccountByUsername(username);
-  if (!account) {
+  const password = String(req.body?.password || "").trim();
+  const accountRow = db
+    .prepare("SELECT * FROM accounts WHERE lower_username = ?")
+    .get(toLowerName(username));
+  if (!accountRow) {
     res.status(404).json({ ok: false, message: "Account not found.", error: "Account not found." });
     return;
   }
+
+  const passwordHash = String(accountRow.password_hash || "").trim();
+  if (passwordHash && password && hashPassword(password) !== passwordHash) {
+      res.status(401).json({
+        ok: false,
+        message: "Invalid username or password.",
+        error: "Invalid username or password."
+      });
+      return;
+  }
+
+  const account = mapAccount(accountRow);
   const token = createSession(account.username);
   res.json({ ok: true, token, account, user: toLegacyUser(account) });
 });

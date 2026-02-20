@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NUSA (New-USA)</title>
-  <link rel="stylesheet" href="styles.css?v=20260220e" />
+  <link rel="stylesheet" href="styles.css?v=20260220f" />
 </head>
 <body class="public-body">
   <header class="site-header">
@@ -217,31 +217,16 @@
   <dialog id="signupDialog">
     <form id="signupForm" method="dialog" class="signup-form">
       <h2>Create Account</h2>
-      <p>Any account created is counted as a Participant in this phase.</p>
+      <p>Use a username and password for now. Age verification comes later.</p>
 
       <label>
-        Display name
+        Username
         <input type="text" name="username" required minlength="2" maxlength="30" />
       </label>
 
       <label>
-        Age
-        <input type="number" name="age" min="1" max="120" required />
-      </label>
-
-      <label>
-        Parent/Guardian username (required for under 18 verification)
-        <input type="text" name="parentLink" maxlength="30" />
-      </label>
-
-      <label class="checkbox-row">
-        <input type="checkbox" name="wantsVerification" />
-        I want to become a Verified Patriot now
-      </label>
-
-      <label class="checkbox-row">
-        <input type="checkbox" name="pledge" />
-        I pledge support for a peaceful and lawful transition process
+        Password
+        <input type="password" name="password" required minlength="6" maxlength="100" />
       </label>
 
       <menu>
@@ -252,8 +237,8 @@
     </form>
   </dialog>
 
-  <script src="store.js?v=20260220e"></script>
-  <script src="dataClient.js?v=20260220e"></script>
-  <script src="main.js?v=20260220e"></script>
+  <script src="store.js?v=20260220f"></script>
+  <script src="dataClient.js?v=20260220f"></script>
+  <script src="main.js?v=20260220f"></script>
 </body>
 </html>

@@ -1,19 +1,26 @@
 {
-  "generated_at": "2026-02-20T12:42:24Z",
+  "generated_at": "2026-02-20T13:16:27Z",
   "trigger": {
     "phase": "pre_commit",
     "note": "auto pre-commit context sync"
   },
   "git": {
     "branch": "cursor/liquidgov-website-definition-d045",
-    "commit": "3629f45",
+    "commit": "a550c7f",
     "changed_files": [
       "context/activity_log.jsonl",
       "context/current_task.md",
       "context/flowmap.json",
       "context/flowmap.md",
       "context/state.json",
-      "context/watchlist.json"
+      "context/watchlist.json",
+      "dataClient.js",
+      "index.html",
+      "login.html",
+      "main.js",
+      "server/db.js",
+      "server/server.js",
+      "store.js"
     ]
   },
   "frontend": {
@@ -22,12 +29,12 @@
         "file": "index.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220e"
+          "styles.css?v=20260220f"
         ],
         "scripts": [
-          "store.js?v=20260220e",
-          "dataClient.js?v=20260220e",
-          "main.js?v=20260220e"
+          "store.js?v=20260220f",
+          "dataClient.js?v=20260220f",
+          "main.js?v=20260220f"
         ],
         "links": [
           "#start-here",
@@ -72,7 +79,7 @@
         "file": "login.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220d"
+          "styles.css?v=20260220f"
         ],
         "scripts": [],
         "links": [
@@ -128,6 +135,7 @@
           "/api/auth/logout",
           "/api/auth/me",
           "/api/auth/register",
+          "/api/auth/signup",
           "/api/health",
           "/api/listings",
           "/api/listings/${encodeURIComponent(listingId)}/close",
@@ -351,6 +359,7 @@
       "/api/auth/logout",
       "/api/auth/me",
       "/api/auth/register",
+      "/api/auth/signup",
       "/api/health",
       "/api/listings",
       "/api/listings/${encodeURIComponent(listingId)}/close",
@@ -435,38 +444,38 @@
   ],
   "workflow_rule": "Run context guard before inspect/change: ./scripts/context_guard.sh inspect|change \"note\"",
   "optimization": {
-    "activity_entries": 21,
+    "activity_entries": 25,
     "hotspots": [
       {
         "file": "context/activity_log.jsonl",
-        "touches": 10
+        "touches": 13
       },
       {
         "file": "context/current_task.md",
-        "touches": 10
+        "touches": 13
       },
       {
         "file": "context/flowmap.json",
-        "touches": 10
+        "touches": 13
       },
       {
         "file": "context/flowmap.md",
-        "touches": 10
+        "touches": 13
       },
       {
         "file": "context/state.json",
-        "touches": 10
+        "touches": 13
       },
       {
         "file": "context/watchlist.json",
-        "touches": 10
+        "touches": 13
+      },
+      {
+        "file": "index.html",
+        "touches": 7
       },
       {
         "file": "README.md",
-        "touches": 6
-      },
-      {
-        "file": "scripts/context_flowmap.py",
         "touches": 6
       }
     ]

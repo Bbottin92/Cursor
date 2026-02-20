@@ -15,6 +15,7 @@ db.exec(`
     username TEXT NOT NULL,
     lower_username TEXT NOT NULL UNIQUE,
     email TEXT,
+    password_hash TEXT,
     age INTEGER NOT NULL,
     parent_link TEXT,
     approved_adults TEXT NOT NULL DEFAULT '[]',
@@ -114,6 +115,7 @@ function ensureColumn(table, columnName, columnDDL) {
 
 ensureColumn("accounts", "profile_photo_url", "profile_photo_url TEXT");
 ensureColumn("accounts", "email", "email TEXT");
+ensureColumn("accounts", "password_hash", "password_hash TEXT");
 ensureColumn("accounts", "bio", "bio TEXT NOT NULL DEFAULT ''");
 ensureColumn("accounts", "skills", "skills TEXT NOT NULL DEFAULT '[]'");
 ensureColumn("accounts", "social_services", "social_services TEXT NOT NULL DEFAULT '[]'");
