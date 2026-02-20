@@ -153,8 +153,8 @@ main {
   position: absolute;
   top: -0.25rem;
   right: 0.4rem;
-  width: clamp(130px, 18vw, 260px);
-  opacity: 0.86;
+  width: clamp(110px, 14vw, 210px);
+  opacity: 0.72;
   pointer-events: none;
   z-index: 0;
 }
@@ -698,6 +698,12 @@ menu {
   }
 }
 
+@media (max-width: 980px) {
+  .hero-notax {
+    display: none;
+  }
+}
+
 @media (max-width: 760px) {
   .site-header {
     padding: 0.8rem 1rem;
@@ -760,10 +766,7 @@ menu {
   }
 
   .hero-notax {
-    width: min(44vw, 180px);
-    top: 0.1rem;
-    right: -0.2rem;
-    opacity: 0.6;
+    display: none;
   }
 
   .honest-grid {

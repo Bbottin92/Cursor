@@ -1,6 +1,6 @@
 # Current Task Intent (Auto)
 
-Updated: `2026-02-20T10:43:51Z`  
+Updated: `2026-02-20T10:53:46Z`  
 Checkpoint: `pre_commit`  
 Intent note: auto pre-commit context sync
 
@@ -15,21 +15,31 @@ Before edits:
 ## Active Working Context
 
 Branch: `cursor/liquidgov-website-definition-d045`  
-Commit: `4231a2b`  
-Context runs: `12`
+Commit: `f5e98f2`  
+Context runs: `15`
 
 ### Currently changed files
+- `app.html`
+- `context/activity_log.jsonl`
 - `context/current_task.md`
+- `context/flowmap.json`
+- `context/flowmap.md`
+- `context/state.json`
+- `context/watchlist.json`
+- `index.html`
+- `legal.html`
+- `login.html`
+- `styles.css`
 
 ### Auto optimization watchlist
+- `context/activity_log.jsonl` (7 touches)
+- `context/current_task.md` (7 touches)
+- `context/flowmap.json` (7 touches)
+- `context/flowmap.md` (7 touches)
+- `context/state.json` (7 touches)
+- `context/watchlist.json` (7 touches)
 - `README.md` (6 touches)
 - `scripts/context_flowmap.py` (6 touches)
-- `scripts/install_context_hooks.sh` (6 touches)
-- `context/activity_log.jsonl` (5 touches)
-- `context/current_task.md` (5 touches)
-- `context/flowmap.json` (5 touches)
-- `context/flowmap.md` (5 touches)
-- `context/state.json` (5 touches)
 
 ## High Priority Flow References
 

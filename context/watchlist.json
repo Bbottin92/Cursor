@@ -1,7 +1,31 @@
 {
-  "generated_at": "2026-02-20T10:43:51Z",
+  "generated_at": "2026-02-20T10:53:46Z",
   "description": "Auto-ranked files touched most often in context checkpoints.",
   "hotspots": [
+    {
+      "file": "context/activity_log.jsonl",
+      "touches": 7
+    },
+    {
+      "file": "context/current_task.md",
+      "touches": 7
+    },
+    {
+      "file": "context/flowmap.json",
+      "touches": 7
+    },
+    {
+      "file": "context/flowmap.md",
+      "touches": 7
+    },
+    {
+      "file": "context/state.json",
+      "touches": 7
+    },
+    {
+      "file": "context/watchlist.json",
+      "touches": 7
+    },
     {
       "file": "README.md",
       "touches": 6
@@ -9,30 +33,6 @@
     {
       "file": "scripts/context_flowmap.py",
       "touches": 6
-    },
-    {
-      "file": "scripts/install_context_hooks.sh",
-      "touches": 6
-    },
-    {
-      "file": "context/activity_log.jsonl",
-      "touches": 5
-    },
-    {
-      "file": "context/current_task.md",
-      "touches": 5
-    },
-    {
-      "file": "context/flowmap.json",
-      "touches": 5
-    },
-    {
-      "file": "context/flowmap.md",
-      "touches": 5
-    },
-    {
-      "file": "context/state.json",
-      "touches": 5
     }
   ]
 }

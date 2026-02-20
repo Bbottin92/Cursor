@@ -1,6 +1,6 @@
 # NUSA Context + Flowmap
 
-Generated: `2026-02-20T10:43:51Z`
+Generated: `2026-02-20T10:53:46Z`
 Trigger: `pre_commit` - auto pre-commit context sync
 
 ## Persistent Workflow Rules
@@ -11,8 +11,8 @@ Trigger: `pre_commit` - auto pre-commit context sync
 4. Pre-commit hook auto-refreshes this flowmap (install with `npm run context:install-hooks`)
 5. Deploy script auto-refreshes context at deploy start and finish
 
-State runs: `12`  
-Phase counts: `{"bootstrap": 1, "test": 2, "change": 2, "pre_commit": 5, "inspect": 2}`
+State runs: `15`  
+Phase counts: `{"bootstrap": 1, "test": 2, "change": 3, "pre_commit": 6, "inspect": 3}`
 
 ## Frontend Map
 
@@ -94,22 +94,22 @@ Phase counts: `{"bootstrap": 1, "test": 2, "change": 2, "pre_commit": 5, "inspec
 
 ## Optimization Watchlist (Auto)
 
+- `context/activity_log.jsonl` touched `7` checkpoint(s)
+- `context/current_task.md` touched `7` checkpoint(s)
+- `context/flowmap.json` touched `7` checkpoint(s)
+- `context/flowmap.md` touched `7` checkpoint(s)
+- `context/state.json` touched `7` checkpoint(s)
+- `context/watchlist.json` touched `7` checkpoint(s)
 - `README.md` touched `6` checkpoint(s)
 - `scripts/context_flowmap.py` touched `6` checkpoint(s)
-- `scripts/install_context_hooks.sh` touched `6` checkpoint(s)
-- `context/activity_log.jsonl` touched `5` checkpoint(s)
-- `context/current_task.md` touched `5` checkpoint(s)
-- `context/flowmap.json` touched `5` checkpoint(s)
-- `context/flowmap.md` touched `5` checkpoint(s)
-- `context/state.json` touched `5` checkpoint(s)
 
 ## Recent Context Activity
 
-- `2026-02-20T10:39:57Z` [inspect] collect exact hero requirements from transcript and current files
-- `2026-02-20T10:40:48Z` [change] implement auto task-intent template and final hero layout pass
-- `2026-02-20T10:42:23Z` [inspect] verify hero pass and regenerate current task template
 - `2026-02-20T10:42:38Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T10:42:47Z` [test] npm test context sync
 - `2026-02-20T10:42:57Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T10:43:27Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T10:43:51Z` [pre_commit] auto pre-commit context sync
+- `2026-02-20T10:51:05Z` [inspect] fetch and compare live liquidgov.us rendering sources
+- `2026-02-20T10:52:26Z` [change] refine live hero mobile rendering and bump cache-bust tokens
+- `2026-02-20T10:53:46Z` [pre_commit] auto pre-commit context sync
