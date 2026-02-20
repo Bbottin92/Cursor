@@ -1,8 +1,8 @@
 # Current Task Intent (Auto)
 
-Updated: `2026-02-20T10:42:23Z`  
-Checkpoint: `inspect`  
-Intent note: verify hero pass and regenerate current task template
+Updated: `2026-02-20T10:42:47Z`  
+Checkpoint: `test`  
+Intent note: npm test context sync
 
 ## Mandatory Use
 
@@ -15,30 +15,21 @@ Before edits:
 ## Active Working Context
 
 Branch: `cursor/liquidgov-website-definition-d045`  
-Commit: `940fde0`  
-Context runs: `7`
+Commit: `5c57c10`  
+Context runs: `9`
 
 ### Currently changed files
-- `README.md`
-- `context/activity_log.jsonl`
-- `context/flowmap.json`
-- `context/flowmap.md`
-- `context/state.json`
-- `context/watchlist.json`
-- `index.html`
-- `scripts/context_flowmap.py`
-- `scripts/install_context_hooks.sh`
-- `styles.css`
+- `context/current_task.md`
 
 ### Auto optimization watchlist
-- `README.md` (5 touches)
-- `scripts/context_flowmap.py` (5 touches)
-- `scripts/install_context_hooks.sh` (5 touches)
-- `package.json` (4 touches)
-- `scripts/context_guard.sh` (4 touches)
-- `scripts/deploy_cpanel_no_ssh.sh` (4 touches)
-- `context/` (3 touches)
-- `context/activity_log.jsonl` (3 touches)
+- `README.md` (6 touches)
+- `scripts/context_flowmap.py` (6 touches)
+- `scripts/install_context_hooks.sh` (6 touches)
+- `context/activity_log.jsonl` (4 touches)
+- `context/flowmap.json` (4 touches)
+- `context/flowmap.md` (4 touches)
+- `context/state.json` (4 touches)
+- `context/watchlist.json` (4 touches)
 
 ## High Priority Flow References
 

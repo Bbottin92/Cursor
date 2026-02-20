@@ -1,6 +1,6 @@
 # NUSA Context + Flowmap
 
-Generated: `2026-02-20T10:42:38Z`
+Generated: `2026-02-20T10:42:57Z`
 Trigger: `pre_commit` - auto pre-commit context sync
 
 ## Persistent Workflow Rules
@@ -11,8 +11,8 @@ Trigger: `pre_commit` - auto pre-commit context sync
 4. Pre-commit hook auto-refreshes this flowmap (install with `npm run context:install-hooks`)
 5. Deploy script auto-refreshes context at deploy start and finish
 
-State runs: `8`  
-Phase counts: `{"bootstrap": 1, "test": 1, "change": 2, "pre_commit": 2, "inspect": 2}`
+State runs: `10`  
+Phase counts: `{"bootstrap": 1, "test": 2, "change": 2, "pre_commit": 3, "inspect": 2}`
 
 ## Frontend Map
 
@@ -97,19 +97,19 @@ Phase counts: `{"bootstrap": 1, "test": 1, "change": 2, "pre_commit": 2, "inspec
 - `README.md` touched `6` checkpoint(s)
 - `scripts/context_flowmap.py` touched `6` checkpoint(s)
 - `scripts/install_context_hooks.sh` touched `6` checkpoint(s)
-- `context/activity_log.jsonl` touched `4` checkpoint(s)
-- `context/flowmap.json` touched `4` checkpoint(s)
-- `context/flowmap.md` touched `4` checkpoint(s)
-- `context/state.json` touched `4` checkpoint(s)
-- `context/watchlist.json` touched `4` checkpoint(s)
+- `context/activity_log.jsonl` touched `5` checkpoint(s)
+- `context/flowmap.json` touched `5` checkpoint(s)
+- `context/flowmap.md` touched `5` checkpoint(s)
+- `context/state.json` touched `5` checkpoint(s)
+- `context/watchlist.json` touched `5` checkpoint(s)
 
 ## Recent Context Activity
 
-- `2026-02-20T10:21:57Z` [bootstrap] reset context tracker with clean baseline
-- `2026-02-20T10:22:22Z` [test] npm test context sync
 - `2026-02-20T10:22:39Z` [change] stage and commit context system implementation
 - `2026-02-20T10:23:02Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T10:39:57Z` [inspect] collect exact hero requirements from transcript and current files
 - `2026-02-20T10:40:48Z` [change] implement auto task-intent template and final hero layout pass
 - `2026-02-20T10:42:23Z` [inspect] verify hero pass and regenerate current task template
 - `2026-02-20T10:42:38Z` [pre_commit] auto pre-commit context sync
+- `2026-02-20T10:42:47Z` [test] npm test context sync
+- `2026-02-20T10:42:57Z` [pre_commit] auto pre-commit context sync
