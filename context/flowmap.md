@@ -1,6 +1,6 @@
 # NUSA Context + Flowmap
 
-Generated: `2026-02-20T15:09:30Z`
+Generated: `2026-02-20T15:36:09Z`
 Trigger: `pre_commit` - auto pre-commit context sync
 
 ## Persistent Workflow Rules
@@ -11,8 +11,8 @@ Trigger: `pre_commit` - auto pre-commit context sync
 4. Pre-commit hook auto-refreshes this flowmap (install with `npm run context:install-hooks`)
 5. Deploy script auto-refreshes context at deploy start and finish
 
-State runs: `45`  
-Phase counts: `{"bootstrap": 1, "test": 11, "change": 12, "pre_commit": 17, "inspect": 4}`
+State runs: `49`  
+Phase counts: `{"bootstrap": 1, "test": 11, "change": 12, "pre_commit": 18, "inspect": 5, "deploy": 1, "deploy_verify": 1}`
 
 ## Frontend Map
 
@@ -94,22 +94,22 @@ Phase counts: `{"bootstrap": 1, "test": 11, "change": 12, "pre_commit": 17, "ins
 
 ## Optimization Watchlist (Auto)
 
-- `context/activity_log.jsonl` touched `26` checkpoint(s)
-- `context/current_task.md` touched `26` checkpoint(s)
-- `context/flowmap.json` touched `26` checkpoint(s)
-- `context/flowmap.md` touched `26` checkpoint(s)
-- `context/state.json` touched `26` checkpoint(s)
-- `context/watchlist.json` touched `26` checkpoint(s)
+- `context/activity_log.jsonl` touched `29` checkpoint(s)
+- `context/current_task.md` touched `29` checkpoint(s)
+- `context/flowmap.json` touched `29` checkpoint(s)
+- `context/flowmap.md` touched `29` checkpoint(s)
+- `context/state.json` touched `29` checkpoint(s)
+- `context/watchlist.json` touched `29` checkpoint(s)
 - `store.js` touched `15` checkpoint(s)
 - `dataClient.js` touched `13` checkpoint(s)
 
 ## Recent Context Activity
 
-- `2026-02-20T14:52:22Z` [change] finalize Brandon login bootstrap and post-login feedback prompt flow
-- `2026-02-20T14:52:32Z` [pre_commit] auto pre-commit context sync
-- `2026-02-20T14:52:54Z` [test] npm test context sync
-- `2026-02-20T14:53:16Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T15:05:25Z` [change] fix login payload compatibility for name and password required error
 - `2026-02-20T15:08:38Z` [test] npm test context sync
 - `2026-02-20T15:09:10Z` [change] finalize login payload fix and data-client login flow
 - `2026-02-20T15:09:30Z` [pre_commit] auto pre-commit context sync
+- `2026-02-20T15:30:18Z` [inspect] deploy latest frontend using provided cPanel token
+- `2026-02-20T15:32:35Z` [deploy] deploy_cpanel_no_ssh invoked
+- `2026-02-20T15:32:40Z` [deploy_verify] deploy verification passed
+- `2026-02-20T15:36:09Z` [pre_commit] auto pre-commit context sync
