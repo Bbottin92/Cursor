@@ -51,6 +51,31 @@ Then open:
 - `http://localhost:3000/` (public site)
 - `http://localhost:3000/app.html` (member app)
 
+## No-SSH cPanel deploy automation
+
+For cPanel environments where SSH/WebDAV are blocked, use:
+
+```bash
+./scripts/deploy_cpanel_no_ssh.sh
+```
+
+The script uploads frontend files to `public_html/` via cPanel API (port 2083),
+then verifies:
+
+- `https://liquidgov.us/`
+- `https://liquidgov.us/app.html`
+- `/api/stats/participants`
+- `/api/announcements`
+
+One-time token setup (stored locally with restricted permissions):
+
+```bash
+read -rsp "cPanel API token: " T; echo
+printf '%s' "$T" > ~/.liquidgov_cpanel_token
+chmod 600 ~/.liquidgov_cpanel_token
+unset T
+```
+
 ## API coverage (implemented)
 
 - Auth/session:
