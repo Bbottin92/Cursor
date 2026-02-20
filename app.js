@@ -27,9 +27,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let activeScope = "Neighborhood";
   let activeUsername = null;
+  let hasSelectedScope = false;
+  let hasPostedProposal = false;
+  let hasSentMessage = false;
 
   const currentUsername = document.getElementById("currentUsername");
   const currentBadge = document.getElementById("currentBadge");
+  const onboardAccount = document.getElementById("onboardAccount");
+  const onboardScope = document.getElementById("onboardScope");
+  const onboardProposal = document.getElementById("onboardProposal");
+  const onboardMessage = document.getElementById("onboardMessage");
+  const onboardingProgress = document.getElementById("onboardingProgress");
+  const jumpToProposalBtn = document.getElementById("jumpToProposalBtn");
+  const jumpToMessagesBtn = document.getElementById("jumpToMessagesBtn");
+  const proposalCard = document.getElementById("proposalCard");
+  const messagesCard = document.getElementById("messagesCard");
   const avatarInitial = document.getElementById("avatarInitial");
   const profileVerifiedCounter = document.getElementById("profileVerifiedCounter");
   const participantsCount = document.getElementById("participantsCount");
@@ -106,6 +118,34 @@ document.addEventListener("DOMContentLoaded", async () => {
     "System: Welcome to the group channel.",
     "System: Keep discussion constructive and solution-focused."
   ];
+
+  function setOnboardingState(el, done) {
+    if (!el) {
+      return;
+    }
+    el.classList.toggle("done", done);
+    const status = el.querySelector("strong");
+    if (status) {
+      status.textContent = done ? "Done" : "Pending";
+    }
+  }
+
+  function updateOnboarding() {
+    const doneAccount = Boolean(activeUsername);
+    const doneScope = Boolean(hasSelectedScope);
+    const doneProposal = Boolean(hasPostedProposal);
+    const doneMessage = Boolean(hasSentMessage);
+
+    setOnboardingState(onboardAccount, doneAccount);
+    setOnboardingState(onboardScope, doneScope);
+    setOnboardingState(onboardProposal, doneProposal);
+    setOnboardingState(onboardMessage, doneMessage);
+
+    const total = [doneAccount, doneScope, doneProposal, doneMessage].filter(Boolean).length;
+    if (onboardingProgress) {
+      onboardingProgress.textContent = `${total}/4`;
+    }
+  }
 
   async function getAccounts() {
     return data.getAccounts();
@@ -216,8 +256,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       currentUsername.textContent = "Guest";
       currentBadge.textContent = "Participant";
       avatarInitial.textContent = "G";
+      hasPostedProposal = false;
+      hasSentMessage = false;
       visitorLogBody.innerHTML = '<tr><td colspan="2">Sign in to view logs.</td></tr>';
       notificationsBody.innerHTML = '<tr><td colspan="2">Sign in to view notifications.</td></tr>';
+      updateOnboarding();
       return;
     }
 
@@ -247,6 +290,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       currentBadge.textContent = "Participant";
     }
 
+    updateOnboarding();
     await renderVisitorLog();
     await renderNotifications();
   }
@@ -263,6 +307,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     scopeChips.querySelectorAll("button").forEach((button) => {
       button.addEventListener("click", () => {
         activeScope = button.dataset.scope;
+        hasSelectedScope = true;
+        updateOnboarding();
         renderScopes();
         renderScopePanel();
       });
@@ -384,6 +430,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     profilePreview.srcdoc = frame;
   }
 
+  jumpToProposalBtn.addEventListener("click", () => {
+    proposalCard.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  jumpToMessagesBtn.addEventListener("click", () => {
+    messagesCard.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
   announcementForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     announcementResult.textContent = "";
@@ -436,6 +490,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       author: activeUsername,
       status: "under_review"
     });
+    hasPostedProposal = true;
+    updateOnboarding();
     proposalResult.textContent = "Proposal submitted to archive with author credit.";
     painPointInput.value = "";
     solutionInput.value = "";
@@ -470,6 +526,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
     dmInput.value = "";
     dmResult.textContent = "Message delivered.";
+    hasSentMessage = true;
+    updateOnboarding();
     await renderNotifications();
   });
 
@@ -479,6 +537,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     await data.addNotification(activeUsername, "Audio message submitted.", "info");
     audioNoteInput.value = "";
+    hasSentMessage = true;
+    updateOnboarding();
     await renderNotifications();
   });
 
@@ -504,6 +564,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     groupMessages.unshift(`${activeUsername}: ${groupInput.value.trim()}`);
     groupInput.value = "";
+    hasSentMessage = true;
+    updateOnboarding();
     renderGroupStream();
   });
 
@@ -684,6 +746,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await renderNetworkPosts();
   renderGroupStream();
   renderProfileTheme();
+  updateOnboarding();
 
   const session = await data.getCurrentUser();
   await setActiveUser(session ? session.username : accountSwitcher.value, {

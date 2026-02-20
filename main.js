@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const participantCurrent = document.getElementById("participantCurrent");
   const openSignup = document.getElementById("openSignup");
+  const openSignupSecondary = document.getElementById("openSignupSecondary");
   const signupDialog = document.getElementById("signupDialog");
   const signupForm = document.getElementById("signupForm");
   const signupResult = document.getElementById("signupResult");
@@ -69,6 +70,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   openSignup.addEventListener("click", openSignupDialog);
+  if (openSignupSecondary) {
+    openSignupSecondary.addEventListener("click", openSignupDialog);
+  }
   closeSignup.addEventListener("click", closeSignupDialog);
 
   signupForm.addEventListener("submit", async (event) => {
