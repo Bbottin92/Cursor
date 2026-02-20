@@ -112,6 +112,34 @@ main {
   padding: 4rem 0 2.5rem;
 }
 
+.hero-title-row {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 1rem;
+  align-items: end;
+}
+
+.hero-brand-lockup {
+  border: 1px solid #3a4f86;
+  background: #17244a;
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+}
+
+.hero-brand-name {
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #a2edff;
+  line-height: 1;
+}
+
+.hero-brand-sub {
+  margin-top: 0.35rem;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
 .eyebrow {
   color: var(--accent);
   text-transform: uppercase;
@@ -568,5 +596,12 @@ menu {
 @media (max-width: 1100px) {
   .app-shell {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .hero-title-row {
+    grid-template-columns: 1fr;
+    align-items: start;
   }
 }
