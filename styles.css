@@ -321,6 +321,51 @@ h1 {
   margin-top: 0.9rem;
 }
 
+.manifesto-section {
+  margin-top: 0.9rem;
+}
+
+.manifesto-title {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(2rem, 4.3vw, 3.4rem);
+  line-height: 1.06;
+}
+
+.manifesto-subtitle {
+  margin: 0.15rem 0 1rem;
+  text-align: center;
+  color: #d5ddf2;
+  font-size: clamp(1.05rem, 2.1vw, 1.45rem);
+  font-weight: 700;
+}
+
+.manifesto-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.manifesto-card {
+  border: 1px solid #34467a;
+  border-radius: 14px;
+  background: #172248;
+  padding: 1rem;
+}
+
+.manifesto-card h3 {
+  margin: 0.2rem 0 0.45rem;
+  font-size: clamp(1.05rem, 1.9vw, 1.5rem);
+}
+
+.manifesto-card .checklist {
+  margin-bottom: 0.8rem;
+}
+
+.manifesto-card .checklist:last-child {
+  margin-bottom: 0;
+}
+
 .honest-grid {
   display: grid;
   grid-template-columns: 1fr minmax(170px, 250px);
@@ -775,5 +820,9 @@ menu {
 
   .honest-image {
     width: min(70vw, 220px);
+  }
+
+  .manifesto-card {
+    padding: 0.85rem;
   }
 }

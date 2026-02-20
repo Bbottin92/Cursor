@@ -1,6 +1,6 @@
 # NUSA Context + Flowmap
 
-Generated: `2026-02-20T10:54:10Z`
+Generated: `2026-02-20T12:41:55Z`
 Trigger: `pre_commit` - auto pre-commit context sync
 
 ## Persistent Workflow Rules
@@ -11,8 +11,8 @@ Trigger: `pre_commit` - auto pre-commit context sync
 4. Pre-commit hook auto-refreshes this flowmap (install with `npm run context:install-hooks`)
 5. Deploy script auto-refreshes context at deploy start and finish
 
-State runs: `17`  
-Phase counts: `{"bootstrap": 1, "test": 3, "change": 3, "pre_commit": 7, "inspect": 3}`
+State runs: `19`  
+Phase counts: `{"bootstrap": 1, "test": 3, "change": 4, "pre_commit": 8, "inspect": 3}`
 
 ## Frontend Map
 
@@ -94,22 +94,22 @@ Phase counts: `{"bootstrap": 1, "test": 3, "change": 3, "pre_commit": 7, "inspec
 
 ## Optimization Watchlist (Auto)
 
-- `context/activity_log.jsonl` touched `8` checkpoint(s)
-- `context/current_task.md` touched `8` checkpoint(s)
-- `context/flowmap.json` touched `8` checkpoint(s)
-- `context/flowmap.md` touched `8` checkpoint(s)
-- `context/state.json` touched `8` checkpoint(s)
-- `context/watchlist.json` touched `8` checkpoint(s)
+- `context/activity_log.jsonl` touched `9` checkpoint(s)
+- `context/current_task.md` touched `9` checkpoint(s)
+- `context/flowmap.json` touched `9` checkpoint(s)
+- `context/flowmap.md` touched `9` checkpoint(s)
+- `context/state.json` touched `9` checkpoint(s)
+- `context/watchlist.json` touched `9` checkpoint(s)
 - `README.md` touched `6` checkpoint(s)
 - `scripts/context_flowmap.py` touched `6` checkpoint(s)
 
 ## Recent Context Activity
 
-- `2026-02-20T10:42:57Z` [pre_commit] auto pre-commit context sync
-- `2026-02-20T10:43:27Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T10:43:51Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T10:51:05Z` [inspect] fetch and compare live liquidgov.us rendering sources
 - `2026-02-20T10:52:26Z` [change] refine live hero mobile rendering and bump cache-bust tokens
 - `2026-02-20T10:53:46Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T10:53:57Z` [test] npm test context sync
 - `2026-02-20T10:54:10Z` [pre_commit] auto pre-commit context sync
+- `2026-02-20T12:40:44Z` [change] add get involved content section to first page
+- `2026-02-20T12:41:55Z` [pre_commit] auto pre-commit context sync
