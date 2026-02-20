@@ -109,7 +109,35 @@ main {
 }
 
 .hero {
+  position: relative;
   padding: 4rem 0 2.5rem;
+  overflow: hidden;
+}
+
+.hero-corner {
+  position: absolute;
+  top: 0.2rem;
+  width: min(31vw, 340px);
+  max-height: 230px;
+  object-fit: contain;
+  opacity: 0.95;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.hero-corner-left {
+  left: -0.9rem;
+}
+
+.hero-corner-right {
+  right: -0.9rem;
+}
+
+.hero-title-row,
+.counter-wrap,
+.hero-actions {
+  position: relative;
+  z-index: 1;
 }
 
 .hero-title-row {
@@ -600,6 +628,12 @@ menu {
 }
 
 @media (max-width: 760px) {
+  .hero-corner {
+    width: min(40vw, 220px);
+    max-height: 160px;
+    opacity: 0.75;
+  }
+
   .hero-title-row {
     grid-template-columns: 1fr;
     align-items: start;

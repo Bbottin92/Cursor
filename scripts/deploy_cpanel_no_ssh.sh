@@ -51,6 +51,19 @@ FILES=(
   js/error-handler.js
 )
 
+OPTIONAL_FILES=(
+  Dripflag.tiff
+  Dripflag.tif
+  Dripflag.TIFF
+  Dripflag.TIF
+  Notax.tiff
+  Notax.tif
+  Notax.TIFF
+  Notax.TIF
+  Notax.till
+  Notax.TILL
+)
+
 for file in "${FILES[@]}"; do
   if [[ ! -f "$file" ]]; then
     echo "Missing file: $file" >&2
@@ -105,6 +118,12 @@ mkdir_api "$ROOT_DIR" "js"
 
 for file in "${FILES[@]}"; do
   upload_file "$file"
+done
+
+for file in "${OPTIONAL_FILES[@]}"; do
+  if [[ -f "$file" ]]; then
+    upload_file "$file"
+  fi
 done
 
 echo "Verifying live pages..."
