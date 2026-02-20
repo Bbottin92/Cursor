@@ -1,0 +1,9 @@
+{
+  "id": "healthcheck",
+  "prompt": "Respond with EXACTLY this single line and nothing else:\\nOFFLOAD_WORKER_OK",
+  "model": "qwen2.5:3b",
+  "options": {
+    "temperature": 0
+  }
+}
+
