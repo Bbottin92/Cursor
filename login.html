@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NUSA Login</title>
-  <link rel="stylesheet" href="styles.css?v=20260220g" />
+  <link rel="stylesheet" href="styles.css?v=20260220i" />
 </head>
 <body>
   <main class="legal-container stack">
@@ -29,6 +29,8 @@
     </section>
   </main>
 
+  <script src="store.js?v=20260220i"></script>
+  <script src="dataClient.js?v=20260220i"></script>
   <script>
     const form = document.getElementById("legacyLoginForm");
     const usernameInput = document.getElementById("legacyUsername");
@@ -41,24 +43,19 @@
       const username = usernameInput.value.trim();
       const password = passwordInput.value.trim();
       if (!username || !password) {
+        result.textContent = "Username and password are required.";
         return;
       }
       try {
-        const response = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || data.message || "Login failed.");
-        }
-        if (data.token) {
-          localStorage.setItem("auth_token", data.token);
+        const data = window.LiquidGovData;
+        await data.init();
+        const account = await data.setCurrentUser(username, password);
+        if (!account?.username) {
+          throw new Error("Login failed.");
         }
         result.textContent = "Login successful. Redirecting...";
         setTimeout(() => {
-          window.location.href = "dashboard.html";
+          window.location.href = "app.html";
         }, 500);
       } catch (error) {
         result.textContent = error.message;

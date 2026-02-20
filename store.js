@@ -215,6 +215,29 @@
     write(STORE.session, { username });
   }
 
+  function login(username, password) {
+    const accounts = getAccounts();
+    const normalized = normalizeName(username);
+    const target = accounts.find((item) => normalizeName(item.username) === normalized);
+    if (!target) {
+      return { ok: false, message: "Account not found." };
+    }
+    const pass = String(password || "");
+    const stored = String(target.password || "");
+    if (stored && pass !== stored) {
+      return { ok: false, message: "Invalid username or password." };
+    }
+    if (!stored) {
+      if (pass.length < 1) {
+        return { ok: false, message: "Password required." };
+      }
+      target.password = pass;
+      saveAccounts(accounts);
+    }
+    setCurrentUser(target.username);
+    return { ok: true, account: target };
+  }
+
   function normalizeName(name) {
     return String(name || "").trim().toLowerCase();
   }
@@ -758,6 +781,7 @@
     saveAccounts,
     getCurrentUser,
     setCurrentUser,
+    login,
     createAccount,
     getProposals,
     addProposal,

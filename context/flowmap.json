@@ -1,19 +1,25 @@
 {
-  "generated_at": "2026-02-20T14:53:16Z",
+  "generated_at": "2026-02-20T15:09:30Z",
   "trigger": {
     "phase": "pre_commit",
     "note": "auto pre-commit context sync"
   },
   "git": {
     "branch": "cursor/liquidgov-website-definition-d045",
-    "commit": "77da3c5",
+    "commit": "3811650",
     "changed_files": [
+      "app.html",
       "context/activity_log.jsonl",
       "context/current_task.md",
       "context/flowmap.json",
       "context/flowmap.md",
       "context/state.json",
-      "context/watchlist.json"
+      "context/watchlist.json",
+      "dataClient.js",
+      "index.html",
+      "legal.html",
+      "login.html",
+      "store.js"
     ]
   },
   "frontend": {
@@ -22,12 +28,12 @@
         "file": "index.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220g"
+          "styles.css?v=20260220i"
         ],
         "scripts": [
-          "store.js?v=20260220g",
-          "dataClient.js?v=20260220g",
-          "main.js?v=20260220g"
+          "store.js?v=20260220i",
+          "dataClient.js?v=20260220i",
+          "main.js?v=20260220i"
         ],
         "links": [
           "#start-here",
@@ -44,12 +50,12 @@
         "file": "app.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220h"
+          "styles.css?v=20260220i"
         ],
         "scripts": [
-          "store.js?v=20260220h",
-          "dataClient.js?v=20260220h",
-          "app.js?v=20260220h"
+          "store.js?v=20260220i",
+          "dataClient.js?v=20260220i",
+          "app.js?v=20260220i"
         ],
         "links": [
           "index.html",
@@ -60,7 +66,7 @@
         "file": "legal.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220g"
+          "styles.css?v=20260220i"
         ],
         "scripts": [],
         "links": [
@@ -72,9 +78,12 @@
         "file": "login.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220g"
+          "styles.css?v=20260220i"
         ],
-        "scripts": [],
+        "scripts": [
+          "store.js?v=20260220i",
+          "dataClient.js?v=20260220i"
+        ],
         "links": [
           "index.html"
         ]
@@ -549,39 +558,39 @@
   ],
   "workflow_rule": "Run context guard before inspect/change: ./scripts/context_guard.sh inspect|change \"note\"",
   "optimization": {
-    "activity_entries": 41,
+    "activity_entries": 45,
     "hotspots": [
       {
         "file": "context/activity_log.jsonl",
-        "touches": 23
+        "touches": 26
       },
       {
         "file": "context/current_task.md",
-        "touches": 23
+        "touches": 26
       },
       {
         "file": "context/flowmap.json",
-        "touches": 23
+        "touches": 26
       },
       {
         "file": "context/flowmap.md",
-        "touches": 23
+        "touches": 26
       },
       {
         "file": "context/state.json",
-        "touches": 23
+        "touches": 26
       },
       {
         "file": "context/watchlist.json",
-        "touches": 23
-      },
-      {
-        "file": "server/server.js",
-        "touches": 12
+        "touches": 26
       },
       {
         "file": "store.js",
-        "touches": 12
+        "touches": 15
+      },
+      {
+        "file": "dataClient.js",
+        "touches": 13
       }
     ]
   }

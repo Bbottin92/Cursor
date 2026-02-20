@@ -219,6 +219,13 @@
             // Fall through to local storage login.
           }
         }
+        if (password && typeof localStore.login === "function") {
+          const local = localStore.login(username, password);
+          if (!local?.ok) {
+            throw new Error(local?.message || "Login failed.");
+          }
+          return normalizeLocalSession(localStore.getCurrentUser());
+        }
         localStore.setCurrentUser(username);
         return normalizeLocalSession(localStore.getCurrentUser());
       }
