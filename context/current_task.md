@@ -1,6 +1,6 @@
 # Current Task Intent (Auto)
 
-Updated: `2026-02-20T21:30:24Z`  
+Updated: `2026-02-20T21:30:35Z`  
 Checkpoint: `pre_commit`  
 Intent note: auto pre-commit context sync
 
@@ -15,19 +15,10 @@ Before edits:
 ## Active Working Context
 
 Branch: `cursor/liquidgov-website-definition-d045`  
-Commit: `717a2c7`  
-Context runs: `55`
+Commit: `84b6812`  
+Context runs: `56`
 
 ### Currently changed files
-- `context/activity_log.jsonl`
-- `context/current_task.md`
-- `context/flowmap.json`
-- `context/flowmap.md`
-- `context/state.json`
-- `context/watchlist.json`
-- `offload/README.md`
-- `offload/results/.gitkeep`
-- `offload/tasks/.gitkeep`
 - `scripts/offload_worker.sh`
 
 ### Auto optimization watchlist

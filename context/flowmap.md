@@ -1,6 +1,6 @@
 # NUSA Context + Flowmap
 
-Generated: `2026-02-20T21:30:24Z`
+Generated: `2026-02-20T21:30:35Z`
 Trigger: `pre_commit` - auto pre-commit context sync
 
 ## Persistent Workflow Rules
@@ -11,8 +11,8 @@ Trigger: `pre_commit` - auto pre-commit context sync
 4. Pre-commit hook auto-refreshes this flowmap (install with `npm run context:install-hooks`)
 5. Deploy script auto-refreshes context at deploy start and finish
 
-State runs: `55`  
-Phase counts: `{"bootstrap": 1, "test": 11, "change": 13, "pre_commit": 21, "inspect": 7, "deploy": 1, "deploy_verify": 1}`
+State runs: `56`  
+Phase counts: `{"bootstrap": 1, "test": 11, "change": 13, "pre_commit": 22, "inspect": 7, "deploy": 1, "deploy_verify": 1}`
 
 ## Frontend Map
 
@@ -105,7 +105,6 @@ Phase counts: `{"bootstrap": 1, "test": 11, "change": 13, "pre_commit": 21, "ins
 
 ## Recent Context Activity
 
-- `2026-02-20T15:32:40Z` [deploy_verify] deploy verification passed
 - `2026-02-20T15:36:09Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T15:48:33Z` [inspect] verify new Ollama tunnel and enable local-model offload workflow
 - `2026-02-20T15:50:52Z` [pre_commit] auto pre-commit context sync
@@ -113,3 +112,4 @@ Phase counts: `{"bootstrap": 1, "test": 11, "change": 13, "pre_commit": 21, "ins
 - `2026-02-20T16:48:27Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T21:26:21Z` [change] add single-script local Ollama offload worker via git queue
 - `2026-02-20T21:30:24Z` [pre_commit] auto pre-commit context sync
+- `2026-02-20T21:30:35Z` [pre_commit] auto pre-commit context sync
