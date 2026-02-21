@@ -101,8 +101,16 @@ ensure_git_identity() {
 
 sync_repo() {
   git -C "$CLONE_DIR" fetch "$REMOTE" "$BRANCH" --prune
-  git -C "$CLONE_DIR" checkout -B "$BRANCH" "$REMOTE/$BRANCH"
-  git -C "$CLONE_DIR" pull --ff-only "$REMOTE" "$BRANCH"
+  if git -C "$CLONE_DIR" show-ref --verify --quiet "refs/heads/$BRANCH"; then
+    git -C "$CLONE_DIR" checkout "$BRANCH" >/dev/null 2>&1 || git -C "$CLONE_DIR" checkout -B "$BRANCH"
+  else
+    git -C "$CLONE_DIR" checkout -B "$BRANCH" "$REMOTE/$BRANCH"
+  fi
+
+  # Use rebase so local "results" commits aren't discarded if pushing fails.
+  # (Without this, we'd re-run the same tasks over and over when auth is missing.)
+  git -C "$CLONE_DIR" pull --rebase --autostash "$REMOTE" "$BRANCH" >/dev/null 2>&1 || \
+    git -C "$CLONE_DIR" pull --ff-only "$REMOTE" "$BRANCH" >/dev/null 2>&1 || true
 
   mkdir -p "$CLONE_DIR/offload/tasks" "$CLONE_DIR/offload/results"
 

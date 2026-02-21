@@ -138,7 +138,25 @@ log "Using gh: $GH_BIN"
 log "Authenticating gh (one-time; interactive)..."
 if ! "$GH_BIN" auth status -h github.com >/dev/null 2>&1; then
   log "Follow the prompts: GitHub.com -> HTTPS -> Login with browser / device code"
-  tty_exec "$GH_BIN" auth login -h github.com -p https
+  if ! tty_exec "$GH_BIN" auth login -h github.com -p https; then
+    log "Interactive auth failed (some terminals can't handle gh prompts)."
+    log "Fast fallback: use a GitHub Personal Access Token (classic)."
+    log "Create one here (scopes: repo, read:org, gist):"
+    log "  https://github.com/settings/tokens/new?scopes=repo,read:org,gist&description=NUSA%20Offload%20Worker"
+    log ""
+
+    if [[ -r /dev/tty && -w /dev/tty ]]; then
+      read -rsp "Paste GitHub token (input hidden): " GH_PAT </dev/tty
+      printf '\n' >/dev/tty
+    else
+      read -rsp "Paste GitHub token (input hidden): " GH_PAT
+      printf '\n'
+    fi
+
+    # Non-interactive login (no prompt UI).
+    printf '%s' "$GH_PAT" | "$GH_BIN" auth login --with-token -h github.com -p https
+    unset GH_PAT
+  fi
 fi
 
 log "Configuring git to use gh credentials..."
