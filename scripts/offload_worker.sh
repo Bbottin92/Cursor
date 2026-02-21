@@ -56,26 +56,49 @@ RUN_ONCE="${RUN_ONCE:-0}"
 GIT_NAME="${GIT_NAME:-NUSA Offload Worker}"
 GIT_EMAIL="${GIT_EMAIL:-offload-worker@localhost}"
 
-ROOT_REPO="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-if [[ -z "${REPO_URL:-}" ]]; then
-  if [[ -z "$ROOT_REPO" ]]; then
-    log "Run this from inside your repo OR set REPO_URL."
-    exit 1
+CLONE_DIR="${WORKDIR%/}/repo"
+mkdir -p "$WORKDIR"
+
+detect_repo_url_from_repo() {
+  local repo_dir="$1"
+  local url=""
+  url="$(git -C "$repo_dir" config --get "remote.${REMOTE}.url" 2>/dev/null || true)"
+  if [[ -z "$url" ]]; then
+    url="$(git -C "$repo_dir" config --get "remote.origin.url" 2>/dev/null || true)"
   fi
-  REPO_URL="$(git -C "$ROOT_REPO" config --get remote.${REMOTE}.url || true)"
-  if [[ -z "$REPO_URL" ]]; then
-    REPO_URL="$(git -C "$ROOT_REPO" config --get remote.origin.url || true)"
+  printf '%s' "$url"
+}
+
+# Determine REPO_URL even when launched via absolute path (nohup) outside a git repo.
+if [[ -z "${REPO_URL:-}" ]]; then
+  # 1) If the worker clone already exists, use its remote URL.
+  if [[ -d "$CLONE_DIR/.git" ]]; then
+    REPO_URL="$(detect_repo_url_from_repo "$CLONE_DIR")"
   fi
 fi
 
 if [[ -z "${REPO_URL:-}" ]]; then
-  log "Could not determine REPO_URL. Set it like:"
+  # 2) Try the repo that contains this script (../.git).
+  SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if [[ -d "$SCRIPT_DIR/../.git" ]]; then
+    REPO_URL="$(detect_repo_url_from_repo "$SCRIPT_DIR/..")"
+  fi
+fi
+
+if [[ -z "${REPO_URL:-}" ]]; then
+  # 3) Try current working directory's repo.
+  ROOT_REPO="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+  if [[ -n "$ROOT_REPO" ]]; then
+    REPO_URL="$(detect_repo_url_from_repo "$ROOT_REPO")"
+  fi
+fi
+
+if [[ -z "${REPO_URL:-}" ]]; then
+  log "Could not determine REPO_URL."
+  log "Fix: run from inside your repo, or set REPO_URL explicitly:"
   log "  REPO_URL=\"https://github.com/<you>/<repo>.git\" ./scripts/offload_worker.sh"
   exit 1
 fi
-
-CLONE_DIR="${WORKDIR%/}/repo"
-mkdir -p "$WORKDIR"
 
 ensure_clone() {
   if [[ -d "$CLONE_DIR/.git" ]]; then

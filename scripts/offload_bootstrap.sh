@@ -172,7 +172,8 @@ git -C "$REPO_DIR" pull --ff-only origin "$BRANCH" || true
 chmod +x "$REPO_DIR/scripts/offload_worker.sh"
 
 log "Starting worker in background (log: $LOG_FILE)"
-nohup "$REPO_DIR/scripts/offload_worker.sh" >"$LOG_FILE" 2>&1 &
+REPO_URL="$REPO_URL" WORKDIR="$WORKDIR" BRANCH="$BRANCH" REMOTE="origin" \
+  nohup "$REPO_DIR/scripts/offload_worker.sh" >"$LOG_FILE" 2>&1 &
 sleep 2
 
 log "Worker processes:"
