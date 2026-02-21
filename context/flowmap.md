@@ -1,6 +1,6 @@
 # NUSA Context + Flowmap
 
-Generated: `2026-02-21T00:20:34Z`
+Generated: `2026-02-21T02:55:27Z`
 Trigger: `pre_commit` - auto pre-commit context sync
 
 ## Persistent Workflow Rules
@@ -11,8 +11,8 @@ Trigger: `pre_commit` - auto pre-commit context sync
 4. Pre-commit hook auto-refreshes this flowmap (install with `npm run context:install-hooks`)
 5. Deploy script auto-refreshes context at deploy start and finish
 
-State runs: `60`  
-Phase counts: `{"bootstrap": 1, "test": 11, "change": 15, "pre_commit": 24, "inspect": 7, "deploy": 1, "deploy_verify": 1}`
+State runs: `62`  
+Phase counts: `{"bootstrap": 1, "test": 11, "change": 16, "pre_commit": 25, "inspect": 7, "deploy": 1, "deploy_verify": 1}`
 
 ## Frontend Map
 
@@ -94,22 +94,22 @@ Phase counts: `{"bootstrap": 1, "test": 11, "change": 15, "pre_commit": 24, "ins
 
 ## Optimization Watchlist (Auto)
 
-- `context/activity_log.jsonl` touched `34` checkpoint(s)
-- `context/current_task.md` touched `34` checkpoint(s)
-- `context/flowmap.json` touched `34` checkpoint(s)
-- `context/flowmap.md` touched `34` checkpoint(s)
-- `context/state.json` touched `34` checkpoint(s)
-- `context/watchlist.json` touched `34` checkpoint(s)
+- `context/activity_log.jsonl` touched `35` checkpoint(s)
+- `context/current_task.md` touched `35` checkpoint(s)
+- `context/flowmap.json` touched `35` checkpoint(s)
+- `context/flowmap.md` touched `35` checkpoint(s)
+- `context/state.json` touched `35` checkpoint(s)
+- `context/watchlist.json` touched `35` checkpoint(s)
 - `store.js` touched `15` checkpoint(s)
 - `dataClient.js` touched `13` checkpoint(s)
 
 ## Recent Context Activity
 
-- `2026-02-20T16:48:27Z` [pre_commit] auto pre-commit context sync
-- `2026-02-20T21:26:21Z` [change] add single-script local Ollama offload worker via git queue
 - `2026-02-20T21:30:24Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T21:30:35Z` [pre_commit] auto pre-commit context sync
 - `2026-02-20T21:35:16Z` [change] queue offload healthcheck task
 - `2026-02-20T21:35:23Z` [pre_commit] auto pre-commit context sync
 - `2026-02-21T00:20:10Z` [change] harden offload worker git commit/push behavior
 - `2026-02-21T00:20:34Z` [pre_commit] auto pre-commit context sync
+- `2026-02-21T02:55:23Z` [change] add offload bootstrap installer script
+- `2026-02-21T02:55:27Z` [pre_commit] auto pre-commit context sync

@@ -1,6 +1,6 @@
 # Current Task Intent (Auto)
 
-Updated: `2026-02-21T00:20:34Z`  
+Updated: `2026-02-21T02:55:27Z`  
 Checkpoint: `pre_commit`  
 Intent note: auto pre-commit context sync
 
@@ -15,8 +15,8 @@ Before edits:
 ## Active Working Context
 
 Branch: `cursor/liquidgov-website-definition-d045`  
-Commit: `be52c22`  
-Context runs: `60`
+Commit: `07c526f`  
+Context runs: `62`
 
 ### Currently changed files
 - `context/activity_log.jsonl`
@@ -25,15 +25,15 @@ Context runs: `60`
 - `context/flowmap.md`
 - `context/state.json`
 - `context/watchlist.json`
-- `scripts/offload_worker.sh`
+- `scripts/offload_bootstrap.sh`
 
 ### Auto optimization watchlist
-- `context/activity_log.jsonl` (34 touches)
-- `context/current_task.md` (34 touches)
-- `context/flowmap.json` (34 touches)
-- `context/flowmap.md` (34 touches)
-- `context/state.json` (34 touches)
-- `context/watchlist.json` (34 touches)
+- `context/activity_log.jsonl` (35 touches)
+- `context/current_task.md` (35 touches)
+- `context/flowmap.json` (35 touches)
+- `context/flowmap.md` (35 touches)
+- `context/state.json` (35 touches)
+- `context/watchlist.json` (35 touches)
 - `store.js` (15 touches)
 - `dataClient.js` (13 touches)
 
