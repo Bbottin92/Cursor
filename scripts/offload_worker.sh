@@ -40,6 +40,10 @@ need git
 need python3
 need curl
 
+# Prevent background git processes from stealing your terminal with username/password prompts.
+# If git auth isn't configured, pushes will fail fast and the log will tell you what to run.
+export GIT_TERMINAL_PROMPT="${GIT_TERMINAL_PROMPT:-0}"
+
 BRANCH="${BRANCH:-cursor/liquidgov-website-definition-d045}"
 REMOTE="${REMOTE:-origin}"
 WORKDIR="${WORKDIR:-$HOME/.nusa_offload_worker}"
@@ -49,6 +53,8 @@ OLLAMA_BASE="${OLLAMA_BASE:-http://127.0.0.1:11434}"
 OLLAMA_MODEL="${OLLAMA_MODEL:-qwen2.5:3b}"
 OLLAMA_TIMEOUT_S="${OLLAMA_TIMEOUT_S:-900}"
 RUN_ONCE="${RUN_ONCE:-0}"
+GIT_NAME="${GIT_NAME:-NUSA Offload Worker}"
+GIT_EMAIL="${GIT_EMAIL:-offload-worker@localhost}"
 
 ROOT_REPO="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 if [[ -z "${REPO_URL:-}" ]]; then
@@ -80,12 +86,29 @@ ensure_clone() {
   git clone "$REPO_URL" "$CLONE_DIR"
 }
 
+ensure_git_identity() {
+  local cur_name cur_email
+  cur_name="$(git -C "$CLONE_DIR" config user.name 2>/dev/null || true)"
+  cur_email="$(git -C "$CLONE_DIR" config user.email 2>/dev/null || true)"
+
+  if [[ -z "$cur_name" ]]; then
+    git -C "$CLONE_DIR" config user.name "$GIT_NAME"
+  fi
+  if [[ -z "$cur_email" ]]; then
+    git -C "$CLONE_DIR" config user.email "$GIT_EMAIL"
+  fi
+}
+
 sync_repo() {
   git -C "$CLONE_DIR" fetch "$REMOTE" "$BRANCH" --prune
   git -C "$CLONE_DIR" checkout -B "$BRANCH" "$REMOTE/$BRANCH"
   git -C "$CLONE_DIR" pull --ff-only "$REMOTE" "$BRANCH"
 
   mkdir -p "$CLONE_DIR/offload/tasks" "$CLONE_DIR/offload/results"
+
+  # Make rebases more reliable if remote changes land while we have local commits.
+  git -C "$CLONE_DIR" config rebase.autoStash true
+  ensure_git_identity
 }
 
 ollama_healthcheck() {
@@ -164,27 +187,63 @@ PY
 
 commit_and_push_if_needed() {
   # Only commit results; never accidentally commit your other work.
-  local changed
-  changed="$(git -C "$CLONE_DIR" status --porcelain offload/results | wc -l | tr -d ' ')"
-  if [[ "$changed" == "0" ]]; then
+  local changed_files ahead
+  changed_files="$(git -C "$CLONE_DIR" status --porcelain offload/results | wc -l | tr -d ' ')"
+  ahead="$(git -C "$CLONE_DIR" rev-list --count "$REMOTE/$BRANCH..HEAD" 2>/dev/null || echo 0)"
+
+  if [[ "$changed_files" != "0" ]]; then
+    ensure_git_identity
+    git -C "$CLONE_DIR" add offload/results
+
+    if ! git -C "$CLONE_DIR" diff --cached --quiet; then
+      if ! git -C "$CLONE_DIR" commit -m "offload: add worker results" >/dev/null 2>&1; then
+        log "Could not commit results (git identity missing?)."
+        log "Fix once:"
+        log "  git config --global user.name \"Your Name\""
+        log "  git config --global user.email \"you@example.com\""
+        return 1
+      fi
+    fi
+  fi
+
+  ahead="$(git -C "$CLONE_DIR" rev-list --count "$REMOTE/$BRANCH..HEAD" 2>/dev/null || echo 0)"
+  if [[ "$ahead" == "0" ]]; then
     return 0
   fi
 
-  git -C "$CLONE_DIR" add offload/results
-  git -C "$CLONE_DIR" commit -m "offload: add worker results" >/dev/null || true
-
   # Push with a small retry/rebase loop (handles cloud agent commits landing).
   for attempt in 1 2 3; do
-    if git -C "$CLONE_DIR" push "$REMOTE" "$BRANCH" >/dev/null 2>&1; then
+    local push_out
+    if push_out="$(git -C "$CLONE_DIR" push "$REMOTE" "$BRANCH" 2>&1)"; then
       log "Pushed results."
       return 0
     fi
-    log "Push rejected; rebasing (attempt $attempt/3)..."
-    git -C "$CLONE_DIR" pull --rebase "$REMOTE" "$BRANCH" >/dev/null
+
+    if echo "$push_out" | grep -qiE "terminal prompts disabled|could not read Username|Authentication failed|could not authenticate"; then
+      log "Git push auth not configured for GitHub HTTPS."
+      log "Fix once (recommended): install + login GitHub CLI:"
+      log "  gh auth login"
+      log "  gh auth setup-git"
+      return 1
+    fi
+
+    if echo "$push_out" | grep -qiE "non-fast-forward|fetch first|rejected"; then
+      log "Push rejected; rebasing (attempt $attempt/3)..."
+      if ! git -C "$CLONE_DIR" pull --rebase --autostash "$REMOTE" "$BRANCH" >/dev/null 2>&1; then
+        log "Rebase failed. Run:"
+        log "  cd \"$CLONE_DIR\" && git status && git pull --rebase --autostash && git push"
+        return 1
+      fi
+      continue
+    fi
+
+    log "Push failed:"
+    log "$push_out"
+    return 1
   done
 
   log "Failed to push after retries. Run:"
-  log "  cd \"$CLONE_DIR\" && git status && git pull --rebase && git push"
+  log "  cd \"$CLONE_DIR\" && git status && git pull --rebase --autostash && git push"
   return 1
 }
 
