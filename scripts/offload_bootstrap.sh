@@ -160,7 +160,11 @@ if ! "$GH_BIN" auth status -h github.com >/dev/null 2>&1; then
 fi
 
 log "Configuring git to use gh credentials..."
-tty_exec "$GH_BIN" auth setup-git -h github.com || true
+if ! tty_exec "$GH_BIN" auth setup-git -h github.com; then
+  log "gh auth setup-git failed; configuring git credential helper manually."
+  # Use GitHub CLI as credential helper for HTTPS pushes.
+  git config --global credential.helper "!$GH_BIN auth git-credential" || true
+fi
 
 log "Stopping existing worker (if running)..."
 pkill -f "scripts/offload_worker.sh" >/dev/null 2>&1 || true

@@ -1,6 +1,6 @@
 # NUSA Context + Flowmap
 
-Generated: `2026-02-21T05:09:20Z`
+Generated: `2026-02-21T05:11:12Z`
 Trigger: `pre_commit` - auto pre-commit context sync
 
 ## Persistent Workflow Rules
@@ -11,8 +11,8 @@ Trigger: `pre_commit` - auto pre-commit context sync
 4. Pre-commit hook auto-refreshes this flowmap (install with `npm run context:install-hooks`)
 5. Deploy script auto-refreshes context at deploy start and finish
 
-State runs: `68`  
-Phase counts: `{"bootstrap": 1, "test": 11, "change": 19, "pre_commit": 28, "inspect": 7, "deploy": 1, "deploy_verify": 1}`
+State runs: `70`  
+Phase counts: `{"bootstrap": 1, "test": 11, "change": 20, "pre_commit": 29, "inspect": 7, "deploy": 1, "deploy_verify": 1}`
 
 ## Frontend Map
 
@@ -94,22 +94,22 @@ Phase counts: `{"bootstrap": 1, "test": 11, "change": 19, "pre_commit": 28, "ins
 
 ## Optimization Watchlist (Auto)
 
-- `context/activity_log.jsonl` touched `38` checkpoint(s)
-- `context/current_task.md` touched `38` checkpoint(s)
-- `context/flowmap.json` touched `38` checkpoint(s)
-- `context/flowmap.md` touched `38` checkpoint(s)
-- `context/state.json` touched `38` checkpoint(s)
-- `context/watchlist.json` touched `38` checkpoint(s)
+- `context/activity_log.jsonl` touched `39` checkpoint(s)
+- `context/current_task.md` touched `39` checkpoint(s)
+- `context/flowmap.json` touched `39` checkpoint(s)
+- `context/flowmap.md` touched `39` checkpoint(s)
+- `context/state.json` touched `39` checkpoint(s)
+- `context/watchlist.json` touched `39` checkpoint(s)
 - `store.js` touched `15` checkpoint(s)
 - `dataClient.js` touched `13` checkpoint(s)
 
 ## Recent Context Activity
 
-- `2026-02-21T02:55:23Z` [change] add offload bootstrap installer script
-- `2026-02-21T02:55:27Z` [pre_commit] auto pre-commit context sync
 - `2026-02-21T03:03:40Z` [change] fix offload bootstrap gh version detection + tty
 - `2026-02-21T03:03:47Z` [pre_commit] auto pre-commit context sync
 - `2026-02-21T03:23:10Z` [change] offload: avoid rerunning tasks when push fails; add PAT fallback
 - `2026-02-21T03:23:19Z` [pre_commit] auto pre-commit context sync
 - `2026-02-21T05:09:05Z` [change] fix offload worker REPO_URL detection when launched via nohup
 - `2026-02-21T05:09:20Z` [pre_commit] auto pre-commit context sync
+- `2026-02-21T05:10:53Z` [change] bootstrap: fallback to manual git credential helper if setup-git fails
+- `2026-02-21T05:11:12Z` [pre_commit] auto pre-commit context sync
