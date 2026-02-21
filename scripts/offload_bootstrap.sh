@@ -22,6 +22,7 @@ need git
 need curl
 need tar
 need uname
+need install
 
 BRANCH="${BRANCH:-cursor/liquidgov-website-definition-d045}"
 REPO_URL="${REPO_URL:-https://github.com/Bbottin92/Cursor.git}"
@@ -32,6 +33,14 @@ OLLAMA_BASE="${OLLAMA_BASE:-http://127.0.0.1:11434}"
 
 GIT_NAME="${GIT_NAME:-Brandon Bottin}"
 GIT_EMAIL="${GIT_EMAIL:-founder@liquidgov.us}"
+
+tty_exec() {
+  if [[ -r /dev/tty && -w /dev/tty ]]; then
+    "$@" </dev/tty >/dev/tty 2>&1
+  else
+    "$@" 2>&1
+  fi
+}
 
 log "Checking Ollama at: $OLLAMA_BASE"
 if ! curl -fsS --max-time 3 "${OLLAMA_BASE%/}/api/tags" >/dev/null 2>&1; then
@@ -68,19 +77,23 @@ install_gh_to_local_bin() {
       ;;
   esac
 
-  local ver tmp url folder
-  ver="$(
-    curl -fsS https://api.github.com/repos/cli/cli/releases/latest | \
-      python3 - <<'PY'
-import json,sys
-j=json.load(sys.stdin)
-tag=j.get("tag_name","").lstrip("v")
-print(tag)
-PY
-  )"
+  local ver tmp url folder final_url tag
+
+  # Allow manual override if needed.
+  ver="${GH_VERSION:-}"
+
+  # Robust version detection without GitHub API (avoids rate limits / JSON parsing).
+  if [[ -z "$ver" ]]; then
+    final_url="$(curl -fsSL -o /dev/null -w "%{url_effective}" -L "https://github.com/cli/cli/releases/latest" || true)"
+    tag="${final_url##*/}"
+    tag="${tag%%\?*}"
+    ver="${tag#v}"
+  fi
 
   if [[ -z "$ver" ]]; then
-    log "Could not detect gh version via GitHub API."
+    log "Could not detect gh version."
+    log "Set it manually and re-run, e.g.:"
+    log "  GH_VERSION=2.86.0 ./scripts/offload_bootstrap.sh"
     return 1
   fi
 
@@ -125,11 +138,11 @@ log "Using gh: $GH_BIN"
 log "Authenticating gh (one-time; interactive)..."
 if ! "$GH_BIN" auth status -h github.com >/dev/null 2>&1; then
   log "Follow the prompts: GitHub.com -> HTTPS -> Login with browser / device code"
-  "$GH_BIN" auth login -h github.com -p https
+  tty_exec "$GH_BIN" auth login -h github.com -p https
 fi
 
 log "Configuring git to use gh credentials..."
-"$GH_BIN" auth setup-git -h github.com || true
+tty_exec "$GH_BIN" auth setup-git -h github.com || true
 
 log "Stopping existing worker (if running)..."
 pkill -f "scripts/offload_worker.sh" >/dev/null 2>&1 || true
