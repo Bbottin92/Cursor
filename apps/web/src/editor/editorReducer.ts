@@ -9,6 +9,10 @@ function mergeStyle(
   return { ...base, ...patch };
 }
 
+function assertNever(x: never): never {
+  throw new Error(`Unhandled editor action: ${String(x)}`);
+}
+
 export function applyEditorAction(state: EditorState, action: EditorAction): EditorState {
   switch (action.type) {
     case "add": {
@@ -41,10 +45,8 @@ export function applyEditorAction(state: EditorState, action: EditorAction): Edi
     }
     case "setLastPointer":
       return { ...state, lastPointer: action.pointer };
-    default: {
-      const _exhaustive: never = action;
-      return state;
-    }
+    default:
+      return assertNever(action);
   }
 }
 
