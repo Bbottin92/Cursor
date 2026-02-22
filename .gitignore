@@ -1,0 +1,21 @@
+node_modules
+dist
+.DS_Store
+
+# local env
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+
+# Vite
+apps/web/dist
+apps/web/.vite
+
+# Server build
+apps/server/dist
+
+# Shared build
+packages/shared/dist
