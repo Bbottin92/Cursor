@@ -4,21 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NUSA Member App</title>
-  <link rel="stylesheet" href="styles.css?v=20260221a" />
+  <link rel="stylesheet" href="styles.css?v=20260221b" />
 </head>
 <body>
   <header class="site-header">
-    <div class="brand">NUSA Member Workspace</div>
-    <nav>
-      <a href="index.html">Public Site</a>
-      <a href="legal.html#safety-standards">Safety Standards</a>
+    <a class="brand" href="index.html">NUSA Member Workspace</a>
+    <nav class="top-nav member-top-nav">
+      <a href="#dashboard-home">Dashboard</a>
+      <a href="#proposalCard">Proposals</a>
+      <a href="#messagesCard">Messages</a>
+      <a href="#my-profile">My Profile</a>
     </nav>
   </header>
 
   <main class="simple-app member-main">
     <section class="member-layout">
       <aside class="account-column stack">
-        <article class="feed-card account-card">
+        <article class="feed-card account-card" id="my-profile">
           <div class="layout-title">
             <h2 class="tight">Account</h2>
             <button class="secondary" id="logoutBtn" type="button">Log Out</button>
@@ -56,24 +58,63 @@
           <div class="metric">[<span id="participantsCount">0</span> / 175,000,000 PARTICIPANTS]</div>
           <div class="metric">Verified Patriots: <strong id="verifiedCount">0</strong></div>
         </article>
-
-        <article class="feed-card">
-          <h3 class="tight">Quick Setup</h3>
-          <p class="tiny-note">Complete these four steps.</p>
-          <ul class="onboarding-list">
-            <li class="onboarding-item" id="onboardAccount"><span>Choose account</span><strong>Pending</strong></li>
-            <li class="onboarding-item" id="onboardScope"><span>Pick scope</span><strong>Pending</strong></li>
-            <li class="onboarding-item" id="onboardProposal"><span>Post first proposal</span><strong>Pending</strong></li>
-            <li class="onboarding-item" id="onboardMessage"><span>Send first message</span><strong>Pending</strong></li>
-          </ul>
-          <p class="tiny-note">Progress: <strong id="onboardingProgress">0/4</strong></p>
-        </article>
       </aside>
 
       <section class="content-column stack">
+        <article class="section onboarding-focus" id="dashboard-home">
+          <h2 class="tight">Start here</h2>
+          <p class="tiny-note">Complete this checklist to get fully oriented.</p>
+          <ul class="onboarding-list onboarding-main-list">
+            <li class="onboarding-item" id="onboardAccount">
+              <div>
+                <span>Choose account</span>
+                <p class="tiny-note">Select the account you want active right now.</p>
+              </div>
+              <div class="onboarding-meta">
+                <button class="secondary onboarding-jump" type="button" data-onboard-action="account">Go</button>
+                <strong>Pending</strong>
+              </div>
+            </li>
+            <li class="onboarding-item" id="onboardScope">
+              <div>
+                <span>Pick scope</span>
+                <p class="tiny-note">Choose the level where you want to work first.</p>
+              </div>
+              <div class="onboarding-meta">
+                <button class="secondary onboarding-jump" type="button" data-onboard-action="scope">Go</button>
+                <strong>Pending</strong>
+              </div>
+            </li>
+            <li class="onboarding-item" id="onboardProposal">
+              <div>
+                <span>Post first proposal</span>
+                <p class="tiny-note">Share one problem and one practical solution.</p>
+              </div>
+              <div class="onboarding-meta">
+                <button class="secondary onboarding-jump" type="button" data-onboard-action="proposal">Go</button>
+                <strong>Pending</strong>
+              </div>
+            </li>
+            <li class="onboarding-item" id="onboardMessage">
+              <div>
+                <span>Send first message</span>
+                <p class="tiny-note">Start a direct or group conversation.</p>
+              </div>
+              <div class="onboarding-meta">
+                <button class="secondary onboarding-jump" type="button" data-onboard-action="message">Go</button>
+                <strong>Pending</strong>
+              </div>
+            </li>
+          </ul>
+          <p class="tiny-note">Progress: <strong id="onboardingProgress">0/4</strong></p>
+          <p id="onboardingSuccess" class="onboarding-success" hidden>
+            Checklist complete. You are ready to lead, propose, and collaborate.
+          </p>
+        </article>
+
         <article class="section dashboard-summary">
           <h2 class="tight">Member Dashboard</h2>
-          <p class="tiny-note">Work in one focused area at a time.</p>
+          <p class="tiny-note">Pick one section below and continue where you left off.</p>
         </article>
 
         <div class="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
@@ -268,8 +309,8 @@
     </form>
   </dialog>
 
-  <script src="store.js?v=20260221a"></script>
-  <script src="dataClient.js?v=20260221a"></script>
-  <script src="app.js?v=20260221a"></script>
+  <script src="store.js?v=20260221b"></script>
+  <script src="dataClient.js?v=20260221b"></script>
+  <script src="app.js?v=20260221b"></script>
 </body>
 </html>

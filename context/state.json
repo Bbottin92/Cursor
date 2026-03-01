@@ -1,14 +1,14 @@
 {
-  "runs": 72,
+  "runs": 75,
   "phase_counts": {
     "bootstrap": 1,
-    "test": 12,
-    "change": 21,
+    "test": 14,
+    "change": 22,
     "pre_commit": 29,
     "inspect": 7,
     "deploy": 1,
     "deploy_verify": 1
   },
-  "last_run": "2026-03-01T14:18:52Z",
+  "last_run": "2026-03-01T14:50:27Z",
   "last_note": "npm test context sync"
 }

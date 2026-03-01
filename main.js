@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const implementedPreview = document.getElementById("implementedPreview");
   const archivedPreview = document.getElementById("archivedPreview");
   const publicAnnouncementsPreview = document.getElementById("publicAnnouncementsPreview");
+  const joinLinks = Array.from(document.querySelectorAll("[data-open-signup='true']"));
 
   async function updateCounter() {
     const participantCount = await data.getParticipantCount();
@@ -73,6 +74,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (openSignupSecondary) {
     openSignupSecondary.addEventListener("click", openSignupDialog);
   }
+  joinLinks.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      openSignupDialog();
+    });
+  });
   closeSignup.addEventListener("click", closeSignupDialog);
 
   signupForm.addEventListener("submit", async (event) => {
@@ -114,4 +121,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   await updateCounter();
   await renderArchivePreview();
   await renderAnnouncementPreview();
+
+  if (window.location.hash === "#join") {
+    openSignupDialog();
+  }
 });

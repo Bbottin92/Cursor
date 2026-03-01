@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-01T14:18:52Z",
+  "generated_at": "2026-03-01T14:50:27Z",
   "trigger": {
     "phase": "test",
     "note": "npm test context sync"
   },
   "git": {
     "branch": "cursor/liquidgov-website-definition-d045",
-    "commit": "0333998",
+    "commit": "4473098",
     "changed_files": [
       "app.html",
       "app.js",
@@ -19,7 +19,10 @@
       "index.html",
       "legal.html",
       "login.html",
-      "styles.css"
+      "main.js",
+      "scripts/deploy_cpanel_no_ssh.sh",
+      "styles.css",
+      "how-it-works.html"
     ]
   },
   "frontend": {
@@ -28,48 +31,51 @@
         "file": "index.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260221a"
+          "styles.css?v=20260221b"
         ],
         "scripts": [
-          "store.js?v=20260221a",
-          "dataClient.js?v=20260221a",
-          "main.js?v=20260221a"
+          "store.js?v=20260221b",
+          "dataClient.js?v=20260221b",
+          "main.js?v=20260221b"
         ],
         "links": [
-          "#start-here",
-          "#how-it-works",
-          "#updates",
-          "legal.html#safety-standards",
+          "index.html",
+          "index.html",
+          "how-it-works.html",
+          "#why-nusa",
+          "#join",
+          "how-it-works.html",
           "app.html",
           "login.html",
-          "app.html",
           "legal.html#safety-standards",
-          "app.html",
-          "app.html#proposalCard",
-          "legal.html#safety-standards"
+          "how-it-works.html",
+          "how-it-works.html"
         ]
       },
       {
         "file": "app.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260221a"
+          "styles.css?v=20260221b"
         ],
         "scripts": [
-          "store.js?v=20260221a",
-          "dataClient.js?v=20260221a",
-          "app.js?v=20260221a"
+          "store.js?v=20260221b",
+          "dataClient.js?v=20260221b",
+          "app.js?v=20260221b"
         ],
         "links": [
           "index.html",
-          "legal.html#safety-standards"
+          "#dashboard-home",
+          "#proposalCard",
+          "#messagesCard",
+          "#my-profile"
         ]
       },
       {
         "file": "legal.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260221a"
+          "styles.css?v=20260221b"
         ],
         "scripts": [],
         "links": [
@@ -81,11 +87,11 @@
         "file": "login.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260221a"
+          "styles.css?v=20260221b"
         ],
         "scripts": [
-          "store.js?v=20260221a",
-          "dataClient.js?v=20260221a"
+          "store.js?v=20260221b",
+          "dataClient.js?v=20260221b"
         ],
         "links": [
           "index.html"
@@ -504,6 +510,7 @@
     "script": "scripts/deploy_cpanel_no_ssh.sh",
     "required_files": [
       "index.html",
+      "how-it-works.html",
       "app.html",
       "legal.html",
       "styles.css",
@@ -561,39 +568,39 @@
   ],
   "workflow_rule": "Run context guard before inspect/change: ./scripts/context_guard.sh inspect|change \"note\"",
   "optimization": {
-    "activity_entries": 72,
+    "activity_entries": 75,
     "hotspots": [
       {
         "file": "context/activity_log.jsonl",
-        "touches": 40
+        "touches": 42
       },
       {
         "file": "context/current_task.md",
-        "touches": 40
+        "touches": 42
       },
       {
         "file": "context/flowmap.json",
-        "touches": 40
+        "touches": 42
       },
       {
         "file": "context/flowmap.md",
-        "touches": 40
+        "touches": 42
       },
       {
         "file": "context/state.json",
-        "touches": 40
+        "touches": 42
       },
       {
         "file": "context/watchlist.json",
-        "touches": 40
-      },
-      {
-        "file": "store.js",
-        "touches": 15
+        "touches": 42
       },
       {
         "file": "index.html",
-        "touches": 14
+        "touches": 17
+      },
+      {
+        "file": "app.html",
+        "touches": 16
       }
     ]
   }

@@ -41,6 +41,7 @@ fi
 
 FILES=(
   index.html
+  how-it-works.html
   app.html
   legal.html
   styles.css

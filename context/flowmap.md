@@ -1,6 +1,6 @@
 # NUSA Context + Flowmap
 
-Generated: `2026-03-01T14:18:52Z`
+Generated: `2026-03-01T14:50:27Z`
 Trigger: `test` - npm test context sync
 
 ## Persistent Workflow Rules
@@ -11,13 +11,13 @@ Trigger: `test` - npm test context sync
 4. Pre-commit hook auto-refreshes this flowmap (install with `npm run context:install-hooks`)
 5. Deploy script auto-refreshes context at deploy start and finish
 
-State runs: `72`  
-Phase counts: `{"bootstrap": 1, "test": 12, "change": 21, "pre_commit": 29, "inspect": 7, "deploy": 1, "deploy_verify": 1}`
+State runs: `75`  
+Phase counts: `{"bootstrap": 1, "test": 14, "change": 22, "pre_commit": 29, "inspect": 7, "deploy": 1, "deploy_verify": 1}`
 
 ## Frontend Map
 
 - `index.html` -> styles: 1, scripts: 3, links: 11
-- `app.html` -> styles: 1, scripts: 3, links: 2
+- `app.html` -> styles: 1, scripts: 3, links: 5
 - `legal.html` -> styles: 1, scripts: 0, links: 2
 - `login.html` -> styles: 1, scripts: 2, links: 1
 - `dashboard.html` -> styles: 0, scripts: 0, links: 1
@@ -89,27 +89,27 @@ Phase counts: `{"bootstrap": 1, "test": 12, "change": 21, "pre_commit": 29, "ins
 ## Deploy Map
 
 - Script: `scripts/deploy_cpanel_no_ssh.sh`
-- Required upload files: `13`
+- Required upload files: `14`
 - Optional upload files: `10`
 
 ## Optimization Watchlist (Auto)
 
-- `context/activity_log.jsonl` touched `40` checkpoint(s)
-- `context/current_task.md` touched `40` checkpoint(s)
-- `context/flowmap.json` touched `40` checkpoint(s)
-- `context/flowmap.md` touched `40` checkpoint(s)
-- `context/state.json` touched `40` checkpoint(s)
-- `context/watchlist.json` touched `40` checkpoint(s)
-- `store.js` touched `15` checkpoint(s)
-- `index.html` touched `14` checkpoint(s)
+- `context/activity_log.jsonl` touched `42` checkpoint(s)
+- `context/current_task.md` touched `42` checkpoint(s)
+- `context/flowmap.json` touched `42` checkpoint(s)
+- `context/flowmap.md` touched `42` checkpoint(s)
+- `context/state.json` touched `42` checkpoint(s)
+- `context/watchlist.json` touched `42` checkpoint(s)
+- `index.html` touched `17` checkpoint(s)
+- `app.html` touched `16` checkpoint(s)
 
 ## Recent Context Activity
 
-- `2026-02-21T03:23:10Z` [change] offload: avoid rerunning tasks when push fails; add PAT fallback
-- `2026-02-21T03:23:19Z` [pre_commit] auto pre-commit context sync
-- `2026-02-21T05:09:05Z` [change] fix offload worker REPO_URL detection when launched via nohup
 - `2026-02-21T05:09:20Z` [pre_commit] auto pre-commit context sync
 - `2026-02-21T05:10:53Z` [change] bootstrap: fallback to manual git credential helper if setup-git fails
 - `2026-02-21T05:11:12Z` [pre_commit] auto pre-commit context sync
 - `2026-03-01T14:18:26Z` [change] refactor public and member UI hierarchy for calm civic layout
 - `2026-03-01T14:18:52Z` [test] npm test context sync
+- `2026-03-01T14:49:02Z` [test] npm test context sync
+- `2026-03-01T14:50:02Z` [change] redesign end-to-end user journey and onboarding navigation
+- `2026-03-01T14:50:27Z` [test] npm test context sync

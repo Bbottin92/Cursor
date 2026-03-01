@@ -106,6 +106,8 @@ img {
   font-size: 1.3rem;
   font-weight: 680;
   letter-spacing: 0.02em;
+  color: var(--text);
+  text-decoration: none;
 }
 
 nav,
@@ -235,6 +237,20 @@ main {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.ghost-action {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.45rem 0.78rem;
+  font-size: 0.84rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.ghost-action:hover {
+  color: var(--text);
+  border-color: #5a7088;
+}
+
 .inline-button {
   margin-top: var(--space-3);
 }
@@ -324,6 +340,23 @@ main {
 
 .hero-support a:hover {
   color: #ffffff;
+}
+
+.learn-more-section details {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+  padding: var(--space-3);
+}
+
+.learn-more-section summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.learn-more-section details[open] summary {
+  margin-bottom: var(--space-3);
 }
 
 .three-col,
@@ -465,6 +498,37 @@ menu {
 
 .dashboard-summary {
   margin-top: 0;
+}
+
+.onboarding-focus {
+  margin-top: 0;
+  border-color: #4f647c;
+  background: linear-gradient(165deg, #1c2e43, #172739);
+}
+
+.onboarding-main-list .onboarding-item {
+  align-items: center;
+}
+
+.onboarding-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.onboarding-jump {
+  padding: 0.42rem 0.75rem;
+  font-size: 0.82rem;
+}
+
+.onboarding-success {
+  margin-top: 0.45rem;
+  color: var(--ok);
+  font-weight: 620;
+}
+
+.member-top-nav a {
+  font-size: 0.9rem;
 }
 
 .dashboard-tabs {
@@ -657,7 +721,7 @@ menu {
   .top-nav {
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.4rem;
   }
 

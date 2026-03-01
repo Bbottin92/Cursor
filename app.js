@@ -23,6 +23,33 @@ document.addEventListener("DOMContentLoaded", async () => {
       "System: Keep discussion constructive and solution-focused."
     ]
   };
+  const ONBOARDING_PROGRESS_KEY = "nusaOnboardingProgress";
+
+  function loadOnboardingProgressMap() {
+    try {
+      const raw = window.localStorage.getItem(ONBOARDING_PROGRESS_KEY);
+      if (!raw) {
+        return {};
+      }
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveOnboardingProgressMap(map) {
+    try {
+      window.localStorage.setItem(
+        ONBOARDING_PROGRESS_KEY,
+        JSON.stringify(map || {})
+      );
+    } catch (error) {
+      // Ignore storage write failures; onboarding can still work in-memory.
+    }
+  }
+
+  state.onboardingProgressByUser = loadOnboardingProgressMap();
 
   function el(id) {
     return document.getElementById(id);
@@ -43,6 +70,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const onboardProposal = el("onboardProposal");
   const onboardMessage = el("onboardMessage");
   const onboardingProgress = el("onboardingProgress");
+  const onboardingSuccess = el("onboardingSuccess");
+  const onboardingJumpButtons = Array.from(
+    document.querySelectorAll("[data-onboard-action]")
+  );
 
   const announcementForm = el("announcementForm");
   const announcementTitle = el("announcementTitle");
@@ -108,7 +139,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     messagesCard: "messages",
     tabMessagesPanel: "messages",
     adminCard: "transparency",
-    tabTransparencyPanel: "transparency"
+    tabTransparencyPanel: "transparency",
+    proposals: "proposals",
+    messages: "messages"
   };
 
   function setActiveDashboardTab(tabName) {
@@ -152,18 +185,62 @@ document.addEventListener("DOMContentLoaded", async () => {
     status.textContent = done ? "Done" : "Pending";
   }
 
-  function renderOnboarding() {
+  function getOnboardingStatus() {
     const doneAccount = Boolean(state.activeUsername);
-    const doneScope = Boolean(state.activeScope);
+    const doneScope = Boolean(state.activeUsername && state.activeScope);
     const doneProposal = Boolean(state.postedProposal);
     const doneMessage = Boolean(state.sentMessage);
-    setOnboardingItem(onboardAccount, doneAccount);
-    setOnboardingItem(onboardScope, doneScope);
-    setOnboardingItem(onboardProposal, doneProposal);
-    setOnboardingItem(onboardMessage, doneMessage);
+    const completed = doneAccount && doneScope && doneProposal && doneMessage;
+    return {
+      doneAccount,
+      doneScope,
+      doneProposal,
+      doneMessage,
+      completed
+    };
+  }
+
+  function persistActiveUserOnboardingProgress() {
+    if (!state.activeUsername) {
+      return;
+    }
+    const key = String(state.activeUsername).toLowerCase();
+    state.onboardingProgressByUser[key] = {
+      postedProposal: Boolean(state.postedProposal),
+      sentMessage: Boolean(state.sentMessage),
+      updatedAt: new Date().toISOString()
+    };
+    saveOnboardingProgressMap(state.onboardingProgressByUser);
+  }
+
+  async function maybePromptAfterOnboardingCompletion() {
+    if (!state.activeUsername || !getOnboardingStatus().completed) {
+      return;
+    }
+    const account = await findAccount(state.activeUsername);
+    if (!account) {
+      return;
+    }
+    await maybeShowFeedbackPrompt(account);
+  }
+
+  function renderOnboarding() {
+    const status = getOnboardingStatus();
+    setOnboardingItem(onboardAccount, status.doneAccount);
+    setOnboardingItem(onboardScope, status.doneScope);
+    setOnboardingItem(onboardProposal, status.doneProposal);
+    setOnboardingItem(onboardMessage, status.doneMessage);
     onboardingProgress.textContent = `${
-      [doneAccount, doneScope, doneProposal, doneMessage].filter(Boolean).length
+      [
+        status.doneAccount,
+        status.doneScope,
+        status.doneProposal,
+        status.doneMessage
+      ].filter(Boolean).length
     }/4`;
+    if (onboardingSuccess) {
+      onboardingSuccess.hidden = !status.completed;
+    }
   }
 
   async function getAccounts() {
@@ -426,6 +503,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!account || !account.username) {
       return false;
     }
+    if (!getOnboardingStatus().completed) {
+      return false;
+    }
     const key = String(account.username).toLowerCase();
     if (state.promptShownSession[key]) {
       return false;
@@ -477,6 +557,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       state.activeUsername = null;
       state.activePortrait = null;
       state.isAdmin = false;
+      state.postedProposal = false;
+      state.sentMessage = false;
       currentUsername.textContent = "Guest";
       currentBadge.textContent = "Participant";
       visitorLogBody.innerHTML = "<tr><td colspan='2'>Sign in to view visitor logs.</td></tr>";
@@ -504,6 +586,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     state.activeUsername = account.username;
     state.isAdmin = Boolean(account.isAdmin);
+    const userProgress =
+      state.onboardingProgressByUser[String(account.username).toLowerCase()] || {};
+    state.postedProposal = Boolean(userProgress.postedProposal);
+    state.sentMessage = Boolean(userProgress.sentMessage);
     currentUsername.textContent = account.username;
     currentBadge.textContent = state.isAdmin
       ? "Admin"
@@ -516,13 +602,45 @@ document.addEventListener("DOMContentLoaded", async () => {
     await renderPortraitFromAccount();
     await renderAdminPanel();
     renderOnboarding();
-    await maybeShowFeedbackPrompt(account);
+    await maybePromptAfterOnboardingCompletion();
   }
 
   function renderScope() {
     scopeSelect.value = state.activeScope;
     scopeHint.textContent = scopes[state.activeScope];
     renderOnboarding();
+  }
+
+  function jumpToOnboardingAction(action) {
+    if (action === "account") {
+      document.getElementById("my-profile")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+      accountSwitcher.focus();
+      return;
+    }
+    if (action === "scope") {
+      document.getElementById("my-profile")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+      scopeSelect.focus();
+      return;
+    }
+    if (action === "proposal") {
+      setActiveDashboardTab("proposals");
+      const target = document.getElementById("proposalCard");
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      painPointInput.focus();
+      return;
+    }
+    if (action === "message") {
+      setActiveDashboardTab("messages");
+      const target = document.getElementById("messagesCard");
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      dmRecipient.focus();
+    }
   }
 
   async function renderAnnouncements() {
@@ -652,9 +770,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     painPointInput.value = "";
     solutionInput.value = "";
     state.postedProposal = true;
+    persistActiveUserOnboardingProgress();
     renderOnboarding();
     proposalResult.textContent = "Proposal submitted.";
     await renderArchive();
+    await maybePromptAfterOnboardingCompletion();
   });
 
   dmSendBtn.addEventListener("click", async () => {
@@ -687,20 +807,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
     dmInput.value = "";
     state.sentMessage = true;
+    persistActiveUserOnboardingProgress();
     renderOnboarding();
     dmResult.textContent = "Message sent.";
     await renderNotifications();
+    await maybePromptAfterOnboardingCompletion();
   });
 
-  groupSendBtn.addEventListener("click", () => {
+  groupSendBtn.addEventListener("click", async () => {
     if (!state.activeUsername || !groupInput.value.trim()) {
       return;
     }
     state.groupMessages.unshift(`${state.activeUsername}: ${groupInput.value.trim()}`);
     groupInput.value = "";
     state.sentMessage = true;
+    persistActiveUserOnboardingProgress();
     renderOnboarding();
     renderGroupMessages();
+    await maybePromptAfterOnboardingCompletion();
   });
 
   useAccountBtn.addEventListener("click", async () => {
@@ -897,6 +1021,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   dashboardTabButtons.forEach((button) => {
     button.addEventListener("click", () => {
       setActiveDashboardTab(button.dataset.dashboardTab);
+    });
+  });
+  onboardingJumpButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      jumpToOnboardingAction(button.dataset.onboardAction);
     });
   });
   window.addEventListener("hashchange", applyHashTabSelection);

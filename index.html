@@ -4,23 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NUSA (New-USA)</title>
-  <link rel="stylesheet" href="styles.css?v=20260221a" />
+  <link rel="stylesheet" href="styles.css?v=20260221b" />
 </head>
 <body class="public-body">
   <header class="site-header">
-    <div class="brand">NUSA</div>
+    <a class="brand" href="index.html">NUSA</a>
     <nav class="top-nav">
-      <a href="#start-here">Start Here</a>
-      <a href="#how-it-works">How It Works</a>
-      <a href="#updates">Updates</a>
-      <a href="legal.html#safety-standards">Safety Standards</a>
-      <a href="app.html">Member App</a>
-      <a class="nav-login" href="login.html">Login</a>
+      <a href="index.html">Home</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="#why-nusa">Why NUSA</a>
+      <a href="#join" data-open-signup="true">Join</a>
     </nav>
   </header>
 
-  <main>
-    <section class="hero">
+  <main id="home">
+    <section class="hero" id="join">
       <div class="hero-main">
         <img
           class="hero-dripflag"
@@ -53,9 +51,11 @@
 
           <div class="hero-actions">
             <button id="openSignup" class="primary" type="button">Create Account</button>
+            <a class="secondary" href="how-it-works.html">See How It Works</a>
+            <a class="ghost-action" href="app.html">Visit as Guest</a>
           </div>
           <p class="hero-support">
-            <a href="app.html">Browse the member app as a guest</a>
+            <a href="login.html">Already have an account? Log in</a>
             <span aria-hidden="true"> · </span>
             <a href="legal.html#safety-standards">Read safety and conduct standards</a>
           </p>
@@ -63,75 +63,55 @@
       </div>
     </section>
 
-    <section id="start-here" class="section">
-      <h2>Start Here</h2>
-      <p class="section-lead">One clear first step now, then participate at your own pace.</p>
-      <div class="three-col">
-        <article class="start-step">
-          <h3>Create your account</h3>
-          <p>Join the participant counter with username and password only.</p>
-          <button class="secondary inline-button" id="openSignupSecondary" type="button">
-            Create Account
-          </button>
-        </article>
-        <article class="start-step">
-          <h3>Choose your scope</h3>
-          <p>Start local or national, then adjust as your priorities change.</p>
-          <a class="secondary inline-button" href="app.html">Open Member App</a>
-        </article>
-        <article class="start-step">
-          <h3>Submit one proposal</h3>
-          <p>Post one real problem and one practical solution.</p>
-          <a class="secondary inline-button" href="app.html#proposalCard">Post First Idea</a>
-        </article>
-      </div>
-    </section>
-
-    <section id="how-it-works" class="section">
-      <h2>How NUSA Works</h2>
+    <section id="why-nusa" class="section">
+      <h2>Why NUSA</h2>
+      <p class="section-lead">Built for civic trust, transparent decision-making, and voluntary participation.</p>
       <div class="compare-grid">
         <article>
-          <h3>Transparent records</h3>
-          <p>Decisions and outcomes are logged so participants can verify what happened.</p>
+          <h3>Transparent by default</h3>
+          <p>Decision trails stay visible so participants can verify outcomes.</p>
         </article>
         <article>
-          <h3>Real-time participation</h3>
-          <p>Participants can vote directly or delegate representation and adjust over time.</p>
+          <h3>Real-time civic input</h3>
+          <p>Participants can vote directly or delegate and adjust over time.</p>
         </article>
         <article>
-          <h3>Local to national scope</h3>
-          <p>People can organize around neighborhood, town, state, or national priorities.</p>
+          <h3>Idea-to-action flow</h3>
+          <p>Members can post problems and solutions and track what gets implemented.</p>
         </article>
       </div>
+      <a class="secondary inline-button" href="how-it-works.html">Learn More</a>
     </section>
 
     <section class="section">
-      <h2>Safety and Civic Standards</h2>
+      <h2>What to do next</h2>
       <p class="section-lead">
-        Child safety, conduct policy, and transparency rules are documented in a
-        dedicated legal and safety page.
+        Read the 2-minute explainer, create your account, then post your first proposal.
       </p>
-      <a class="secondary inline-button" href="legal.html#safety-standards">
-        View Full Safety Standards
-      </a>
+      <div class="hero-actions">
+        <a class="secondary" href="how-it-works.html">See How It Works</a>
+        <button class="primary" id="openSignupSecondary" type="button">Create Account</button>
+      </div>
     </section>
 
-    <section id="updates" class="section">
-      <h2>Movement Updates</h2>
-      <div class="archive-grid">
-        <article>
-          <h3>Announcements</h3>
-          <ul id="publicAnnouncementsPreview"></ul>
-        </article>
-        <article>
-          <h3>Implemented Ideas</h3>
-          <ul id="implementedPreview"></ul>
-        </article>
-        <article>
-          <h3>Archived Ideas</h3>
-          <ul id="archivedPreview"></ul>
-        </article>
-      </div>
+    <section id="updates" class="section learn-more-section">
+      <details>
+        <summary>Learn More: Recent movement updates</summary>
+        <div class="archive-grid">
+          <article>
+            <h3>Announcements</h3>
+            <ul id="publicAnnouncementsPreview"></ul>
+          </article>
+          <article>
+            <h3>Implemented Ideas</h3>
+            <ul id="implementedPreview"></ul>
+          </article>
+          <article>
+            <h3>Archived Ideas</h3>
+            <ul id="archivedPreview"></ul>
+          </article>
+        </div>
+      </details>
     </section>
   </main>
 
@@ -162,8 +142,8 @@
     </form>
   </dialog>
 
-  <script src="store.js?v=20260221a"></script>
-  <script src="dataClient.js?v=20260221a"></script>
-  <script src="main.js?v=20260221a"></script>
+  <script src="store.js?v=20260221b"></script>
+  <script src="dataClient.js?v=20260221b"></script>
+  <script src="main.js?v=20260221b"></script>
 </body>
 </html>
