@@ -1,20 +1,25 @@
 {
-  "generated_at": "2026-02-21T05:11:12Z",
+  "generated_at": "2026-03-01T14:18:52Z",
   "trigger": {
-    "phase": "pre_commit",
-    "note": "auto pre-commit context sync"
+    "phase": "test",
+    "note": "npm test context sync"
   },
   "git": {
     "branch": "cursor/liquidgov-website-definition-d045",
-    "commit": "e6c7e09",
+    "commit": "0333998",
     "changed_files": [
+      "app.html",
+      "app.js",
       "context/activity_log.jsonl",
       "context/current_task.md",
       "context/flowmap.json",
       "context/flowmap.md",
       "context/state.json",
       "context/watchlist.json",
-      "scripts/offload_bootstrap.sh"
+      "index.html",
+      "legal.html",
+      "login.html",
+      "styles.css"
     ]
   },
   "frontend": {
@@ -23,45 +28,48 @@
         "file": "index.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220i"
+          "styles.css?v=20260221a"
         ],
         "scripts": [
-          "store.js?v=20260220i",
-          "dataClient.js?v=20260220i",
-          "main.js?v=20260220i"
+          "store.js?v=20260221a",
+          "dataClient.js?v=20260221a",
+          "main.js?v=20260221a"
         ],
         "links": [
           "#start-here",
-          "#why-nusa",
+          "#how-it-works",
           "#updates",
+          "legal.html#safety-standards",
           "app.html",
           "login.html",
           "app.html",
+          "legal.html#safety-standards",
           "app.html",
-          "app.html#proposalCard"
+          "app.html#proposalCard",
+          "legal.html#safety-standards"
         ]
       },
       {
         "file": "app.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220i"
+          "styles.css?v=20260221a"
         ],
         "scripts": [
-          "store.js?v=20260220i",
-          "dataClient.js?v=20260220i",
-          "app.js?v=20260220i"
+          "store.js?v=20260221a",
+          "dataClient.js?v=20260221a",
+          "app.js?v=20260221a"
         ],
         "links": [
           "index.html",
-          "legal.html"
+          "legal.html#safety-standards"
         ]
       },
       {
         "file": "legal.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220i"
+          "styles.css?v=20260221a"
         ],
         "scripts": [],
         "links": [
@@ -73,11 +81,11 @@
         "file": "login.html",
         "exists": true,
         "stylesheets": [
-          "styles.css?v=20260220i"
+          "styles.css?v=20260221a"
         ],
         "scripts": [
-          "store.js?v=20260220i",
-          "dataClient.js?v=20260220i"
+          "store.js?v=20260221a",
+          "dataClient.js?v=20260221a"
         ],
         "links": [
           "index.html"
@@ -553,39 +561,39 @@
   ],
   "workflow_rule": "Run context guard before inspect/change: ./scripts/context_guard.sh inspect|change \"note\"",
   "optimization": {
-    "activity_entries": 70,
+    "activity_entries": 72,
     "hotspots": [
       {
         "file": "context/activity_log.jsonl",
-        "touches": 39
+        "touches": 40
       },
       {
         "file": "context/current_task.md",
-        "touches": 39
+        "touches": 40
       },
       {
         "file": "context/flowmap.json",
-        "touches": 39
+        "touches": 40
       },
       {
         "file": "context/flowmap.md",
-        "touches": 39
+        "touches": 40
       },
       {
         "file": "context/state.json",
-        "touches": 39
+        "touches": 40
       },
       {
         "file": "context/watchlist.json",
-        "touches": 39
+        "touches": 40
       },
       {
         "file": "store.js",
         "touches": 15
       },
       {
-        "file": "dataClient.js",
-        "touches": 13
+        "file": "index.html",
+        "touches": 14
       }
     ]
   }

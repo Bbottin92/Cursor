@@ -94,8 +94,57 @@ document.addEventListener("DOMContentLoaded", async () => {
   const feedbackPromptClose = el("feedbackPromptClose");
   const feedbackPromptSend = el("feedbackPromptSend");
   const feedbackPromptResult = el("feedbackPromptResult");
+  const dashboardTabButtons = Array.from(
+    document.querySelectorAll("[data-dashboard-tab]")
+  );
+  const dashboardPanels = Array.from(
+    document.querySelectorAll("[data-dashboard-panel]")
+  );
 
   const FEEDBACK_PROMPT_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+  const dashboardHashToTab = {
+    proposalCard: "proposals",
+    tabProposalsPanel: "proposals",
+    messagesCard: "messages",
+    tabMessagesPanel: "messages",
+    adminCard: "transparency",
+    tabTransparencyPanel: "transparency"
+  };
+
+  function setActiveDashboardTab(tabName) {
+    const fallbackTab = dashboardTabButtons[0]?.dataset.dashboardTab || "proposals";
+    const targetTab = dashboardPanels.some(
+      (panel) => panel.dataset.dashboardPanel === tabName
+    )
+      ? tabName
+      : fallbackTab;
+
+    dashboardTabButtons.forEach((button) => {
+      const isActive = button.dataset.dashboardTab === targetTab;
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-selected", String(isActive));
+      button.setAttribute("tabindex", isActive ? "0" : "-1");
+    });
+
+    dashboardPanels.forEach((panel) => {
+      const isActive = panel.dataset.dashboardPanel === targetTab;
+      panel.hidden = !isActive;
+      panel.classList.toggle("active", isActive);
+    });
+  }
+
+  function applyHashTabSelection() {
+    const rawHash = String(window.location.hash || "").replace(/^#/, "");
+    const mappedTab = dashboardHashToTab[rawHash];
+    if (!mappedTab) {
+      return;
+    }
+    setActiveDashboardTab(mappedTab);
+    const target = document.getElementById(rawHash);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
 
   function setOnboardingItem(itemEl, done) {
     itemEl.classList.toggle("done", done);
@@ -845,12 +894,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 320);
   });
 
+  dashboardTabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      setActiveDashboardTab(button.dataset.dashboardTab);
+    });
+  });
+  window.addEventListener("hashchange", applyHashTabSelection);
+
   await renderMetrics();
   await renderAccountOptions();
   await renderAnnouncements();
   await renderArchive();
   renderScope();
   renderGroupMessages();
+  setActiveDashboardTab("proposals");
+  applyHashTabSelection();
   drawPortraitPlaceholder(portraitPreview, "Guest");
 
   const session = await data.getCurrentUser();

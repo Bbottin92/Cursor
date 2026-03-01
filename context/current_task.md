@@ -1,8 +1,8 @@
 # Current Task Intent (Auto)
 
-Updated: `2026-02-21T05:11:12Z`  
-Checkpoint: `pre_commit`  
-Intent note: auto pre-commit context sync
+Updated: `2026-03-01T14:18:52Z`  
+Checkpoint: `test`  
+Intent note: npm test context sync
 
 ## Mandatory Use
 
@@ -15,27 +15,32 @@ Before edits:
 ## Active Working Context
 
 Branch: `cursor/liquidgov-website-definition-d045`  
-Commit: `e6c7e09`  
-Context runs: `70`
+Commit: `0333998`  
+Context runs: `72`
 
 ### Currently changed files
+- `app.html`
+- `app.js`
 - `context/activity_log.jsonl`
 - `context/current_task.md`
 - `context/flowmap.json`
 - `context/flowmap.md`
 - `context/state.json`
 - `context/watchlist.json`
-- `scripts/offload_bootstrap.sh`
+- `index.html`
+- `legal.html`
+- `login.html`
+- `styles.css`
 
 ### Auto optimization watchlist
-- `context/activity_log.jsonl` (39 touches)
-- `context/current_task.md` (39 touches)
-- `context/flowmap.json` (39 touches)
-- `context/flowmap.md` (39 touches)
-- `context/state.json` (39 touches)
-- `context/watchlist.json` (39 touches)
+- `context/activity_log.jsonl` (40 touches)
+- `context/current_task.md` (40 touches)
+- `context/flowmap.json` (40 touches)
+- `context/flowmap.md` (40 touches)
+- `context/state.json` (40 touches)
+- `context/watchlist.json` (40 touches)
 - `store.js` (15 touches)
-- `dataClient.js` (13 touches)
+- `index.html` (14 touches)
 
 ## High Priority Flow References
 

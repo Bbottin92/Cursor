@@ -4,180 +4,235 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NUSA Member App</title>
-  <link rel="stylesheet" href="styles.css?v=20260220i" />
+  <link rel="stylesheet" href="styles.css?v=20260221a" />
 </head>
 <body>
   <header class="site-header">
-    <div class="brand">NUSA Member App</div>
+    <div class="brand">NUSA Member Workspace</div>
     <nav>
       <a href="index.html">Public Site</a>
-      <a href="legal.html">Legal & Safety</a>
+      <a href="legal.html#safety-standards">Safety Standards</a>
     </nav>
   </header>
 
-  <main class="simple-app">
-    <section class="section portrait-dock">
-      <button id="portraitTrigger" class="portrait-trigger" type="button" aria-label="Edit self portrait">
-        <canvas id="portraitPreview" width="120" height="120"></canvas>
-      </button>
-      <div>
-        <h3 class="tight">Self Portrait</h3>
-        <p class="tiny-note">Draw your own profile portrait. Click the circle to edit or clear it.</p>
-      </div>
-    </section>
+  <main class="simple-app member-main">
+    <section class="member-layout">
+      <aside class="account-column stack">
+        <article class="feed-card account-card">
+          <div class="layout-title">
+            <h2 class="tight">Account</h2>
+            <button class="secondary" id="logoutBtn" type="button">Log Out</button>
+          </div>
 
-    <section class="section">
-      <div class="layout-title">
-        <h2 class="tight">Start Here</h2>
-        <button class="secondary" id="logoutBtn" type="button">Log Out</button>
-      </div>
-      <p class="tiny-note">Complete these 4 steps to get started quickly.</p>
-      <ul class="onboarding-list">
-        <li class="onboarding-item" id="onboardAccount"><span>Choose account</span><strong>Pending</strong></li>
-        <li class="onboarding-item" id="onboardScope"><span>Pick scope</span><strong>Pending</strong></li>
-        <li class="onboarding-item" id="onboardProposal"><span>Post first proposal</span><strong>Pending</strong></li>
-        <li class="onboarding-item" id="onboardMessage"><span>Send first message</span><strong>Pending</strong></li>
-      </ul>
-      <p class="tiny-note">Progress: <strong id="onboardingProgress">0/4</strong></p>
-    </section>
+          <div class="portrait-dock">
+            <button id="portraitTrigger" class="portrait-trigger" type="button" aria-label="Edit self portrait">
+              <canvas id="portraitPreview" width="120" height="120"></canvas>
+            </button>
+            <div>
+              <h3 class="tight">Self Portrait</h3>
+              <p class="tiny-note">Click the portrait to edit.</p>
+            </div>
+          </div>
 
-    <section class="section app-grid">
-      <article class="feed-card">
-        <h3>Account</h3>
-        <p>Signed in as: <strong id="currentUsername">Guest</strong> (<span id="currentBadge">Participant</span>)</p>
-        <label>
-          Switch account
-          <select id="accountSwitcher"></select>
-        </label>
-        <button id="useAccountBtn" class="primary" type="button">Use Selected Account</button>
-        <label>
-          Scope
-          <select id="scopeSelect">
-            <option>Neighborhood</option>
-            <option>Town</option>
-            <option>State</option>
-            <option>National</option>
-            <option>International</option>
-          </select>
-        </label>
-        <p id="scopeHint" class="tiny-note"></p>
-        <div class="metric">[<span id="participantsCount">0</span> / 175,000,000 PARTICIPANTS]</div>
-        <div class="metric">Verified Patriots: <strong id="verifiedCount">0</strong></div>
-      </article>
-
-      <article class="feed-card admin-only" id="adminCard">
-        <h3>Admin Tools</h3>
-        <p class="tiny-note">Grant moderator access or remove abusive profiles.</p>
-        <label>
-          Select profile
-          <select id="adminUserSelect"></select>
-        </label>
-        <div class="hero-actions">
-          <button id="grantModeratorBtn" class="secondary" type="button">Grant Moderator</button>
-          <button id="revokeModeratorBtn" class="secondary" type="button">Revoke Moderator</button>
-          <button id="deleteProfileBtn" class="secondary" type="button">Delete Profile</button>
-        </div>
-        <p id="adminResult" class="tiny-note"></p>
-      </article>
-
-      <article class="feed-card">
-        <h3>Announcements</h3>
-        <form id="announcementForm" class="stack">
-          <label>Title <input id="announcementTitle" type="text" maxlength="160" required /></label>
-          <label>Message <textarea id="announcementBody" required></textarea></label>
-          <button class="secondary" type="submit">Post Announcement</button>
-          <p id="announcementResult" class="tiny-note"></p>
-        </form>
-        <ul id="announcementsList"></ul>
-      </article>
-
-      <article class="feed-card" id="proposalCard">
-        <h3>Post a Proposal</h3>
-        <form id="proposalForm" class="stack">
-          <label>Pain point <textarea id="painPointInput" required></textarea></label>
-          <label>Proposed solution <textarea id="solutionInput" required></textarea></label>
+          <p>Signed in as <strong id="currentUsername">Guest</strong> (<span id="currentBadge">Participant</span>)</p>
           <label>
-            Category
-            <select id="proposalCategory">
-              <option>Governance</option>
-              <option>Community</option>
-              <option>Trade</option>
-              <option>Safety</option>
-              <option>Arts</option>
-              <option>News</option>
+            Switch account
+            <select id="accountSwitcher"></select>
+          </label>
+          <button id="useAccountBtn" class="secondary" type="button">Use Selected Account</button>
+
+          <label>
+            Scope
+            <select id="scopeSelect">
+              <option>Neighborhood</option>
+              <option>Town</option>
+              <option>State</option>
+              <option>National</option>
+              <option>International</option>
             </select>
           </label>
-          <button class="primary" type="submit">Submit Proposal</button>
-          <p id="proposalResult" class="tiny-note"></p>
-        </form>
-      </article>
+          <p id="scopeHint" class="tiny-note"></p>
 
-      <article class="feed-card" id="messagesCard">
-        <h3>Messages</h3>
-        <label>Recipient username <input id="dmRecipient" type="text" /></label>
-        <label>Direct message <textarea id="dmInput"></textarea></label>
-        <button id="dmSendBtn" class="secondary" type="button">Send DM</button>
-        <p id="dmResult" class="tiny-note"></p>
-        <label>Group message <textarea id="groupInput"></textarea></label>
-        <button id="groupSendBtn" class="secondary" type="button">Post to Group</button>
-        <ul id="groupStream"></ul>
-      </article>
+          <div class="metric">[<span id="participantsCount">0</span> / 175,000,000 PARTICIPANTS]</div>
+          <div class="metric">Verified Patriots: <strong id="verifiedCount">0</strong></div>
+        </article>
 
-      <article class="feed-card">
-        <h3>Contribution Archive</h3>
-        <table class="archive-table">
-          <thead>
-            <tr>
-              <th>When</th>
-              <th>Author</th>
-              <th>Idea</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="archiveTableBody"></tbody>
-        </table>
-      </article>
+        <article class="feed-card">
+          <h3 class="tight">Quick Setup</h3>
+          <p class="tiny-note">Complete these four steps.</p>
+          <ul class="onboarding-list">
+            <li class="onboarding-item" id="onboardAccount"><span>Choose account</span><strong>Pending</strong></li>
+            <li class="onboarding-item" id="onboardScope"><span>Pick scope</span><strong>Pending</strong></li>
+            <li class="onboarding-item" id="onboardProposal"><span>Post first proposal</span><strong>Pending</strong></li>
+            <li class="onboarding-item" id="onboardMessage"><span>Send first message</span><strong>Pending</strong></li>
+          </ul>
+          <p class="tiny-note">Progress: <strong id="onboardingProgress">0/4</strong></p>
+        </article>
+      </aside>
 
-      <article class="feed-card">
-        <h3>Transparency</h3>
-        <label>Visit profile
-          <select id="profileDirectory"></select>
-        </label>
-        <button id="visitProfileBtn" class="secondary" type="button">Log Profile Visit</button>
+      <section class="content-column stack">
+        <article class="section dashboard-summary">
+          <h2 class="tight">Member Dashboard</h2>
+          <p class="tiny-note">Work in one focused area at a time.</p>
+        </article>
 
-        <h4>Recent Profile Visitors</h4>
-        <table class="visitor-log">
-          <thead><tr><th>Visitor</th><th>Time</th></tr></thead>
-          <tbody id="visitorLogBody"></tbody>
-        </table>
+        <div class="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
+          <button
+            class="tab-button active"
+            id="tabProposalsBtn"
+            type="button"
+            role="tab"
+            aria-controls="tabProposalsPanel"
+            aria-selected="true"
+            data-dashboard-tab="proposals"
+          >
+            Proposals
+          </button>
+          <button
+            class="tab-button"
+            id="tabMessagesBtn"
+            type="button"
+            role="tab"
+            aria-controls="tabMessagesPanel"
+            aria-selected="false"
+            data-dashboard-tab="messages"
+          >
+            Messages
+          </button>
+          <button
+            class="tab-button"
+            id="tabTransparencyBtn"
+            type="button"
+            role="tab"
+            aria-controls="tabTransparencyPanel"
+            aria-selected="false"
+            data-dashboard-tab="transparency"
+          >
+            Transparency
+          </button>
+        </div>
 
-        <h4>Notifications</h4>
-        <table class="visitor-log">
-          <thead><tr><th>Time</th><th>Message</th></tr></thead>
-          <tbody id="notificationsBody"></tbody>
-        </table>
-      </article>
+        <section class="tab-panel active" id="tabProposalsPanel" role="tabpanel" data-dashboard-panel="proposals">
+          <article class="feed-card" id="proposalCard">
+            <h3>Post a Proposal</h3>
+            <form id="proposalForm" class="stack">
+              <label>Pain point <textarea id="painPointInput" required></textarea></label>
+              <label>Proposed solution <textarea id="solutionInput" required></textarea></label>
+              <label>
+                Category
+                <select id="proposalCategory">
+                  <option>Governance</option>
+                  <option>Community</option>
+                  <option>Trade</option>
+                  <option>Safety</option>
+                  <option>Arts</option>
+                  <option>News</option>
+                </select>
+              </label>
+              <button class="primary" type="submit">Submit Proposal</button>
+              <p id="proposalResult" class="tiny-note"></p>
+            </form>
+          </article>
+
+          <article class="feed-card">
+            <h3>Contribution Archive</h3>
+            <table class="archive-table">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Author</th>
+                  <th>Idea</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="archiveTableBody"></tbody>
+            </table>
+          </article>
+        </section>
+
+        <section class="tab-panel" id="tabMessagesPanel" role="tabpanel" data-dashboard-panel="messages" hidden>
+          <article class="feed-card" id="messagesCard">
+            <h3>Messages</h3>
+            <label>Recipient username <input id="dmRecipient" type="text" /></label>
+            <label>Direct message <textarea id="dmInput"></textarea></label>
+            <button id="dmSendBtn" class="secondary" type="button">Send DM</button>
+            <p id="dmResult" class="tiny-note"></p>
+            <label>Group message <textarea id="groupInput"></textarea></label>
+            <button id="groupSendBtn" class="secondary" type="button">Post to Group</button>
+            <ul id="groupStream"></ul>
+          </article>
+        </section>
+
+        <section class="tab-panel" id="tabTransparencyPanel" role="tabpanel" data-dashboard-panel="transparency" hidden>
+          <article class="feed-card">
+            <h3>Announcements</h3>
+            <form id="announcementForm" class="stack">
+              <label>Title <input id="announcementTitle" type="text" maxlength="160" required /></label>
+              <label>Message <textarea id="announcementBody" required></textarea></label>
+              <button class="secondary" type="submit">Post Announcement</button>
+              <p id="announcementResult" class="tiny-note"></p>
+            </form>
+            <ul id="announcementsList"></ul>
+          </article>
+
+          <article class="feed-card">
+            <h3>Transparency</h3>
+            <label>
+              Visit profile
+              <select id="profileDirectory"></select>
+            </label>
+            <button id="visitProfileBtn" class="secondary" type="button">Log Profile Visit</button>
+
+            <h4>Recent Profile Visitors</h4>
+            <table class="visitor-log">
+              <thead><tr><th>Visitor</th><th>Time</th></tr></thead>
+              <tbody id="visitorLogBody"></tbody>
+            </table>
+
+            <h4>Notifications</h4>
+            <table class="visitor-log">
+              <thead><tr><th>Time</th><th>Message</th></tr></thead>
+              <tbody id="notificationsBody"></tbody>
+            </table>
+          </article>
+
+          <article class="feed-card admin-only" id="adminCard">
+            <h3>Admin Tools</h3>
+            <p class="tiny-note">Grant moderator access or remove abusive profiles.</p>
+            <label>
+              Select profile
+              <select id="adminUserSelect"></select>
+            </label>
+            <div class="button-row">
+              <button id="grantModeratorBtn" class="secondary" type="button">Grant Moderator</button>
+              <button id="revokeModeratorBtn" class="secondary" type="button">Revoke Moderator</button>
+              <button id="deleteProfileBtn" class="secondary" type="button">Delete Profile</button>
+            </div>
+            <p id="adminResult" class="tiny-note"></p>
+          </article>
+        </section>
+      </section>
     </section>
   </main>
 
   <dialog id="portraitDialog">
     <form method="dialog" class="portrait-editor-form">
       <h3>Portrait Editor</h3>
-      <p class="tiny-note">Draw inside the circle. Use color, shade, and brush size wheels.</p>
+      <p class="tiny-note">Draw inside the circle. Adjust color, shade, and brush size.</p>
       <div class="portrait-canvas-wrap">
         <canvas id="portraitCanvas" width="420" height="420"></canvas>
       </div>
       <div class="portrait-controls">
         <label>
-          Color wheel
+          Color
           <input id="brushColor" type="color" value="#57d5ff" />
         </label>
         <label>
-          White-black wheel
+          Shade
           <input id="brushShade" type="range" min="0" max="100" value="50" />
         </label>
         <label>
-          Brush size wheel
+          Brush size
           <input id="brushSize" type="range" min="2" max="42" value="10" />
         </label>
       </div>
@@ -213,8 +268,8 @@
     </form>
   </dialog>
 
-  <script src="store.js?v=20260220i"></script>
-  <script src="dataClient.js?v=20260220i"></script>
-  <script src="app.js?v=20260220i"></script>
+  <script src="store.js?v=20260221a"></script>
+  <script src="dataClient.js?v=20260221a"></script>
+  <script src="app.js?v=20260221a"></script>
 </body>
 </html>
